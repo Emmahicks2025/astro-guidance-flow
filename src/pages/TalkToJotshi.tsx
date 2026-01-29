@@ -7,6 +7,7 @@ import { SpiritualInput } from "@/components/ui/spiritual-input";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExpertConsultationDialog } from "@/components/consultation/ExpertConsultationDialog";
 
 type Category = 'all' | 'astrologer' | 'jotshi' | 'palmist' | 'relationship';
 
@@ -22,6 +23,7 @@ interface Expert {
   category: Category;
   languages: string[];
   sessions: number;
+  ai_personality?: string;
 }
 
 const categoryConfig: { id: Category; label: string; icon: React.ReactNode }[] = [
@@ -41,6 +43,9 @@ const TalkToJotshi = () => {
   const [loading, setLoading] = useState(true);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
+  const [consultationOpen, setConsultationOpen] = useState(false);
+  const [consultationTab, setConsultationTab] = useState<'chat' | 'call'>('chat');
 
   useEffect(() => {
     const fetchExperts = async () => {
@@ -66,6 +71,7 @@ const TalkToJotshi = () => {
           category: (p.category as Category) || 'astrologer',
           languages: p.languages || ['Hindi', 'English'],
           sessions: p.total_sessions || 0,
+          ai_personality: p.ai_personality || undefined,
         }));
 
         setExperts(mappedExperts);
@@ -95,6 +101,12 @@ const TalkToJotshi = () => {
   });
 
   const onlineCount = filteredExperts.filter(e => e.status === 'online').length;
+
+  const openConsultation = (expert: Expert, tab: 'chat' | 'call') => {
+    setSelectedExpert(expert);
+    setConsultationTab(tab);
+    setConsultationOpen(true);
+  };
 
   return (
     <motion.div
@@ -291,6 +303,7 @@ const TalkToJotshi = () => {
                             size="sm"
                             className="gap-1.5 text-xs h-9 px-3"
                             disabled={expert.status !== 'online'}
+                            onClick={() => openConsultation(expert, 'call')}
                           >
                             <Phone className="w-3.5 h-3.5" />
                             Call
@@ -299,7 +312,7 @@ const TalkToJotshi = () => {
                             variant="primary" 
                             size="sm"
                             className="gap-1.5 text-xs h-9 px-3"
-                            disabled={expert.status !== 'online'}
+                            onClick={() => openConsultation(expert, 'chat')}
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
                             Chat
@@ -317,6 +330,14 @@ const TalkToJotshi = () => {
         {/* Bottom Spacing */}
         <div className="h-6" />
       </main>
+
+      {/* Consultation Dialog */}
+      <ExpertConsultationDialog
+        expert={selectedExpert}
+        open={consultationOpen}
+        onOpenChange={setConsultationOpen}
+        initialTab={consultationTab}
+      />
     </motion.div>
   );
 };
