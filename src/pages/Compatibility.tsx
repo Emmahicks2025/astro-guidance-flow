@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { SpiritualCard } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import GunaMatchingCalculator from "@/components/compatibility/GunaMatchingCalculator";
+import WalkthroughTrigger from "@/components/walkthrough/WalkthroughTrigger";
 
 const Compatibility = () => {
   const navigate = useNavigate();
@@ -31,9 +32,12 @@ const Compatibility = () => {
               </div>
             </div>
           </div>
-          <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/explore')}>
-            <Book className="w-5 h-5" />
-          </SpiritualButton>
+          <div className="flex gap-2">
+            <WalkthroughTrigger />
+            <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/explore')}>
+              <Book className="w-5 h-5" />
+            </SpiritualButton>
+          </div>
         </div>
       </header>
 

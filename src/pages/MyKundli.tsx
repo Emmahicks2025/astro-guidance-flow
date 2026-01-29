@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ArrowLeft, User, Calendar, Clock, MapPin, Download, Share2, Scan, BookOpen, Languages, FileText, ChevronRight } from "lucide-react";
+import { Star, ArrowLeft, User, Calendar, Clock, MapPin, Download, Share2, Scan, BookOpen, Languages, FileText, ChevronRight, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
@@ -11,6 +11,7 @@ import PlanetaryTable from "@/components/kundli/PlanetaryTable";
 import KundliScanner from "@/components/kundli/KundliScanner";
 import KundliAnalysisDashboard from "@/components/kundli/KundliAnalysisDashboard";
 import LifeReportGenerator from "@/components/kundli/LifeReportGenerator";
+import WalkthroughTrigger from "@/components/walkthrough/WalkthroughTrigger";
 import { generateSampleKundli } from "@/lib/kundli";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -77,6 +78,7 @@ const MyKundli = () => {
                 onCheckedChange={setUseHindiTerms}
               />
             </div>
+            <WalkthroughTrigger />
             <SpiritualButton variant="ghost" size="icon" onClick={() => toast.info("Share feature coming soon!")}>
               <Share2 className="w-5 h-5" />
             </SpiritualButton>

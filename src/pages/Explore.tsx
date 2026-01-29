@@ -3,11 +3,12 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, Home, Sun, Moon, Star, Triangle, Book, Calendar,
-  Sparkles, AlertTriangle, Heart, Coins, Compass, ChevronRight
+  Sparkles, AlertTriangle, Heart, Coins, Compass, ChevronRight, HelpCircle
 } from "lucide-react";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { Badge } from "@/components/ui/badge";
+import WalkthroughTrigger from "@/components/walkthrough/WalkthroughTrigger";
 
 // Category data
 const categories = [
@@ -310,19 +311,22 @@ const Explore = () => {
     >
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ArrowLeft className="w-5 h-5" />
-          </SpiritualButton>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-mystic flex items-center justify-center">
-              <Book className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-xl">Astro Library</h1>
-              <p className="text-xs text-muted-foreground">Explore Vedic Astrology</p>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/')}>
+              <ArrowLeft className="w-5 h-5" />
+            </SpiritualButton>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-mystic flex items-center justify-center">
+                <Book className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="font-display font-bold text-xl">Astro Library</h1>
+                <p className="text-xs text-muted-foreground">Explore Vedic Astrology</p>
+              </div>
             </div>
           </div>
+          <WalkthroughTrigger />
         </div>
       </header>
 
