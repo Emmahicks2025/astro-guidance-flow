@@ -81,6 +81,7 @@ export type Database = {
           updated_at: string
           user_id: string | null
           verified: boolean | null
+          voice_id: string | null
         }
         Insert: {
           ai_personality?: string | null
@@ -103,6 +104,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           verified?: boolean | null
+          voice_id?: string | null
         }
         Update: {
           ai_personality?: string | null
@@ -125,6 +127,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           verified?: boolean | null
+          voice_id?: string | null
         }
         Relationships: []
       }

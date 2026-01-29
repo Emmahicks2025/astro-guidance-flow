@@ -44,6 +44,7 @@ interface JotshiProfile {
   ai_personality: string | null;
   approval_status: string;
   approved_at: string | null;
+  voice_id: string | null;
 }
 
 const specialties = [
@@ -319,7 +320,8 @@ const AdminPanel = () => {
         display_name: selectedProvider.display_name,
         ai_personality: selectedProvider.ai_personality,
         avatar_url: selectedProvider.avatar_url,
-        category: selectedProvider.category
+        category: selectedProvider.category,
+        voice_id: selectedProvider.voice_id
       })
       .eq('id', selectedProvider.id);
 
@@ -1072,6 +1074,31 @@ const AdminPanel = () => {
                   rows={4}
                   placeholder="Example: Speak in a calm, wise manner. Use traditional Vedic terminology. Be empathetic and supportive. Always suggest remedies with explanations. End responses with a blessing."
                   className="bg-background"
+                />
+              </div>
+
+              {/* ElevenLabs Voice ID Section */}
+              <div className="space-y-2 p-3 rounded-lg bg-secondary/5 border border-secondary/20">
+                <Label className="flex items-center gap-2 text-secondary">
+                  <Phone className="w-4 h-4" />
+                  ElevenLabs Voice ID (Admin Only)
+                </Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Enter the ElevenLabs voice ID for voice consultations. Find voices at{" "}
+                  <a 
+                    href="https://elevenlabs.io/app/voice-library" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary underline"
+                  >
+                    ElevenLabs Voice Library
+                  </a>
+                </p>
+                <SpiritualInput
+                  value={selectedProvider.voice_id || ""}
+                  onChange={(e) => setSelectedProvider({ ...selectedProvider, voice_id: e.target.value })}
+                  placeholder="e.g., S3F8rLt9v7twQC170pA5"
+                  className="bg-background font-mono text-sm"
                 />
               </div>
 
