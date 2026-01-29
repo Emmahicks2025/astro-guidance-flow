@@ -5,7 +5,7 @@ import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-
+import jotshiWoman from "@/assets/jotshi-woman.jpg";
 const serviceCards = [
   {
     id: 'talk',
@@ -152,9 +152,19 @@ const UserDashboard = () => {
                 >
                   <SpiritualCardContent className="p-5">
                     <div className="flex items-center gap-4">
-                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.gradient} flex items-center justify-center shadow-lg`}>
-                        <service.icon className="w-7 h-7 text-primary-foreground" />
-                      </div>
+                      {service.id === 'talk' ? (
+                        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-primary/30 shadow-lg flex-shrink-0">
+                          <img 
+                            src={jotshiWoman} 
+                            alt="Jotshi Astrologer" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${service.gradient} flex items-center justify-center shadow-lg`}>
+                          <service.icon className="w-7 h-7 text-primary-foreground" />
+                        </div>
+                      )}
                       <div className="flex-1">
                         <h4 className="font-semibold text-lg">{service.title}</h4>
                         <p className="text-sm text-muted-foreground">{service.description}</p>
