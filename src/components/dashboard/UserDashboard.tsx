@@ -3,6 +3,7 @@ import { MessageCircle, Hand, Heart, Sun, Moon, Star, Wallet, User, Settings } f
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
 const serviceCards = [
@@ -13,6 +14,7 @@ const serviceCards = [
     icon: MessageCircle,
     gradient: 'from-primary to-primary-dark',
     variant: 'spiritual' as const,
+    path: '/talk',
   },
   {
     id: 'palm',
@@ -21,6 +23,7 @@ const serviceCards = [
     icon: Hand,
     gradient: 'from-accent to-accent-dark',
     variant: 'golden' as const,
+    path: '/palm-reading',
   },
   {
     id: 'compatibility',
@@ -29,17 +32,19 @@ const serviceCards = [
     icon: Heart,
     gradient: 'from-secondary to-secondary-dark',
     variant: 'mystic' as const,
+    path: '/compatibility',
   },
 ];
 
 const quickActions = [
-  { icon: Sun, label: 'Daily Horoscope' },
-  { icon: Moon, label: 'Panchang' },
-  { icon: Star, label: 'My Kundli' },
+  { icon: Sun, label: 'Daily Horoscope', path: '/horoscope' },
+  { icon: Moon, label: 'Panchang', path: '/panchang' },
+  { icon: Star, label: 'My Kundli', path: '/kundli' },
 ];
 
 const UserDashboard = () => {
   const { userData, resetOnboarding } = useOnboardingStore();
+  const navigate = useNavigate();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -73,10 +78,10 @@ const UserDashboard = () => {
             <span className="font-display font-bold text-xl text-gradient-spiritual">AstroGuru</span>
           </div>
           <div className="flex items-center gap-2">
-            <SpiritualButton variant="ghost" size="icon">
+            <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/wallet')}>
               <Wallet className="w-5 h-5" />
             </SpiritualButton>
-            <SpiritualButton variant="ghost" size="icon">
+            <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/settings')}>
               <Settings className="w-5 h-5" />
             </SpiritualButton>
           </div>
@@ -116,6 +121,7 @@ const UserDashboard = () => {
             {quickActions.map((action) => (
               <button
                 key={action.label}
+                onClick={() => navigate(action.path)}
                 className="flex flex-col items-center gap-2 min-w-[80px] p-4 rounded-2xl bg-card border border-border hover:border-primary/50 hover:shadow-soft transition-all duration-300"
               >
                 <div className="w-12 h-12 rounded-full bg-gradient-spiritual flex items-center justify-center">
@@ -137,11 +143,12 @@ const UserDashboard = () => {
                 variants={itemVariants}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => navigate(service.path)}
               >
                 <SpiritualCard
                   variant={service.variant}
                   interactive
-                  className="overflow-hidden"
+                  className="overflow-hidden cursor-pointer"
                 >
                   <SpiritualCardContent className="p-5">
                     <div className="flex items-center gap-4">

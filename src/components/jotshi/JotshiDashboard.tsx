@@ -15,6 +15,7 @@ import {
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
+import { toast } from "sonner";
 
 // Mock data for active users
 const activeUsers = [
@@ -53,6 +54,7 @@ const activeUsers = [
 const JotshiDashboard = () => {
   const { resetOnboarding } = useOnboardingStore();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -87,10 +89,20 @@ const JotshiDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <SpiritualButton variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10">
+            <SpiritualButton 
+              variant="ghost" 
+              size="icon" 
+              className="text-secondary-foreground hover:bg-secondary-foreground/10"
+              onClick={() => toast.info("Notifications coming soon!")}
+            >
               <Bell className="w-5 h-5" />
             </SpiritualButton>
-            <SpiritualButton variant="ghost" size="icon" className="text-secondary-foreground hover:bg-secondary-foreground/10">
+            <SpiritualButton 
+              variant="ghost" 
+              size="icon" 
+              className="text-secondary-foreground hover:bg-secondary-foreground/10"
+              onClick={() => toast.info("Settings coming soon!")}
+            >
               <Settings className="w-5 h-5" />
             </SpiritualButton>
           </div>
@@ -122,11 +134,18 @@ const JotshiDashboard = () => {
           <SpiritualCard variant="elevated" className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                <span className="font-medium">You are Online</span>
+                <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                <span className="font-medium">{isOnline ? 'You are Online' : 'You are Offline'}</span>
               </div>
-              <SpiritualButton variant="outline" size="sm">
-                Go Offline
+              <SpiritualButton 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setIsOnline(!isOnline);
+                  toast.success(isOnline ? "You are now offline" : "You are now online");
+                }}
+              >
+                {isOnline ? 'Go Offline' : 'Go Online'}
               </SpiritualButton>
             </div>
           </SpiritualCard>
@@ -197,11 +216,26 @@ const JotshiDashboard = () => {
                         </div>
                         
                         <div className="flex gap-2">
-                          <SpiritualButton variant="primary" size="lg" className="flex-1">
+                          <SpiritualButton 
+                            variant="primary" 
+                            size="lg" 
+                            className="flex-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toast.success(`Starting chat with ${user.name}`);
+                            }}
+                          >
                             <MessageCircle className="w-5 h-5" />
                             Start Chat
                           </SpiritualButton>
-                          <SpiritualButton variant="outline" size="lg">
+                          <SpiritualButton 
+                            variant="outline" 
+                            size="lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toast.info("View full chart coming soon!");
+                            }}
+                          >
                             <ChevronRight className="w-5 h-5" />
                           </SpiritualButton>
                         </div>
