@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { Moon, ArrowLeft, Sun, Calendar, Clock, Star, Loader2, RefreshCw } from "lucide-react";
+import { Moon, ArrowLeft, Sun, Calendar, Clock, Star, Loader2, RefreshCw, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useOnboardingStore } from "@/stores/onboardingStore";
@@ -170,6 +171,21 @@ const Panchang = () => {
                   </p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                     📍 Based on your birthplace: <span className="text-primary font-medium">{userLocation}</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button className="ml-1 hover:text-primary transition-colors">
+                            <Info className="w-3.5 h-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[280px] text-center p-3">
+                          <p className="text-sm font-medium mb-1">Why Location Matters</p>
+                          <p className="text-xs text-muted-foreground">
+                            Panchang timings like sunrise, sunset, Rahu Kaal, and Muhurtas are calculated based on your geographical coordinates. Different locations see different timings due to Earth's rotation and your longitude/latitude.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </p>
                 </div>
               </div>
