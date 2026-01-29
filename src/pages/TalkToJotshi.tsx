@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MessageCircle, ArrowLeft, Star, Clock, Phone, Video, Sparkles, Users, Hand, Heart, CheckCircle, Shield, Headphones } from "lucide-react";
+import { MessageCircle, ArrowLeft, Star, Clock, Phone, Sparkles, Users, Hand, Heart, CheckCircle, Shield, Headphones } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
@@ -261,14 +261,7 @@ const TalkToJotshi = () => {
                               className="h-9 px-3"
                             >
                               <MessageCircle className="w-4 h-4" />
-                            </SpiritualButton>
-                            <SpiritualButton
-                              variant="outline"
-                              size="sm"
-                              disabled={expert.status !== 'online'}
-                              className="h-9 px-3"
-                            >
-                              <Video className="w-4 h-4" />
+                              <span className="ml-1">Chat</span>
                             </SpiritualButton>
                             <SpiritualButton
                               variant="primary"
