@@ -47,6 +47,7 @@ const TalkToJotshi = () => {
         const { data, error } = await supabase
           .from('jotshi_profiles')
           .select('*')
+          .eq('approval_status', 'approved')
           .order('rating', { ascending: false });
 
         if (error) throw error;
