@@ -183,26 +183,73 @@ serve(async (req) => {
     
     console.log("AI Response received, parsing JSON...");
     
+    // Helper function to sanitize JSON string
+    const sanitizeJson = (jsonStr: string): string => {
+      return jsonStr
+        // Remove trailing commas before } or ]
+        .replace(/,\s*}/g, '}')
+        .replace(/,\s*]/g, ']')
+        // Fix unescaped newlines in strings
+        .replace(/([^\\])\\n/g, '$1\\\\n')
+        // Remove control characters
+        .replace(/[\x00-\x1F\x7F]/g, ' ')
+        // Fix common issues with quotes
+        .replace(/"\s*\n\s*"/g, '", "');
+    };
+
+    // Helper function to try parsing JSON with sanitization
+    const tryParseJson = (str: string): any => {
+      // First try direct parse
+      try {
+        return JSON.parse(str);
+      } catch {
+        // Try with sanitization
+        const sanitized = sanitizeJson(str);
+        return JSON.parse(sanitized);
+      }
+    };
+    
     // Extract JSON from the response
     let analysisResult;
     try {
-      // Try to parse directly
-      analysisResult = JSON.parse(content);
-    } catch {
-      // Try to extract JSON from markdown code blocks
+      // Try to extract JSON from markdown code blocks first
       const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[1].trim());
+        analysisResult = tryParseJson(jsonMatch[1].trim());
       } else {
         // Try to find JSON object in the response
         const jsonStart = content.indexOf('{');
         const jsonEnd = content.lastIndexOf('}');
         if (jsonStart !== -1 && jsonEnd !== -1) {
-          analysisResult = JSON.parse(content.substring(jsonStart, jsonEnd + 1));
+          analysisResult = tryParseJson(content.substring(jsonStart, jsonEnd + 1));
         } else {
-          throw new Error("Could not parse AI response as JSON");
+          // Try parsing the whole content
+          analysisResult = tryParseJson(content);
         }
       }
+    } catch (parseError) {
+      console.error("JSON parsing failed, attempting recovery...", parseError);
+      
+      // Last resort: return a structured error response that the frontend can handle
+      analysisResult = {
+        error: "Chart analysis partially completed. Please try again.",
+        chartStyle: "Unknown",
+        lagna: "Unknown",
+        lagnaNumber: 1,
+        moonSign: "Unknown",
+        moonNakshatra: "Unknown",
+        nakshatraPada: 1,
+        planets: [],
+        doshas: [],
+        yogas: [],
+        mahadasha: { current: "Unknown", startYear: 2020, endYear: 2030, antardasha: "Unknown", antardashaEnd: "2025" },
+        personalIdentity: { title: "Analysis Pending", description: "We couldn't fully analyze your chart. Please try uploading a clearer image." },
+        marriageLove: { title: "Analysis Pending", description: "Please try again with a clearer image.", warnings: [] },
+        careerWealth: { title: "Analysis Pending", description: "Please try again with a clearer image.", predictions: [] },
+        dailyRemedy: { title: "General Remedy", description: "Start your day with positive intentions.", color: "White", deity: "Ganesha" },
+        remedies: [],
+        panchangDetails: { tithi: "Unknown", vara: "Unknown", nakshatra: "Unknown" }
+      };
     }
 
     return new Response(
