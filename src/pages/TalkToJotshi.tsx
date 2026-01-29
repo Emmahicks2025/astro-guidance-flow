@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { MessageCircle, ArrowLeft, Star, Clock, Phone, Sparkles, Users, Hand, Heart, CheckCircle, Shield, Headphones, Loader2 } from "lucide-react";
+import { MessageCircle, ArrowLeft, Star, Clock, Phone, Sparkles, Users, Hand, Heart, CheckCircle, Shield, Headphones, Loader2, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
+import { SpiritualInput } from "@/components/ui/spiritual-input";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +40,7 @@ const TalkToJotshi = () => {
   const [experts, setExperts] = useState<Expert[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchExperts = async () => {
@@ -84,9 +86,13 @@ const TalkToJotshi = () => {
     fetchExperts();
   }, []);
 
-  const filteredExperts = activeCategory === 'all' 
-    ? experts 
-    : experts.filter(e => e.category === activeCategory);
+  const filteredExperts = experts.filter(e => {
+    const matchesCategory = activeCategory === 'all' || e.category === activeCategory;
+    const matchesSearch = searchQuery === '' || 
+      e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.specialty.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const onlineCount = filteredExperts.filter(e => e.status === 'online').length;
 
@@ -117,6 +123,17 @@ const TalkToJotshi = () => {
       </header>
 
       <main className="container mx-auto px-4 py-5 space-y-5">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <SpiritualInput
+            placeholder="Search experts by name or specialty..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-12"
+          />
+        </div>
+
         {/* Trust Indicators */}
         <div className="flex items-center justify-center gap-6 py-3">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
