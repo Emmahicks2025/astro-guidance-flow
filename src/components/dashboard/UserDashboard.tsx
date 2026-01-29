@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { MessageCircle, Hand, Heart, Sun, Moon, Star, Wallet, User, Settings } from "lucide-react";
+import { MessageCircle, Hand, Heart, Sun, Moon, Star, Wallet, User, Settings, Book, Calendar } from "lucide-react";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import jotshiWoman from "@/assets/jotshi-woman.jpg";
+
 const serviceCards = [
   {
     id: 'talk',
@@ -27,8 +28,8 @@ const serviceCards = [
   },
   {
     id: 'compatibility',
-    title: 'Compatibility',
-    description: 'Guna Milan & relationship matching',
+    title: 'Guna Milan',
+    description: '36-point Kundli matching & compatibility',
     icon: Heart,
     gradient: 'from-secondary to-secondary-dark',
     variant: 'mystic' as const,
@@ -37,9 +38,10 @@ const serviceCards = [
 ];
 
 const quickActions = [
-  { icon: Sun, label: 'Daily Horoscope', path: '/horoscope' },
-  { icon: Moon, label: 'Panchang', path: '/panchang' },
   { icon: Star, label: 'My Kundli', path: '/kundli' },
+  { icon: Book, label: 'Explore', path: '/explore' },
+  { icon: Calendar, label: 'Panchang', path: '/panchang' },
+  { icon: Sun, label: 'Horoscope', path: '/horoscope' },
 ];
 
 const UserDashboard = () => {

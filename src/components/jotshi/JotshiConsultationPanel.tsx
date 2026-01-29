@@ -11,14 +11,21 @@ import {
   Calendar,
   Clock,
   MapPin,
-  Star
+  Star,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  Save
 } from "lucide-react";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { SpiritualInput } from "@/components/ui/spiritual-input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NorthIndianKundliChart from "@/components/kundli/NorthIndianKundliChart";
 import PlanetaryTable from "@/components/kundli/PlanetaryTable";
-import { generateSampleKundli } from "@/lib/kundli";
+import { generateSampleKundli, KundliData } from "@/lib/kundli";
 import { toast } from "sonner";
 
 interface UserProfile {
@@ -30,6 +37,7 @@ interface UserProfile {
   birthPlace: string;
   gender: string;
   birthTimeExactness: string;
+  aiAnalysisSummary?: string;
 }
 
 interface JotshiConsultationPanelProps {
@@ -43,18 +51,62 @@ const quickActions = [
   { icon: BookOpen, label: 'Recommend Pooja', action: 'pooja' },
 ];
 
+// Generate Navamsa (D9) chart from D1
+const generateNavamsa = (d1Data: KundliData): KundliData => {
+  const signs = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 
+    'Leo', 'Virgo', 'Libra', 'Scorpio',
+    'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+  ];
+
+  const getSignIndex = (sign: string): number => signs.indexOf(sign);
+
+  const navamsaPlanets = d1Data.planets.map(planet => {
+    const signIndex = getSignIndex(planet.sign);
+    const navamsaNumber = Math.floor(planet.degree / 3.333333) % 9;
+    
+    let startSign: number;
+    if (signIndex % 4 === 0) startSign = 0;
+    else if (signIndex % 4 === 1) startSign = 3;
+    else if (signIndex % 4 === 2) startSign = 6;
+    else startSign = 9;
+    
+    const navamsaSign = signs[(startSign + navamsaNumber) % 12];
+    const navamsaHouse = ((startSign + navamsaNumber) % 12) + 1;
+    
+    return {
+      ...planet,
+      sign: navamsaSign,
+      house: navamsaHouse,
+      degree: (planet.degree * 9) % 30
+    };
+  });
+
+  const d9LagnaIndex = (getSignIndex(d1Data.lagnaSign) * 9) % 12;
+  
+  return {
+    ...d1Data,
+    lagnaSign: signs[d9LagnaIndex],
+    planets: navamsaPlanets
+  };
+};
+
 const JotshiConsultationPanel = ({ user, onBack }: JotshiConsultationPanelProps) => {
   const [message, setMessage] = useState("");
+  const [jotshiNotes, setJotshiNotes] = useState("");
+  const [showNotes, setShowNotes] = useState(false);
+  const [activeChartTab, setActiveChartTab] = useState<"d1" | "d9">("d1");
   const [messages, setMessages] = useState<Array<{ role: 'jotshi' | 'user'; text: string; time: string }>>([
     { role: 'user', text: `Namaste Guruji, I need guidance about ${user.concern.toLowerCase()}.`, time: '2:30 PM' },
   ]);
 
-  // Generate Kundli based on user's birth data
-  const kundliData = generateSampleKundli(
+  // Generate Kundli charts based on user's birth data
+  const d1KundliData = generateSampleKundli(
     new Date(user.birthDate), 
     user.birthTime, 
     user.birthPlace
   );
+  const d9KundliData = generateNavamsa(d1KundliData);
 
   const handleSendMessage = () => {
     if (!message.trim()) return;
@@ -69,9 +121,9 @@ const JotshiConsultationPanel = ({ user, onBack }: JotshiConsultationPanelProps)
 
   const handleQuickAction = (action: string) => {
     const actionMessages: Record<string, string> = {
-      mantra: `🙏 Based on your chart, I recommend chanting the ${kundliData.lagnaSign === 'Leo' ? 'Surya' : 'Chandra'} Mantra daily:\n\n"Om ${kundliData.lagnaSign === 'Leo' ? 'Suryaya' : 'Chandraya'} Namaha"\n\nChant 108 times every morning for best results.`,
-      remedy: `💎 Recommended Remedies:\n\n1. Wear a ${kundliData.lagnaSign === 'Leo' ? 'Ruby' : 'Pearl'} gemstone on your ${kundliData.lagnaSign === 'Leo' ? 'ring' : 'little'} finger\n2. Donate to the needy on ${kundliData.lagnaSign === 'Leo' ? 'Sundays' : 'Mondays'}\n3. Fast on ${kundliData.lagnaSign === 'Leo' ? 'Sunday' : 'Monday'} mornings`,
-      pooja: `🪔 I recommend performing a ${user.concern === 'Marriage & Love' ? 'Vivah Prapti' : user.concern === 'Career & Business' ? 'Brihaspati' : 'Navagraha'} Pooja for your specific concerns.\n\nBest time: During ${kundliData.nakshatras.moon} Nakshatra\nIdeal day: Thursday or ${kundliData.lagnaSign === 'Leo' ? 'Sunday' : 'Monday'}`,
+      mantra: `🙏 Based on your chart, I recommend chanting the ${d1KundliData.lagnaSign === 'Leo' ? 'Surya' : 'Chandra'} Mantra daily:\n\n"Om ${d1KundliData.lagnaSign === 'Leo' ? 'Suryaya' : 'Chandraya'} Namaha"\n\nChant 108 times every morning for best results.`,
+      remedy: `💎 Recommended Remedies:\n\n1. Wear a ${d1KundliData.lagnaSign === 'Leo' ? 'Ruby' : 'Pearl'} gemstone on your ${d1KundliData.lagnaSign === 'Leo' ? 'ring' : 'little'} finger\n2. Donate to the needy on ${d1KundliData.lagnaSign === 'Leo' ? 'Sundays' : 'Mondays'}\n3. Fast on ${d1KundliData.lagnaSign === 'Leo' ? 'Sunday' : 'Monday'} mornings`,
+      pooja: `🪔 I recommend performing a ${user.concern === 'Marriage & Love' ? 'Vivah Prapti' : user.concern === 'Career & Business' ? 'Brihaspati' : 'Navagraha'} Pooja.\n\nBest time: During ${d1KundliData.nakshatras.moon} Nakshatra\nIdeal day: Thursday`,
     };
 
     setMessages([...messages, {
@@ -80,6 +132,11 @@ const JotshiConsultationPanel = ({ user, onBack }: JotshiConsultationPanelProps)
       time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
     }]);
     toast.success(`${action.charAt(0).toUpperCase() + action.slice(1)} suggestion sent!`);
+  };
+
+  const handleSaveNotes = () => {
+    toast.success("Notes saved successfully!");
+    setShowNotes(false);
   };
 
   const handleEndSession = () => {
@@ -111,18 +168,33 @@ const JotshiConsultationPanel = ({ user, onBack }: JotshiConsultationPanelProps)
               </div>
               <div>
                 <h2 className="font-bold">{user.name}</h2>
-                <p className="text-xs opacity-75">{user.concern}</p>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs bg-secondary-foreground/20">
+                    {user.concern}
+                  </Badge>
+                </div>
               </div>
             </div>
-            <SpiritualButton 
-              variant="ghost" 
-              size="sm"
-              className="text-secondary-foreground hover:bg-secondary-foreground/10"
-              onClick={handleEndSession}
-            >
-              <X className="w-4 h-4 mr-1" />
-              End Session
-            </SpiritualButton>
+            <div className="flex gap-2">
+              <SpiritualButton 
+                variant="ghost" 
+                size="sm"
+                className="text-secondary-foreground hover:bg-secondary-foreground/10"
+                onClick={() => setShowNotes(!showNotes)}
+              >
+                <FileText className="w-4 h-4 mr-1" />
+                Notes
+              </SpiritualButton>
+              <SpiritualButton 
+                variant="ghost" 
+                size="sm"
+                className="text-secondary-foreground hover:bg-secondary-foreground/10"
+                onClick={handleEndSession}
+              >
+                <X className="w-4 h-4 mr-1" />
+                End
+              </SpiritualButton>
+            </div>
           </div>
 
           {/* Birth Details Strip */}
@@ -141,7 +213,7 @@ const JotshiConsultationPanel = ({ user, onBack }: JotshiConsultationPanelProps)
             </span>
             <span className="flex items-center gap-1">
               <Star className="w-4 h-4 text-accent" /> 
-              {kundliData.lagnaSign} Lagna | {kundliData.nakshatras.moon} Nakshatra
+              {d1KundliData.lagnaSign} | {d1KundliData.nakshatras.moon}
             </span>
           </div>
         </div>
@@ -149,26 +221,94 @@ const JotshiConsultationPanel = ({ user, onBack }: JotshiConsultationPanelProps)
 
       {/* Main Content - Split View */}
       <div className="flex-1 container mx-auto p-4 grid lg:grid-cols-5 gap-4 overflow-hidden">
-        {/* Left: Kundli Chart (40%) */}
+        {/* Left: Chart Suite (40%) */}
         <div className="lg:col-span-2 space-y-4 overflow-y-auto">
+          {/* Side-by-Side Charts */}
           <SpiritualCard variant="elevated" className="p-4">
-            <h3 className="font-semibold text-center mb-4 font-display">Janam Kundli</h3>
-            <div className="flex justify-center">
-              <NorthIndianKundliChart data={kundliData} size={250} />
-            </div>
+            <Tabs value={activeChartTab} onValueChange={(v) => setActiveChartTab(v as any)}>
+              <TabsList className="grid grid-cols-2 mb-4">
+                <TabsTrigger value="d1" className="text-xs">
+                  Lagna (D1)
+                </TabsTrigger>
+                <TabsTrigger value="d9" className="text-xs">
+                  Navamsa (D9)
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="d1">
+                <div className="flex justify-center">
+                  <NorthIndianKundliChart data={d1KundliData} size={220} />
+                </div>
+                <p className="text-center text-xs text-muted-foreground mt-2">
+                  Lagna: {d1KundliData.lagnaSign}
+                </p>
+              </TabsContent>
+              
+              <TabsContent value="d9">
+                <div className="flex justify-center">
+                  <NorthIndianKundliChart data={d9KundliData} size={220} />
+                </div>
+                <p className="text-center text-xs text-muted-foreground mt-2">
+                  D9 Lagna: {d9KundliData.lagnaSign}
+                </p>
+              </TabsContent>
+            </Tabs>
           </SpiritualCard>
 
-          <PlanetaryTable data={kundliData} />
+          {/* AI Analysis Summary (if available) */}
+          {user.aiAnalysisSummary && (
+            <SpiritualCard variant="mystic" className="p-4">
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                AI Analysis Summary
+              </h4>
+              <p className="text-xs text-muted-foreground">{user.aiAnalysisSummary}</p>
+            </SpiritualCard>
+          )}
+
+          {/* Planetary Table */}
+          <PlanetaryTable data={d1KundliData} />
 
           {/* Dasha Info */}
-          {kundliData.dashaInfo && (
+          {d1KundliData.dashaInfo && (
             <SpiritualCard variant="golden" className="p-4">
-              <h4 className="font-semibold mb-2">Current Maha Dasha</h4>
-              <p className="text-lg font-bold text-accent">{kundliData.dashaInfo.currentMahaDasha}</p>
-              <p className="text-sm text-muted-foreground">
-                {kundliData.dashaInfo.startDate} - {kundliData.dashaInfo.endDate}
+              <h4 className="font-semibold mb-2 text-sm">Current Maha Dasha</h4>
+              <p className="text-lg font-bold text-accent">{d1KundliData.dashaInfo.currentMahaDasha}</p>
+              <p className="text-xs text-muted-foreground">
+                {d1KundliData.dashaInfo.startDate} - {d1KundliData.dashaInfo.endDate}
               </p>
             </SpiritualCard>
+          )}
+
+          {/* Jotshi Notes Panel */}
+          {showNotes && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <SpiritualCard variant="default" className="p-4">
+                <h4 className="font-semibold mb-2 text-sm flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Private Notes
+                </h4>
+                <Textarea
+                  placeholder="Add observations about dasha periods, yogas, or specific concerns..."
+                  value={jotshiNotes}
+                  onChange={(e) => setJotshiNotes(e.target.value)}
+                  className="min-h-[120px] text-sm mb-3"
+                />
+                <SpiritualButton 
+                  variant="primary" 
+                  size="sm" 
+                  onClick={handleSaveNotes}
+                  className="w-full"
+                >
+                  <Save className="w-4 h-4 mr-1" />
+                  Save Notes
+                </SpiritualButton>
+              </SpiritualCard>
+            </motion.div>
           )}
         </div>
 

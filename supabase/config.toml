@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.analyze-kundli]
 verify_jwt = false
+
+[functions.generate-life-report]
+verify_jwt = false
+
+[functions.calculate-guna-milan]
+verify_jwt = false
