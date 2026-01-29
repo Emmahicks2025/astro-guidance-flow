@@ -14,7 +14,235 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      consultations: {
+        Row: {
+          amount_charged: number | null
+          concern: string | null
+          created_at: string
+          duration_minutes: number | null
+          ended_at: string | null
+          feedback: string | null
+          id: string
+          jotshi_id: string
+          rating: number | null
+          started_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_charged?: number | null
+          concern?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          ended_at?: string | null
+          feedback?: string | null
+          id?: string
+          jotshi_id: string
+          rating?: number | null
+          started_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount_charged?: number | null
+          concern?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          ended_at?: string | null
+          feedback?: string | null
+          id?: string
+          jotshi_id?: string
+          rating?: number | null
+          started_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      jotshi_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string
+          experience_years: number | null
+          hourly_rate: number | null
+          id: string
+          is_online: boolean | null
+          rating: number | null
+          specialty: string | null
+          total_earnings: number | null
+          total_sessions: number | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          experience_years?: number | null
+          hourly_rate?: number | null
+          id?: string
+          is_online?: boolean | null
+          rating?: number | null
+          specialty?: string | null
+          total_earnings?: number | null
+          total_sessions?: number | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          experience_years?: number | null
+          hourly_rate?: number | null
+          id?: string
+          is_online?: boolean | null
+          rating?: number | null
+          specialty?: string | null
+          total_earnings?: number | null
+          total_sessions?: number | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          consultation_id: string
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          sender_id: string
+        }
+        Insert: {
+          consultation_id: string
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          sender_id: string
+        }
+        Update: {
+          consultation_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          birth_time_exactness: string | null
+          created_at: string
+          date_of_birth: string | null
+          full_name: string | null
+          gender: string | null
+          id: string
+          major_concern: string | null
+          partner_dob: string | null
+          partner_name: string | null
+          partner_place_of_birth: string | null
+          partner_time_of_birth: string | null
+          place_of_birth: string | null
+          relationship_status: string | null
+          role: string
+          time_of_birth: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          birth_time_exactness?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          major_concern?: string | null
+          partner_dob?: string | null
+          partner_name?: string | null
+          partner_place_of_birth?: string | null
+          partner_time_of_birth?: string | null
+          place_of_birth?: string | null
+          relationship_status?: string | null
+          role?: string
+          time_of_birth?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          birth_time_exactness?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          major_concern?: string | null
+          partner_dob?: string | null
+          partner_name?: string | null
+          partner_place_of_birth?: string | null
+          partner_time_of_birth?: string | null
+          place_of_birth?: string | null
+          relationship_status?: string | null
+          role?: string
+          time_of_birth?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          consultation_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          consultation_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          consultation_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

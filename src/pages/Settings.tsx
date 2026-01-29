@@ -17,11 +17,13 @@ import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { userData, resetOnboarding } = useOnboardingStore();
+  const { signOut, user } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -61,9 +63,11 @@ const SettingsPage = () => {
     },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut();
     resetOnboarding();
     toast.success("Logged out successfully");
+    navigate('/auth');
   };
 
   return (
@@ -97,7 +101,7 @@ const SettingsPage = () => {
             <div className="flex-1">
               <h2 className="text-lg font-bold">{userData.fullName || 'Your Name'}</h2>
               <p className="text-sm text-muted-foreground">
-                {userData.gender ? userData.gender.charAt(0).toUpperCase() + userData.gender.slice(1) : 'Not set'}
+                {user?.email || (userData.gender ? userData.gender.charAt(0).toUpperCase() + userData.gender.slice(1) : 'Not set')}
               </p>
             </div>
             <SpiritualButton variant="ghost" size="icon">

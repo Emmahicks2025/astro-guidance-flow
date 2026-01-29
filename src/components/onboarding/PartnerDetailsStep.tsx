@@ -5,6 +5,9 @@ import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { SpiritualCard } from "@/components/ui/spiritual-card";
 import { SpiritualInput } from "@/components/ui/spiritual-input";
 import { useOnboardingStore } from "@/stores/onboardingStore";
+import { useAuth } from "@/hooks/useAuth";
+import { saveUserProfile, saveJotshiProfile } from "@/lib/profileService";
+import { toast } from "sonner";
 import OnboardingProgress from "./OnboardingProgress";
 
 const relationshipStatuses = [
@@ -16,11 +19,13 @@ const relationshipStatuses = [
 ];
 
 const PartnerDetailsStep = () => {
-  const { userData, updateUserData, nextStep, prevStep, completeOnboarding } = useOnboardingStore();
+  const { userData, updateUserData, prevStep, completeOnboarding } = useOnboardingStore();
+  const { user } = useAuth();
   const [partnerName, setPartnerName] = useState(userData.partnerDetails?.name || '');
   const [partnerDob, setPartnerDob] = useState(userData.partnerDetails?.dateOfBirth || '');
   const [partnerTime, setPartnerTime] = useState(userData.partnerDetails?.timeOfBirth || '');
   const [partnerPlace, setPartnerPlace] = useState(userData.partnerDetails?.placeOfBirth || '');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Only show this step for relationship-focused concerns
   const isRelationshipFocused = userData.majorConcern === 'love';
@@ -29,20 +34,81 @@ const PartnerDetailsStep = () => {
     updateUserData('relationshipStatus', status as any);
   };
 
-  const handleContinue = () => {
-    if (isRelationshipFocused && partnerName) {
-      updateUserData('partnerDetails', {
-        name: partnerName,
-        dateOfBirth: partnerDob,
-        timeOfBirth: partnerTime,
-        placeOfBirth: partnerPlace,
-      });
+  const handleContinue = async () => {
+    if (!user) {
+      toast.error("Please sign in first");
+      return;
     }
-    completeOnboarding();
+
+    setIsSaving(true);
+
+    try {
+      // Update partner details if provided
+      if (isRelationshipFocused && partnerName) {
+        updateUserData('partnerDetails', {
+          name: partnerName,
+          dateOfBirth: partnerDob,
+          timeOfBirth: partnerTime,
+          placeOfBirth: partnerPlace,
+        });
+      }
+
+      // Save profile to database
+      await saveUserProfile(user.id, {
+        ...userData,
+        partnerDetails: isRelationshipFocused && partnerName ? {
+          name: partnerName,
+          dateOfBirth: partnerDob,
+          timeOfBirth: partnerTime,
+          placeOfBirth: partnerPlace,
+        } : null,
+      });
+
+      // If Jotshi, also create jotshi profile
+      if (userData.role === 'jotshi') {
+        await saveJotshiProfile(user.id, {
+          specialty: 'General Astrology',
+          experience_years: 1,
+          hourly_rate: 20,
+        });
+      }
+
+      toast.success("Profile saved successfully! 🌟");
+      completeOnboarding();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error("Failed to save profile. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSkip = () => {
-    completeOnboarding();
+  const handleSkip = async () => {
+    if (!user) {
+      completeOnboarding();
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await saveUserProfile(user.id, userData);
+      
+      if (userData.role === 'jotshi') {
+        await saveJotshiProfile(user.id, {
+          specialty: 'General Astrology',
+          experience_years: 1,
+          hourly_rate: 20,
+        });
+      }
+      
+      toast.success("Profile saved! 🌟");
+      completeOnboarding();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      completeOnboarding();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -175,6 +241,7 @@ const PartnerDetailsStep = () => {
           size="lg"
           className="flex-1"
           onClick={prevStep}
+          disabled={isSaving}
         >
           Back
         </SpiritualButton>
@@ -183,6 +250,7 @@ const PartnerDetailsStep = () => {
             variant="ghost"
             size="lg"
             onClick={handleSkip}
+            disabled={isSaving}
           >
             Skip
           </SpiritualButton>
@@ -192,8 +260,9 @@ const PartnerDetailsStep = () => {
           size="lg"
           className="flex-1"
           onClick={handleContinue}
+          disabled={isSaving}
         >
-          Complete ✨
+          {isSaving ? "Saving..." : "Complete ✨"}
         </SpiritualButton>
       </motion.div>
     </motion.div>
