@@ -4,7 +4,7 @@ import {
   ArrowLeft, Shield, Users, UserCheck, UserX, Plus, Pencil, Trash2, 
   Search, Filter, Star, Clock, Phone, MessageCircle, Eye, Check, X,
   Sparkles, BadgeCheck, IndianRupee, Languages, ToggleLeft, ToggleRight,
-  Upload, Camera, Bot, Brain
+  Upload, Camera, Bot, Brain, AlertCircle, Mail, CheckCircle, XCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -39,17 +40,8 @@ interface JotshiProfile {
   category: string | null;
   languages: string[] | null;
   ai_personality: string | null;
-}
-
-interface NewProviderForm {
-  email: string;
-  full_name: string;
-  specialty: string;
-  experience_years: number;
-  hourly_rate: number;
-  bio: string;
-  is_online: boolean;
-  verified: boolean;
+  approval_status: string;
+  approved_at: string | null;
 }
 
 const specialties = [
@@ -68,6 +60,13 @@ const specialties = [
   "Remedial Astrology"
 ];
 
+const categories = [
+  { value: "astrologer", label: "Astrologer" },
+  { value: "jotshi", label: "Jotshi" },
+  { value: "palmist", label: "Palmist" },
+  { value: "relationship", label: "Relationship Expert" }
+];
+
 const AdminPanel = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -75,24 +74,14 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<JotshiProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "online" | "offline" | "verified" | "unverified">("all");
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<"all" | "online" | "offline" | "verified" | "unverified" | "pending">("all");
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<JotshiProfile | null>(null);
   const [activeTab, setActiveTab] = useState("providers");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const [newProvider, setNewProvider] = useState<NewProviderForm>({
-    email: "",
-    full_name: "",
-    specialty: "",
-    experience_years: 0,
-    hourly_rate: 20,
-    bio: "",
-    is_online: false,
-    verified: false
-  });
 
   // Check if current user is admin
   useEffect(() => {
@@ -131,14 +120,17 @@ const AdminPanel = () => {
         console.error("Error fetching providers:", error);
         toast.error("Failed to load providers");
       } else {
-        setProviders(data || []);
+        setProviders((data as JotshiProfile[]) || []);
       }
     };
 
     fetchProviders();
   }, [isAdmin]);
 
-  const filteredProviders = providers.filter(provider => {
+  const pendingProviders = providers.filter(p => p.approval_status === 'pending');
+  const approvedProviders = providers.filter(p => p.approval_status === 'approved');
+
+  const filteredProviders = approvedProviders.filter(provider => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery || 
                          provider.display_name?.toLowerCase().includes(searchLower) ||
@@ -154,6 +146,84 @@ const AdminPanel = () => {
     
     return matchesSearch;
   });
+
+  const handleApproveProvider = async (provider: JotshiProfile) => {
+    setApprovingId(provider.id);
+    
+    try {
+      // Update approval status
+      const { error: updateError } = await supabase
+        .from('jotshi_profiles')
+        .update({ 
+          approval_status: 'approved',
+          approved_at: new Date().toISOString(),
+          verified: true
+        })
+        .eq('id', provider.id);
+
+      if (updateError) throw updateError;
+
+      // Send approval notification email
+      const { error: emailError } = await supabase.functions.invoke('send-provider-approval', {
+        body: { 
+          providerId: provider.id,
+          providerName: provider.display_name,
+          action: 'approved'
+        }
+      });
+
+      if (emailError) {
+        console.warn("Email notification failed:", emailError);
+        // Don't fail the approval if email fails
+      }
+
+      setProviders(prev => prev.map(p => 
+        p.id === provider.id 
+          ? { ...p, approval_status: 'approved', approved_at: new Date().toISOString(), verified: true } 
+          : p
+      ));
+      toast.success(`${provider.display_name || 'Provider'} has been approved! Email notification sent.`);
+    } catch (error) {
+      console.error("Error approving provider:", error);
+      toast.error("Failed to approve provider");
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const handleRejectProvider = async (provider: JotshiProfile) => {
+    if (!confirm(`Are you sure you want to reject ${provider.display_name || 'this provider'}?`)) return;
+    
+    setApprovingId(provider.id);
+    
+    try {
+      const { error: updateError } = await supabase
+        .from('jotshi_profiles')
+        .update({ approval_status: 'rejected' })
+        .eq('id', provider.id);
+
+      if (updateError) throw updateError;
+
+      // Send rejection notification email
+      await supabase.functions.invoke('send-provider-approval', {
+        body: { 
+          providerId: provider.id,
+          providerName: provider.display_name,
+          action: 'rejected'
+        }
+      });
+
+      setProviders(prev => prev.map(p => 
+        p.id === provider.id ? { ...p, approval_status: 'rejected' } : p
+      ));
+      toast.success(`${provider.display_name || 'Provider'} has been rejected.`);
+    } catch (error) {
+      console.error("Error rejecting provider:", error);
+      toast.error("Failed to reject provider");
+    } finally {
+      setApprovingId(null);
+    }
+  };
 
   const handleToggleOnline = async (provider: JotshiProfile) => {
     const { error } = await supabase
@@ -244,7 +314,8 @@ const AdminPanel = () => {
         verified: selectedProvider.verified,
         display_name: selectedProvider.display_name,
         ai_personality: selectedProvider.ai_personality,
-        avatar_url: selectedProvider.avatar_url
+        avatar_url: selectedProvider.avatar_url,
+        category: selectedProvider.category
       })
       .eq('id', selectedProvider.id);
 
@@ -330,17 +401,29 @@ const AdminPanel = () => {
               <p className="text-xs text-muted-foreground">Manage service providers</p>
             </div>
           </div>
+          {pendingProviders.length > 0 && (
+            <Badge variant="destructive" className="animate-pulse">
+              {pendingProviders.length} Pending
+            </Badge>
+          )}
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-5 space-y-5">
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <SpiritualCard variant="elevated">
             <SpiritualCardContent className="p-4 text-center">
               <Users className="w-6 h-6 mx-auto mb-2 text-primary" />
-              <p className="text-2xl font-bold text-foreground">{providers.length}</p>
-              <p className="text-xs text-muted-foreground">Total Providers</p>
+              <p className="text-2xl font-bold text-foreground">{approvedProviders.length}</p>
+              <p className="text-xs text-muted-foreground">Approved</p>
+            </SpiritualCardContent>
+          </SpiritualCard>
+          <SpiritualCard variant="elevated" className={pendingProviders.length > 0 ? 'ring-2 ring-amber-500' : ''}>
+            <SpiritualCardContent className="p-4 text-center">
+              <AlertCircle className="w-6 h-6 mx-auto mb-2 text-amber-500" />
+              <p className="text-2xl font-bold text-foreground">{pendingProviders.length}</p>
+              <p className="text-xs text-muted-foreground">Pending</p>
             </SpiritualCardContent>
           </SpiritualCard>
           <SpiritualCard variant="elevated">
@@ -368,10 +451,100 @@ const AdminPanel = () => {
           </SpiritualCard>
         </div>
 
+        {/* Pending Approvals Alert */}
+        {pendingProviders.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <SpiritualCard variant="elevated" className="border-2 border-amber-500/50 bg-amber-500/5">
+              <SpiritualCardContent className="p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <AlertCircle className="w-6 h-6 text-amber-500" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">Pending Provider Approvals</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {pendingProviders.length} provider(s) awaiting your approval
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  {pendingProviders.map((provider) => (
+                    <div 
+                      key={provider.id}
+                      className="flex items-center justify-between gap-4 p-3 rounded-lg bg-background border border-border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-gradient-spiritual flex items-center justify-center">
+                          {provider.avatar_url ? (
+                            <img 
+                              src={provider.avatar_url} 
+                              alt={provider.display_name || 'Provider'} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Sparkles className="w-5 h-5 text-primary-foreground" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-foreground">
+                            {provider.display_name || 'New Provider'}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {provider.specialty || 'No specialty'} • {provider.category || 'Uncategorized'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <SpiritualButton
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedProvider(provider);
+                            setShowEditDialog(true);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </SpiritualButton>
+                        <SpiritualButton
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRejectProvider(provider)}
+                          disabled={approvingId === provider.id}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </SpiritualButton>
+                        <SpiritualButton
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleApproveProvider(provider)}
+                          disabled={approvingId === provider.id}
+                        >
+                          {approvingId === provider.id ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                          ) : (
+                            <>
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Approve
+                            </>
+                          )}
+                        </SpiritualButton>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </SpiritualCardContent>
+            </SpiritualCard>
+          </motion.div>
+        )}
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="providers">Service Providers</TabsTrigger>
+            <TabsTrigger value="providers">Approved Providers ({approvedProviders.length})</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -412,7 +585,7 @@ const AdminPanel = () => {
                 <SpiritualCard variant="elevated">
                   <SpiritualCardContent className="p-8 text-center">
                     <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-                    <p className="text-muted-foreground">No providers found</p>
+                    <p className="text-muted-foreground">No approved providers found</p>
                   </SpiritualCardContent>
                 </SpiritualCard>
               ) : (
@@ -555,7 +728,12 @@ const AdminPanel = () => {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Provider</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              Edit Provider
+              {selectedProvider?.approval_status === 'pending' && (
+                <Badge variant="outline" className="text-amber-500 border-amber-500">Pending</Badge>
+              )}
+            </DialogTitle>
           </DialogHeader>
           
           {selectedProvider && (
@@ -616,6 +794,24 @@ const AdminPanel = () => {
                   onChange={(e) => setSelectedProvider({ ...selectedProvider, display_name: e.target.value })}
                   placeholder="Provider's display name"
                 />
+              </div>
+
+              {/* Category */}
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select 
+                  value={selectedProvider.category || ""} 
+                  onValueChange={(v) => setSelectedProvider({ ...selectedProvider, category: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -704,6 +900,34 @@ const AdminPanel = () => {
                   <Label>Verified</Label>
                 </div>
               </div>
+
+              {/* Approve/Reject for pending */}
+              {selectedProvider.approval_status === 'pending' && (
+                <div className="flex gap-2 pt-2 border-t border-border">
+                  <SpiritualButton
+                    variant="outline"
+                    className="flex-1 text-destructive"
+                    onClick={() => {
+                      handleRejectProvider(selectedProvider);
+                      setShowEditDialog(false);
+                    }}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject
+                  </SpiritualButton>
+                  <SpiritualButton
+                    variant="primary"
+                    className="flex-1"
+                    onClick={() => {
+                      handleApproveProvider(selectedProvider);
+                      setShowEditDialog(false);
+                    }}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve & Notify
+                  </SpiritualButton>
+                </div>
+              )}
             </div>
           )}
 
@@ -727,17 +951,18 @@ const AdminPanel = () => {
           
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              To add a new provider, they must first create an account and register as a Jotshi. 
-              You can then verify and manage their profile here.
+              Providers can register through the provider registration page. Once they submit their application, 
+              it will appear in the "Pending Approvals" section above.
             </p>
             
             <SpiritualCard variant="elevated" className="bg-muted/30">
               <SpiritualCardContent className="p-4">
                 <h4 className="font-medium text-foreground mb-2">Provider Registration Flow:</h4>
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>User creates account via /auth</li>
-                  <li>User registers as Jotshi via /jotshi-login</li>
-                  <li>Admin verifies profile here</li>
+                  <li>Provider creates account at <code className="text-primary">/auth</code></li>
+                  <li>Provider registers at <code className="text-primary">/provider-register</code></li>
+                  <li>Application appears here for approval</li>
+                  <li>Admin approves → provider gets email notification</li>
                 </ol>
               </SpiritualCardContent>
             </SpiritualCard>

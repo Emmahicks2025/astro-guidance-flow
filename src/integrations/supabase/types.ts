@@ -62,6 +62,8 @@ export type Database = {
       jotshi_profiles: {
         Row: {
           ai_personality: string | null
+          approval_status: string
+          approved_at: string | null
           avatar_url: string | null
           bio: string | null
           category: string | null
@@ -82,6 +84,8 @@ export type Database = {
         }
         Insert: {
           ai_personality?: string | null
+          approval_status?: string
+          approved_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           category?: string | null
@@ -102,6 +106,8 @@ export type Database = {
         }
         Update: {
           ai_personality?: string | null
+          approval_status?: string
+          approved_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           category?: string | null

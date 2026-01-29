@@ -17,6 +17,7 @@ import WalletPage from "./pages/Wallet";
 import SettingsPage from "./pages/Settings";
 import Explore from "./pages/Explore";
 import AdminPanel from "./pages/AdminPanel";
+import ProviderRegister from "./pages/ProviderRegister";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/provider-register" element={<ProviderRegister />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
