@@ -58,7 +58,8 @@ const TimeOfBirthStep = () => {
           className="space-y-4"
         >
           <SpiritualInput
-            type="time"
+            type="text"
+            placeholder="e.g., 10:30 AM or 22:15"
             value={userData.timeOfBirth}
             onChange={(e) => updateUserData('timeOfBirth', e.target.value)}
             className="text-center text-xl"
