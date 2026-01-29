@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { Star, ArrowLeft, User, Calendar, Clock, MapPin, Download, Share2 } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Star, ArrowLeft, User, Calendar, Clock, MapPin, Download, Share2, Scan, BookOpen, Languages } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
@@ -7,12 +8,27 @@ import { useOnboardingStore } from "@/stores/onboardingStore";
 import { format } from "date-fns";
 import NorthIndianKundliChart from "@/components/kundli/NorthIndianKundliChart";
 import PlanetaryTable from "@/components/kundli/PlanetaryTable";
+import KundliScanner from "@/components/kundli/KundliScanner";
+import KundliAnalysisDashboard from "@/components/kundli/KundliAnalysisDashboard";
 import { generateSampleKundli } from "@/lib/kundli";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+// Ganesha SVG icon for Hindu feel
+const GaneshaIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+  </svg>
+);
 
 const MyKundli = () => {
   const navigate = useNavigate();
   const { userData } = useOnboardingStore();
+  const [activeTab, setActiveTab] = useState<"my-kundli" | "scan">("my-kundli");
+  const [scannedAnalysis, setScannedAnalysis] = useState<any>(null);
+  const [useHindiTerms, setUseHindiTerms] = useState(false);
 
   // Generate Kundli based on user's actual birth data
   const kundliData = generateSampleKundli(
@@ -20,6 +36,14 @@ const MyKundli = () => {
     userData.timeOfBirth,
     userData.placeOfBirth
   );
+
+  const handleAnalysisComplete = (analysis: any) => {
+    setScannedAnalysis(analysis);
+  };
+
+  const handleBackFromAnalysis = () => {
+    setScannedAnalysis(null);
+  };
 
   return (
     <motion.div
@@ -38,10 +62,21 @@ const MyKundli = () => {
               <div className="w-10 h-10 rounded-full bg-gradient-spiritual flex items-center justify-center">
                 <Star className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-xl">My Kundli</span>
+              <span className="font-display font-bold text-xl">
+                {useHindiTerms ? "मेरी कुंडली" : "My Kundli"}
+              </span>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* Language Toggle */}
+            <div className="flex items-center gap-2 mr-2">
+              <Languages className="w-4 h-4 text-muted-foreground" />
+              <Switch
+                id="hindi-mode"
+                checked={useHindiTerms}
+                onCheckedChange={setUseHindiTerms}
+              />
+            </div>
             <SpiritualButton variant="ghost" size="icon" onClick={() => toast.info("Share feature coming soon!")}>
               <Share2 className="w-5 h-5" />
             </SpiritualButton>
@@ -52,93 +87,202 @@ const MyKundli = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* User Info */}
-        <SpiritualCard variant="spiritual" className="p-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-              <User className="w-8 h-8 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold font-display">{userData.fullName || 'Your Name'}</h2>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
-                <p className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {userData.dateOfBirth ? format(userData.dateOfBirth, 'PPP') : 'Not set'}
-                </p>
-                <p className="flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
-                  {userData.timeOfBirth || 'Not set'}
-                </p>
-                <p className="flex items-center gap-1 col-span-2">
-                  <MapPin className="w-4 h-4" />
-                  {userData.placeOfBirth || 'Not set'}
-                </p>
+      <main className="container mx-auto px-4 py-6">
+        {/* Tabs for My Kundli vs Scan */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-6">
+          <TabsList className="grid grid-cols-2 w-full bg-muted/50">
+            <TabsTrigger value="my-kundli" className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4" />
+              {useHindiTerms ? "जन्म कुंडली" : "Birth Chart"}
+            </TabsTrigger>
+            <TabsTrigger value="scan" className="flex items-center gap-2">
+              <Scan className="w-4 h-4" />
+              {useHindiTerms ? "कुंडली स्कैन" : "Scan Kundli"}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* My Kundli Tab */}
+          <TabsContent value="my-kundli" className="mt-6 space-y-6">
+            {/* User Info */}
+            <SpiritualCard variant="spiritual" className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="w-8 h-8 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold font-display">{userData.fullName || 'Your Name'}</h2>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-sm text-muted-foreground">
+                    <p className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {userData.dateOfBirth ? format(userData.dateOfBirth, 'PPP') : 'Not set'}
+                    </p>
+                    <p className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      {userData.timeOfBirth || 'Not set'}
+                    </p>
+                    <p className="flex items-center gap-1 col-span-2">
+                      <MapPin className="w-4 h-4" />
+                      {userData.placeOfBirth || 'Not set'}
+                    </p>
+                  </div>
+                </div>
               </div>
+            </SpiritualCard>
+
+            {/* Kundli Chart - Now with real visualization */}
+            <SpiritualCard variant="elevated" className="overflow-hidden">
+              <SpiritualCardContent className="p-6">
+                <h3 className="text-lg font-bold font-display mb-4 text-center flex items-center justify-center gap-2">
+                  <GaneshaIcon />
+                  {useHindiTerms ? "जन्म कुंडली (Birth Chart)" : "Janam Kundli (Birth Chart)"}
+                </h3>
+                <div className="flex justify-center">
+                  <NorthIndianKundliChart data={kundliData} size={280} />
+                </div>
+              </SpiritualCardContent>
+            </SpiritualCard>
+
+            {/* Lagna Info */}
+            <SpiritualCard variant="golden" className="p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                {useHindiTerms ? "लग्न (Lagna)" : "Lagna (Ascendant)"}
+              </p>
+              <p className="text-2xl font-bold text-accent">{kundliData.lagnaSign}</p>
+              <p className="text-sm mt-1">
+                {useHindiTerms ? "चंद्र नक्षत्र:" : "Moon Nakshatra:"}{" "}
+                <span className="font-medium">{kundliData.nakshatras.moon}</span>{" "}
+                ({useHindiTerms ? "पद" : "Pada"} {kundliData.nakshatras.pada})
+              </p>
+            </SpiritualCard>
+
+            {/* Dasha Info */}
+            {kundliData.dashaInfo && (
+              <SpiritualCard variant="mystic" className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {useHindiTerms ? "वर्तमान महादशा" : "Current Maha Dasha"}
+                    </p>
+                    <p className="text-xl font-bold">{kundliData.dashaInfo.currentMahaDasha}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">
+                      {useHindiTerms ? "अवधि" : "Period"}
+                    </p>
+                    <p className="font-medium">{kundliData.dashaInfo.startDate} - {kundliData.dashaInfo.endDate}</p>
+                  </div>
+                </div>
+              </SpiritualCard>
+            )}
+
+            {/* Planet Positions - Using the component */}
+            <section className="space-y-3">
+              <h3 className="text-lg font-bold font-display flex items-center gap-2">
+                <Star className="w-5 h-5 text-accent" />
+                {useHindiTerms ? "ग्रह स्थिति" : "Planetary Positions"}
+              </h3>
+              <PlanetaryTable data={kundliData} />
+            </section>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              <SpiritualButton 
+                variant="primary" 
+                size="lg" 
+                className="w-full"
+                onClick={() => setActiveTab("scan")}
+              >
+                <Scan className="w-4 h-4 mr-2" />
+                {useHindiTerms ? "AI विश्लेषण" : "AI Analysis"}
+              </SpiritualButton>
+              <SpiritualButton 
+                variant="outline" 
+                size="lg" 
+                className="w-full"
+                onClick={() => toast.info("Dasha periods coming soon!")}
+              >
+                {useHindiTerms ? "दशा विवरण" : "Dasha Periods"}
+              </SpiritualButton>
             </div>
-          </div>
-        </SpiritualCard>
+          </TabsContent>
 
-        {/* Kundli Chart - Now with real visualization */}
-        <SpiritualCard variant="elevated" className="overflow-hidden">
-          <SpiritualCardContent className="p-6">
-            <h3 className="text-lg font-bold font-display mb-4 text-center">Janam Kundli (Birth Chart)</h3>
-            <div className="flex justify-center">
-              <NorthIndianKundliChart data={kundliData} size={280} />
-            </div>
-          </SpiritualCardContent>
-        </SpiritualCard>
+          {/* Scan Kundli Tab */}
+          <TabsContent value="scan" className="mt-6">
+            <AnimatePresence mode="wait">
+              {scannedAnalysis ? (
+                <motion.div
+                  key="analysis"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <KundliAnalysisDashboard 
+                    analysis={scannedAnalysis} 
+                    onBack={handleBackFromAnalysis}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="scanner"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="space-y-6"
+                >
+                  {/* Info banner */}
+                  <SpiritualCard variant="mystic" className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
+                        <GaneshaIcon />
+                      </div>
+                      <div>
+                        <h3 className="font-bold font-display">
+                          {useHindiTerms ? "AI ज्योतिषी विश्लेषण" : "AI Jotshi Analysis"}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {useHindiTerms 
+                            ? "अपनी हस्तलिखित या मुद्रित कुंडली की तस्वीर अपलोड करें। हमारा AI आपके चार्ट का विश्लेषण करेगा।"
+                            : "Upload a photo of your handwritten or printed Kundli. Our AI will analyze your chart and provide a complete Vedic reading with doshas, yogas, and personalized remedies."}
+                        </p>
+                      </div>
+                    </div>
+                  </SpiritualCard>
 
-        {/* Lagna Info */}
-        <SpiritualCard variant="golden" className="p-4 text-center">
-          <p className="text-sm text-muted-foreground">Lagna (Ascendant)</p>
-          <p className="text-2xl font-bold text-accent">{kundliData.lagnaSign}</p>
-          <p className="text-sm mt-1">
-            Moon Nakshatra: <span className="font-medium">{kundliData.nakshatras.moon}</span> (Pada {kundliData.nakshatras.pada})
-          </p>
-        </SpiritualCard>
+                  {/* Scanner component */}
+                  <KundliScanner 
+                    onAnalysisComplete={handleAnalysisComplete}
+                    birthDate={userData.dateOfBirth ? format(userData.dateOfBirth, 'yyyy-MM-dd') : undefined}
+                  />
 
-        {/* Dasha Info */}
-        {kundliData.dashaInfo && (
-          <SpiritualCard variant="mystic" className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Current Maha Dasha</p>
-                <p className="text-xl font-bold">{kundliData.dashaInfo.currentMahaDasha}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Period</p>
-                <p className="font-medium">{kundliData.dashaInfo.startDate} - {kundliData.dashaInfo.endDate}</p>
-              </div>
-            </div>
-          </SpiritualCard>
-        )}
-
-        {/* Planet Positions - Using the component */}
-        <section className="space-y-3">
-          <h3 className="text-lg font-bold font-display">Planetary Positions</h3>
-          <PlanetaryTable data={kundliData} />
-        </section>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <SpiritualButton 
-            variant="primary" 
-            size="lg" 
-            className="w-full"
-            onClick={() => toast.info("Detailed analysis coming soon!")}
-          >
-            Detailed Analysis
-          </SpiritualButton>
-          <SpiritualButton 
-            variant="outline" 
-            size="lg" 
-            className="w-full"
-            onClick={() => toast.info("Dasha periods coming soon!")}
-          >
-            Dasha Periods
-          </SpiritualButton>
-        </div>
+                  {/* Features list */}
+                  <SpiritualCard variant="default" className="p-4">
+                    <h4 className="font-bold text-sm mb-3">
+                      {useHindiTerms ? "AI क्या पढ़ेगा:" : "What AI will analyze:"}
+                    </h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        {useHindiTerms ? "दोष पहचान (मांगलिक, काल सर्प, साढ़े साती)" : "Dosha Detection (Manglik, Kaal Sarp, Sade Sati)"}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                        {useHindiTerms ? "शुभ योग (राज योग, गजकेसरी योग)" : "Auspicious Yogas (Raj Yoga, Gaj Kesari)"}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
+                        {useHindiTerms ? "महादशा और अंतर्दशा गणना" : "Mahadasha & Antardasha calculation"}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        {useHindiTerms ? "व्यक्तिगत उपाय (मंत्र, दान, रत्न)" : "Personalized Remedies (Mantras, Daan, Gemstones)"}
+                      </li>
+                    </ul>
+                  </SpiritualCard>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </TabsContent>
+        </Tabs>
       </main>
     </motion.div>
   );
