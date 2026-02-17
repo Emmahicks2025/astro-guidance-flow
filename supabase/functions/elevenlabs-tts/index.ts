@@ -25,8 +25,9 @@ serve(async (req) => {
       throw new Error("Text and voiceId are required");
     }
 
+    // Use streaming endpoint + turbo model for lowest latency
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?output_format=mp3_22050_32`,
       {
         method: "POST",
         headers: {
@@ -35,12 +36,11 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           text,
-          model_id: "eleven_multilingual_v2",
+          model_id: "eleven_turbo_v2_5",
           voice_settings: {
-            stability: 0.5,
+            stability: 0.4,
             similarity_boost: 0.75,
-            style: 0.5,
-            use_speaker_boost: true,
+            speed: 1.1,
           },
         }),
       }
@@ -52,13 +52,12 @@ serve(async (req) => {
       throw new Error(`TTS request failed: ${response.status}`);
     }
 
-    const audioBuffer = await response.arrayBuffer();
-    console.log("TTS audio generated, size:", audioBuffer.byteLength);
-
-    return new Response(audioBuffer, {
+    // Stream the audio directly back to client
+    return new Response(response.body, {
       headers: {
         ...corsHeaders,
         "Content-Type": "audio/mpeg",
+        "Transfer-Encoding": "chunked",
       },
     });
   } catch (error) {
