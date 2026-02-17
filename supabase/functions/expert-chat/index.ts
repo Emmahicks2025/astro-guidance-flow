@@ -57,6 +57,7 @@ CRITICAL RULES FOR ALL RESPONSES:
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: apiMessages,
+        max_tokens: 4096,
         stream: true,
       }),
     });
