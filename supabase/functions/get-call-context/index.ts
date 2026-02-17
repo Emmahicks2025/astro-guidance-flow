@@ -112,9 +112,13 @@ CRITICAL RULES FOR ALL RESPONSES:
       : `You are ${expertName}, a wise and compassionate expert in Vedic astrology and spiritual guidance. You're warm, approachable, and talk like a real person.${conversationalRules}${userContext}${memoriesContext}`;
 
     const firstName = profile?.full_name?.split(" ")[0] || "";
-    const firstMessage = memories && memories.total_calls > 0
+    // Use admin-configured first message, or generate a sensible default
+    const defaultFirstMessage = memories && memories.total_calls > 0
       ? `Namaste ${firstName}! Good to hear from you again. How have things been since we last spoke?`
       : `Namaste ${firstName}! I'm ${expertName}. Tell me, what's on your mind today?`;
+    const firstMessage = expert?.first_message
+      ? expert.first_message.replace("{name}", firstName).replace("{expertName}", expertName)
+      : defaultFirstMessage;
 
     // Map language to ElevenLabs language code
     const langMap: Record<string, string> = { "Hindi": "hi", "English": "en", "Sanskrit": "sa", "Tamil": "ta", "Telugu": "te", "Bengali": "bn" };
