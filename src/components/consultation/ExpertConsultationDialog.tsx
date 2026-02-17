@@ -11,6 +11,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditPaywall } from "@/components/billing/CreditPaywall";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useConversation } from "@elevenlabs/react";
@@ -56,6 +58,7 @@ export function ExpertConsultationDialog({
   initialTab = 'chat' 
 }: ExpertConsultationDialogProps) {
   const { user } = useAuth();
+  const { balance, deductCredits } = useCredits();
   const [activeTab, setActiveTab] = useState<'chat' | 'call'>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -65,6 +68,8 @@ export function ExpertConsultationDialog({
   const [callDuration, setCallDuration] = useState(0);
   const [isConnecting, setIsConnecting] = useState(false);
   const [consultationId, setConsultationId] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallContext, setPaywallContext] = useState<"chat" | "call">("chat");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const prevOpenRef = useRef(false);
@@ -263,6 +268,12 @@ export function ExpertConsultationDialog({
       toast.error("No expert selected.");
       return;
     }
+    // Credit check: need at least 1 minute worth of call credits
+    if (balance < 8) {
+      setPaywallContext("call");
+      setShowPaywall(true);
+      return;
+    }
 
     setIsConnecting(true);
     startRingtone();
@@ -393,6 +404,12 @@ export function ExpertConsultationDialog({
   const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading || !expert) return;
 
+    // Credit check for chat
+    if (balance < 1) {
+      setPaywallContext("chat");
+      setShowPaywall(true);
+      return;
+    }
     const userMessage: Message = { role: 'user', content: inputMessage.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
@@ -499,6 +516,7 @@ export function ExpertConsultationDialog({
   const isConnected = conversation.status === "connected";
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(open) => {
       if (!open && isCallActive) endCall();
       if (!open && consultationId) {
@@ -743,5 +761,14 @@ export function ExpertConsultationDialog({
         </Tabs>
       </DialogContent>
     </Dialog>
+
+    <CreditPaywall
+      open={showPaywall}
+      onOpenChange={setShowPaywall}
+      currentBalance={balance}
+      creditsNeeded={paywallContext === "call" ? 8 : 1}
+      context={paywallContext}
+    />
+    </>
   );
 }
