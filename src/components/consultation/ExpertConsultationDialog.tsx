@@ -438,16 +438,19 @@ export function ExpertConsultationDialog({
       return;
     }
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      // CRITICAL: getUserMedia must be called directly in click handler
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Stop tracks immediately — SpeechRecognition manages its own mic access
+      stream.getTracks().forEach(t => t.stop());
+      
       const recognition = initSpeechRecognition();
       if (!recognition) return;
       recognitionRef.current = recognition;
       setIsCallActive(true);
       setCallMessages([]);
       toast.success(`Connected with ${expert.name}`);
-      setTimeout(() => {
-        try { recognition.start(); setIsListening(true); } catch {}
-      }, 500);
+      // Start recognition directly — no setTimeout to avoid losing gesture context
+      try { recognition.start(); setIsListening(true); } catch {}
     } catch {
       toast.error("Please enable microphone access to use voice calls.");
     }
