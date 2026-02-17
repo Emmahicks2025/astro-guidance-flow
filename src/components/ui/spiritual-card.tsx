@@ -9,9 +9,9 @@ const spiritualCardVariants = cva(
       variant: {
         default: "bg-card border border-border shadow-soft",
         elevated: "bg-card border border-border shadow-lg hover:shadow-xl",
-        spiritual: "bg-gradient-to-br from-primary/5 to-secondary/5 border border-primary/20 shadow-spiritual",
-        mystic: "bg-gradient-to-br from-secondary/10 to-secondary/5 border border-secondary/20 shadow-mystic",
-        golden: "bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/30 shadow-golden",
+        spiritual: "bg-gradient-spiritual text-primary-foreground shadow-spiritual",
+        mystic: "bg-gradient-mystic text-secondary-foreground shadow-mystic",
+        golden: "bg-gradient-golden text-accent-foreground shadow-golden",
         glass: "bg-card/60 backdrop-blur-lg border border-border/50 shadow-soft",
       },
       interactive: {
