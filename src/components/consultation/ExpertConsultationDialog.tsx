@@ -437,6 +437,26 @@ export function ExpertConsultationDialog({
       toast.error("Voice not configured for this expert. Please use chat instead.");
       return;
     }
+
+    // Check if getUserMedia is available (blocked in some iframes)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error("Microphone not available. Please open the app in a new tab or on your published site.", { duration: 5000 });
+      return;
+    }
+
+    // Check permission status first
+    try {
+      if (navigator.permissions) {
+        const permStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        if (permStatus.state === 'denied') {
+          toast.error("Microphone access is blocked. Please click the lock icon in your browser's address bar → Site settings → Allow Microphone, then reload.", { duration: 8000 });
+          return;
+        }
+      }
+    } catch {
+      // permissions.query may not support 'microphone' in all browsers — continue
+    }
+
     try {
       // CRITICAL: getUserMedia must be called directly in click handler
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -449,10 +469,16 @@ export function ExpertConsultationDialog({
       setIsCallActive(true);
       setCallMessages([]);
       toast.success(`Connected with ${expert.name}`);
-      // Start recognition directly — no setTimeout to avoid losing gesture context
       try { recognition.start(); setIsListening(true); } catch {}
-    } catch {
-      toast.error("Please enable microphone access to use voice calls.");
+    } catch (err: any) {
+      console.error("Microphone access error:", err?.name, err?.message);
+      if (err?.name === 'NotAllowedError') {
+        toast.error("Microphone permission denied. Please allow microphone access in your browser settings and reload the page.", { duration: 6000 });
+      } else if (err?.name === 'NotFoundError') {
+        toast.error("No microphone found. Please connect a microphone and try again.", { duration: 5000 });
+      } else {
+        toast.error("Microphone access failed. Try opening the app directly in a new browser tab.", { duration: 5000 });
+      }
     }
   };
 
