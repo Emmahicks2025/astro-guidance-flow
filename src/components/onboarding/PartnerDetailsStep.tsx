@@ -116,7 +116,7 @@ const PartnerDetailsStep = () => {
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -50 }}
-      className="flex flex-col min-h-screen px-6 pt-12 pb-8 safe-area-top"
+      className="flex flex-col flex-1 px-6"
     >
       <OnboardingProgress currentStep={7} totalSteps={8} />
 

@@ -8,7 +8,7 @@ interface OnboardingProgressProps {
 
 const OnboardingProgress = ({ currentStep, totalSteps }: OnboardingProgressProps) => {
   return (
-    <div className="mb-8">
+    <div className="mb-8 pt-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm text-muted-foreground">Step {currentStep} of {totalSteps}</span>
         <span className="text-sm font-medium text-primary">
