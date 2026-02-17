@@ -74,6 +74,7 @@ export function ExpertConsultationDialog({
   const isSpeakingRef = useRef(false);
   const callMessagesRef = useRef<Message[]>([]);
   const prevOpenRef = useRef(false);
+  const getAIResponseRef = useRef<(text: string) => void>(() => {});
 
   // Treat as AI if has ai_personality OR has no real user_id (admin-created without linked user)
   const isAI = !!expert?.ai_personality || !expert?.user_id;
@@ -200,7 +201,6 @@ export function ExpertConsultationDialog({
     if (!expert || !expert.voice_id) return;
     const userMessage: Message = { role: 'user', content: userText };
     callMessagesRef.current = [...callMessagesRef.current, userMessage];
-    setCallMessages([...callMessagesRef.current]);
 
     // Stop listening while processing
     if (recognitionRef.current) try { recognitionRef.current.stop(); } catch {}
@@ -256,7 +256,6 @@ export function ExpertConsultationDialog({
 
       const assistantMessage: Message = { role: 'assistant', content: fullResponse };
       callMessagesRef.current = [...callMessagesRef.current, assistantMessage];
-      setCallMessages([...callMessagesRef.current]);
 
       setIsSpeaking(true);
       isSpeakingRef.current = true;
@@ -317,6 +316,9 @@ export function ExpertConsultationDialog({
     }
   }, [expert]);
 
+  // Keep ref in sync so speech recognition always calls latest handler
+  getAIResponseRef.current = getAIResponseAndSpeak;
+
   const initSpeechRecognition = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -325,21 +327,19 @@ export function ExpertConsultationDialog({
     }
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
-    recognition.interimResults = true;
+    recognition.interimResults = false; // Only final results to reduce lag
     recognition.lang = 'en-IN';
-
-    let finalTranscript = '';
+    recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: any) => {
-      let transcript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
-      }
-      if (event.results[event.results.length - 1].isFinal) {
-        finalTranscript = transcript.trim();
+      const lastResult = event.results[event.results.length - 1];
+      if (lastResult.isFinal) {
+        const transcript = lastResult[0].transcript.trim();
         setIsListening(false);
-        if (finalTranscript) getAIResponseAndSpeak(finalTranscript);
-        finalTranscript = '';
+        if (transcript) {
+          // Use ref to always get latest handler
+          getAIResponseRef.current(transcript);
+        }
       }
     };
 
@@ -357,17 +357,16 @@ export function ExpertConsultationDialog({
     recognition.onend = () => {
       setIsListening(false);
       if (isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current) {
-        // Small delay before restarting to avoid rapid fire
         setTimeout(() => {
           if (isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current && recognitionRef.current) {
             try { recognitionRef.current.start(); setIsListening(true); } catch {}
           }
-        }, 300);
+        }, 200);
       }
     };
 
     return recognition;
-  }, [getAIResponseAndSpeak]);
+  }, []); // No dependencies — uses refs internally
 
   // Send message — AI or human
   const sendMessage = useCallback(async () => {
