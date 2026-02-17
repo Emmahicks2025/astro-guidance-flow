@@ -176,7 +176,7 @@ const SettingsPage = () => {
     {
       title: t.support,
       items: [
-        { icon: HelpCircle, label: t.helpFaq, action: () => setShowHelpDialog(true) },
+        { icon: HelpCircle, label: t.helpFaq, action: () => navigate('/help') },
         { icon: Star, label: t.rateUs, action: () => {
           toast.success("Thank you for your support! ⭐");
         }},
