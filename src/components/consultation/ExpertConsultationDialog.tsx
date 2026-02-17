@@ -69,6 +69,10 @@ export function ExpertConsultationDialog({
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isCallActiveRef = useRef(false);
+  const isMutedRef = useRef(false);
+  const isSpeakingRef = useRef(false);
+  const callMessagesRef = useRef<Message[]>([]);
   const prevOpenRef = useRef(false);
 
   // Treat as AI if has ai_personality OR has no real user_id (admin-created without linked user)
@@ -195,7 +199,12 @@ export function ExpertConsultationDialog({
   const getAIResponseAndSpeak = useCallback(async (userText: string) => {
     if (!expert || !expert.voice_id) return;
     const userMessage: Message = { role: 'user', content: userText };
-    setCallMessages(prev => [...prev, userMessage]);
+    callMessagesRef.current = [...callMessagesRef.current, userMessage];
+    setCallMessages([...callMessagesRef.current]);
+
+    // Stop listening while processing
+    if (recognitionRef.current) try { recognitionRef.current.stop(); } catch {}
+    setIsListening(false);
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -205,7 +214,7 @@ export function ExpertConsultationDialog({
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ 
-          messages: [...callMessages, userMessage],
+          messages: callMessagesRef.current,
           expertId: expert.id,
           expertName: expert.name,
           expertPersonality: expert.ai_personality
@@ -243,10 +252,14 @@ export function ExpertConsultationDialog({
         }
       }
 
+      if (!fullResponse.trim() || !isCallActiveRef.current) return;
+
       const assistantMessage: Message = { role: 'assistant', content: fullResponse };
-      setCallMessages(prev => [...prev, assistantMessage]);
+      callMessagesRef.current = [...callMessagesRef.current, assistantMessage];
+      setCallMessages([...callMessagesRef.current]);
 
       setIsSpeaking(true);
+      isSpeakingRef.current = true;
       const ttsResponse = await fetch(TTS_URL, {
         method: "POST",
         headers: {
@@ -259,36 +272,50 @@ export function ExpertConsultationDialog({
 
       if (ttsResponse.ok) {
         const audioBlob = await ttsResponse.blob();
-        console.log("TTS audio blob size:", audioBlob.size, "type:", audioBlob.type);
         const audioUrl = URL.createObjectURL(audioBlob);
         if (audioRef.current) audioRef.current.pause();
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
         audio.onended = () => {
           setIsSpeaking(false);
+          isSpeakingRef.current = false;
           URL.revokeObjectURL(audioUrl);
-          if (isCallActive && !isMuted && recognitionRef.current) {
+          // Auto-restart listening after speaking
+          if (isCallActiveRef.current && !isMutedRef.current && recognitionRef.current) {
             try { recognitionRef.current.start(); setIsListening(true); } catch {}
           }
         };
         audio.onerror = (e) => { 
           console.error("Audio playback error:", e);
-          setIsSpeaking(false); 
-          URL.revokeObjectURL(audioUrl); 
+          setIsSpeaking(false);
+          isSpeakingRef.current = false;
+          URL.revokeObjectURL(audioUrl);
+          // Restart listening even on error
+          if (isCallActiveRef.current && !isMutedRef.current && recognitionRef.current) {
+            try { recognitionRef.current.start(); setIsListening(true); } catch {}
+          }
         };
         await audio.play();
       } else {
         const errText = await ttsResponse.text();
         console.error("TTS response error:", ttsResponse.status, errText);
         setIsSpeaking(false);
-        toast.error("Voice synthesis failed. Using text response only.");
+        isSpeakingRef.current = false;
+        // Restart listening on TTS failure
+        if (isCallActiveRef.current && !isMutedRef.current && recognitionRef.current) {
+          try { recognitionRef.current.start(); setIsListening(true); } catch {}
+        }
       }
     } catch (error) {
       console.error("Call AI error:", error);
       setIsSpeaking(false);
-      toast.error("Failed to get response");
+      isSpeakingRef.current = false;
+      // Restart listening on error
+      if (isCallActiveRef.current && !isMutedRef.current && recognitionRef.current) {
+        try { recognitionRef.current.start(); setIsListening(true); } catch {}
+      }
     }
-  }, [expert, callMessages, isCallActive, isMuted]);
+  }, [expert]);
 
   const initSpeechRecognition = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -300,25 +327,45 @@ export function ExpertConsultationDialog({
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = 'en-IN';
+
+    let finalTranscript = '';
+
     recognition.onresult = (event: any) => {
       let transcript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
       }
-      setCurrentTranscript(transcript);
       if (event.results[event.results.length - 1].isFinal) {
+        finalTranscript = transcript.trim();
         setIsListening(false);
-        if (transcript.trim()) getAIResponseAndSpeak(transcript.trim());
-        setCurrentTranscript("");
+        if (finalTranscript) getAIResponseAndSpeak(finalTranscript);
+        finalTranscript = '';
       }
     };
+
     recognition.onerror = (event: any) => {
+      console.log("Speech recognition error:", event.error);
+      if (event.error === 'not-allowed') {
+        toast.error("Microphone permission denied.");
+        isCallActiveRef.current = false;
+        setIsCallActive(false);
+      }
+      // For 'no-speech' or 'aborted', onend will auto-restart
+    };
+
+    // Auto-restart on end (silence timeout, etc.) — unless speaking or muted
+    recognition.onend = () => {
       setIsListening(false);
-      if (event.error !== 'no-speech' && event.error !== 'aborted') {
-        toast.error("Speech recognition error. Please try again.");
+      if (isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current) {
+        // Small delay before restarting to avoid rapid fire
+        setTimeout(() => {
+          if (isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current && recognitionRef.current) {
+            try { recognitionRef.current.start(); setIsListening(true); } catch {}
+          }
+        }, 300);
       }
     };
-    recognition.onend = () => setIsListening(false);
+
     return recognition;
   }, [getAIResponseAndSpeak]);
 
@@ -476,6 +523,8 @@ export function ExpertConsultationDialog({
       if (!recognition) return;
       recognitionRef.current = recognition;
       setIsCallActive(true);
+      isCallActiveRef.current = true;
+      callMessagesRef.current = [];
       setCallMessages([]);
       toast.success(`Connected with ${expert.name}`);
       try { recognition.start(); setIsListening(true); } catch {}
@@ -492,22 +541,26 @@ export function ExpertConsultationDialog({
   };
 
   const endCall = () => {
+    isCallActiveRef.current = false;
     if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} recognitionRef.current = null; }
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     setIsCallActive(false);
     setIsListening(false);
     setIsSpeaking(false);
+    isSpeakingRef.current = false;
     setCurrentTranscript("");
     toast.info(`Call ended - Duration: ${formatDuration(callDuration)}`);
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
-    if (!isMuted) {
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    isMutedRef.current = newMuted;
+    if (newMuted) {
       if (recognitionRef.current) try { recognitionRef.current.stop(); } catch {}
       setIsListening(false);
     } else {
-      if (!isSpeaking && recognitionRef.current) {
+      if (!isSpeakingRef.current && recognitionRef.current) {
         try { recognitionRef.current.start(); setIsListening(true); } catch {}
       }
     }
