@@ -664,10 +664,10 @@ export function ExpertConsultationDialog({
               </div>
 
               {isCallActive && (
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  {isListening && <p className="text-green-500 animate-pulse">🎙 Listening...</p>}
+                <div className="text-sm text-muted-foreground">
                   {isSpeaking && <p className="text-primary animate-pulse">🔊 Speaking...</p>}
-                  {currentTranscript && <p className="italic text-foreground">"{currentTranscript}"</p>}
+                  {isListening && !isSpeaking && <p className="text-green-500 animate-pulse">🎙 Listening...</p>}
+                  {!isListening && !isSpeaking && <p className="text-muted-foreground">Connecting...</p>}
                 </div>
               )}
 
@@ -697,22 +697,6 @@ export function ExpertConsultationDialog({
                   </>
                 )}
               </div>
-
-              {/* Call Messages */}
-              {callMessages.length > 0 && (
-                <ScrollArea className="h-32 w-full text-left">
-                  <div className="space-y-2">
-                    {callMessages.map((msg, i) => (
-                      <div key={i} className={`text-xs p-2 rounded ${
-                        msg.role === 'user' ? 'bg-primary/10 text-primary' : 'bg-muted text-foreground'
-                      }`}>
-                        <span className="font-medium">{msg.role === 'user' ? 'You' : expert.name}:</span>{' '}
-                        {msg.content.substring(0, 100)}{msg.content.length > 100 ? '...' : ''}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
             </div>
           </TabsContent>
         </Tabs>
