@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles, Star, Users, Hand, Heart, Upload, CheckCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Star, Users, Hand, Heart, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
@@ -30,7 +30,6 @@ const ProviderRegister = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
@@ -117,8 +116,8 @@ const ProviderRegister = () => {
           throw error;
         }
       } else {
-        setSubmitted(true);
         toast.success("Application submitted successfully!");
+        navigate('/astrologer');
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -141,56 +140,7 @@ const ProviderRegister = () => {
     );
   }
 
-  if (submitted) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 p-4"
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", delay: 0.2 }}
-          className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center"
-        >
-          <CheckCircle className="w-10 h-10 text-green-500" />
-        </motion.div>
-        
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">Application Submitted!</h2>
-          <p className="text-muted-foreground max-w-md">
-            Thank you for registering as a service provider. Our admin team will review your application 
-            and you'll receive an email notification once approved.
-          </p>
-        </div>
-
-        <SpiritualCard variant="elevated" className="max-w-md w-full">
-          <SpiritualCardContent className="p-6 text-center">
-            <h3 className="font-semibold text-foreground mb-2">What's Next?</h3>
-            <ul className="text-sm text-muted-foreground space-y-2 text-left">
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">1.</span>
-                Our team will review your profile within 24-48 hours
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">2.</span>
-                You'll receive an email when your application is approved
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">3.</span>
-                Once approved, you can start accepting consultations
-              </li>
-            </ul>
-          </SpiritualCardContent>
-        </SpiritualCard>
-
-        <SpiritualButton variant="outline" onClick={() => navigate('/')}>
-          Return Home
-        </SpiritualButton>
-      </motion.div>
-    );
-  }
+  // Removed old submitted state - now navigates to /astrologer
 
   return (
     <motion.div
