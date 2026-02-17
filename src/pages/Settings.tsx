@@ -63,6 +63,7 @@ const SettingsPage = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [profileName, setProfileName] = useState(userData.fullName || '');
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [language, setLanguage] = useState('English');
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
@@ -94,10 +95,11 @@ const SettingsPage = () => {
   const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image too large. Max 5MB.");
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Image too large. Max 50MB.");
       return;
     }
+    setAvatarFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       setProfileAvatar(reader.result as string);
@@ -113,10 +115,20 @@ const SettingsPage = () => {
     setIsSavingProfile(true);
     try {
       const updates: Record<string, string | null> = { full_name: profileName };
-      // If avatar is a data URL (new upload), we store it directly for now
-      if (profileAvatar && profileAvatar.startsWith('data:')) {
-        updates.avatar_url = profileAvatar;
+      
+      // Upload avatar to storage if changed
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const filePath = `${user.id}/avatar.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('user-avatars')
+          .upload(filePath, avatarFile, { upsert: true });
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('user-avatars').getPublicUrl(filePath);
+        updates.avatar_url = urlData.publicUrl;
+        setAvatarFile(null);
       }
+      
       const { error } = await supabase.from('profiles').update(updates).eq('user_id', user.id);
       if (error) throw error;
       toast.success("Profile updated successfully!");
