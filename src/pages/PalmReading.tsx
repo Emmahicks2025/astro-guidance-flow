@@ -263,24 +263,28 @@ const PalmReading = () => {
                         </SpiritualButton>
                       </div>
                       {isAnalyzing && (
-                        <motion.div
-                          key={analyzingMsgIndex}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center"
-                        >
-                          <p className="text-sm font-medium text-primary">{analyzingMessages[analyzingMsgIndex]}</p>
+                        <div className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
+                          <AnimatePresence mode="wait">
+                            <motion.p
+                              key={analyzingMsgIndex}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="text-sm font-medium text-primary"
+                            >
+                              {analyzingMessages[analyzingMsgIndex]}
+                            </motion.p>
+                          </AnimatePresence>
                           <p className="text-xs text-muted-foreground mt-2">This may take 15-30 seconds. Please wait...</p>
                           <div className="mt-3 w-full h-1.5 rounded-full bg-muted overflow-hidden">
                             <motion.div
                               className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
                               initial={{ width: "5%" }}
-                              animate={{ width: "90%" }}
-                              transition={{ duration: 25, ease: "linear" }}
+                              animate={{ width: "95%" }}
+                              transition={{ duration: 30, ease: "linear" }}
                             />
                           </div>
-                        </motion.div>
+                        </div>
                       )}
                     </div>
                   ) : (
