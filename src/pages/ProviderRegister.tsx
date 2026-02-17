@@ -19,21 +19,12 @@ const categories = [
   { value: "relationship", label: "Relationship Expert", icon: Heart, description: "Marriage counseling, Love guidance" }
 ];
 
-const specialties = [
-  "Vedic Astrology",
-  "Nadi Astrology",
-  "KP Astrology",
-  "Lal Kitab",
-  "Palmistry",
-  "Numerology",
-  "Tarot Reading",
-  "Vastu Shastra",
-  "Marriage Counseling",
-  "Relationship Expert",
-  "Kundli Matching",
-  "Dasha Analysis",
-  "Remedial Astrology"
-];
+const specialtiesByCategory: Record<string, string[]> = {
+  astrologer: ["Vedic Astrology", "Nadi Astrology", "KP Astrology", "Lal Kitab", "Numerology", "Tarot Reading", "Vastu Shastra", "Remedial Astrology"],
+  jotshi: ["Kundli Matching", "Dasha Analysis", "Vedic Astrology", "Lal Kitab", "Numerology"],
+  palmist: ["Palmistry", "Numerology", "Hasta Shastra"],
+  relationship: ["Marriage Counseling", "Relationship Expert", "Love Guidance", "Compatibility Analysis"]
+};
 
 const ProviderRegister = () => {
   const navigate = useNavigate();
@@ -240,7 +231,7 @@ const ProviderRegister = () => {
                     type="button"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setFormData({ ...formData, category: cat.value })}
+                    onClick={() => setFormData({ ...formData, category: cat.value, specialty: "" })}
                     className={`p-4 rounded-xl border-2 transition-all text-left ${
                       isSelected
                         ? 'border-primary bg-primary/10'
@@ -306,12 +297,13 @@ const ProviderRegister = () => {
                 <Select 
                   value={formData.specialty} 
                   onValueChange={(v) => setFormData({ ...formData, specialty: v })}
+                  disabled={!formData.category}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select your specialty" />
+                    <SelectValue placeholder={formData.category ? "Select your specialty" : "Select a category first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {specialties.map(s => (
+                    {(specialtiesByCategory[formData.category] || []).map(s => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
                   </SelectContent>
