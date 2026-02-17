@@ -582,84 +582,74 @@ export function ExpertConsultationDialog({
 
           {/* Call Tab — Phone-style full layout */}
           <TabsContent value="call" className="flex-1 flex flex-col m-0 p-0 overflow-hidden">
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-background via-background to-muted/30 py-4 px-6">
-              {/* Top section — avatar & info */}
-              <div className="flex flex-col items-center gap-3">
-                {/* Ringing ripple rings */}
+            <div className="flex-1 flex flex-col items-center justify-between bg-gradient-to-b from-background to-muted/20 px-6 py-6">
+              {/* Avatar & Info */}
+              <div className="flex flex-col items-center gap-2 pt-2">
                 <div className="relative">
                   {(isConnecting || isCallActive) && (
                     <>
                       <motion.div
-                        className="absolute inset-[-12px] rounded-full border border-primary/30"
-                        animate={{ scale: [1, 1.4], opacity: [0.4, 0] }}
+                        className="absolute inset-[-10px] rounded-full border-2 border-primary/30"
+                        animate={{ scale: [1, 1.35], opacity: [0.5, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
                       />
                       <motion.div
-                        className="absolute inset-[-12px] rounded-full border border-primary/20"
-                        animate={{ scale: [1, 1.6], opacity: [0.3, 0] }}
+                        className="absolute inset-[-10px] rounded-full border-2 border-primary/20"
+                        animate={{ scale: [1, 1.55], opacity: [0.3, 0] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.4 }}
                       />
-                      {isConnecting && (
-                        <motion.div
-                          className="absolute inset-[-12px] rounded-full border border-primary/10"
-                          animate={{ scale: [1, 1.8], opacity: [0.2, 0] }}
-                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
-                        />
-                      )}
                     </>
                   )}
-                  <div className={`w-24 h-24 rounded-full overflow-hidden ring-4 transition-all duration-300 ${
+                  <div className={`w-20 h-20 rounded-full overflow-hidden ring-4 transition-all duration-300 ${
                     isCallActive
-                      ? isAgentSpeaking ? 'ring-primary shadow-lg shadow-primary/20' : 'ring-green-500 shadow-lg shadow-green-500/20'
-                      : isConnecting ? 'ring-primary/50' : 'ring-border'
+                      ? isAgentSpeaking ? 'ring-primary shadow-lg shadow-primary/25' : 'ring-green-500 shadow-lg shadow-green-500/25'
+                      : isConnecting ? 'ring-primary/50 animate-pulse' : 'ring-border'
                   }`}>
                     <img src={expert.avatar} alt={expert.name} className="w-full h-full object-cover" />
                   </div>
                 </div>
 
-                <div className="text-center">
-                  <h3 className="font-semibold text-lg text-foreground">{expert.name}</h3>
-                  <p className="text-sm text-muted-foreground">{expert.specialty}</p>
-                </div>
-
-                {/* Status text */}
-                <div className="h-8 flex items-center">
-                  {isConnecting && (
-                    <motion.p
-                      className="text-sm text-muted-foreground"
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      Calling...
-                    </motion.p>
-                  )}
-                  {isCallActive && (
-                    <div className="flex flex-col items-center gap-1">
-                      <p className="text-primary font-mono text-lg tracking-wider">{formatDuration(callDuration)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {isAgentSpeaking ? 'Speaking...' : 'Listening...'}
-                      </p>
-                    </div>
-                  )}
-                  {!isConnecting && !isCallActive && (
-                    <p className="text-sm text-muted-foreground">Tap to call</p>
-                  )}
-                </div>
+                <h3 className="font-semibold text-foreground">{expert.name}</h3>
+                <p className="text-xs text-muted-foreground">{expert.specialty}</p>
               </div>
 
-              {/* Bottom section — action buttons */}
-              <div className="w-full max-w-[280px]">
+              {/* Status */}
+              <div className="flex flex-col items-center gap-1">
+                {isConnecting && (
+                  <motion.p
+                    className="text-base font-medium text-muted-foreground"
+                    animate={{ opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    Calling...
+                  </motion.p>
+                )}
+                {isCallActive && (
+                  <>
+                    <p className="text-primary font-mono text-2xl tracking-wider font-semibold">{formatDuration(callDuration)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {isAgentSpeaking ? '🔊 Speaking...' : '🎙️ Listening...'}
+                    </p>
+                  </>
+                )}
+                {!isConnecting && !isCallActive && (
+                  <p className="text-sm text-muted-foreground">Ready to connect</p>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pb-2">
                 {!isCallActive && !isConnecting ? (
                   <button
                     onClick={startCall}
-                    className="mx-auto flex items-center justify-center w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 active:scale-95 transition-all shadow-lg shadow-green-500/30"
+                    className="flex items-center gap-3 px-8 py-4 rounded-full bg-green-500 hover:bg-green-600 active:scale-95 transition-all shadow-lg shadow-green-500/30 text-white font-semibold text-base"
                   >
-                    <Phone className="w-7 h-7 text-white" />
+                    <Phone className="w-5 h-5" />
+                    Start Voice Call
                   </button>
                 ) : (
-                  <div className="flex items-center justify-center gap-8">
-                    {/* Mute */}
-                    <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center justify-center gap-10">
+                    <div className="flex flex-col items-center gap-1.5">
                       <button
                         onClick={toggleMute}
                         className={`flex items-center justify-center w-14 h-14 rounded-full transition-all active:scale-95 ${
@@ -670,30 +660,25 @@ export function ExpertConsultationDialog({
                       >
                         {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
                       </button>
-                      <span className="text-xs text-muted-foreground">{isMuted ? 'Unmute' : 'Mute'}</span>
+                      <span className="text-[11px] text-muted-foreground">{isMuted ? 'Unmute' : 'Mute'}</span>
                     </div>
 
-                    {/* End call */}
-                    <div className="flex flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-1.5">
                       <button
                         onClick={endCall}
                         className="flex items-center justify-center w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 active:scale-95 transition-all shadow-lg shadow-destructive/30"
                       >
                         <PhoneOff className="w-7 h-7 text-white" />
                       </button>
-                      <span className="text-xs text-muted-foreground">End</span>
+                      <span className="text-[11px] text-muted-foreground">End</span>
                     </div>
 
-                    {/* Speaker indicator */}
-                    <div className="flex flex-col items-center gap-2">
+                    <div className="flex flex-col items-center gap-1.5">
                       <div className={`flex items-center justify-center w-14 h-14 rounded-full transition-all ${
                         isAgentSpeaking ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
                       }`}>
                         {isAgentSpeaking ? (
-                          <motion.div
-                            className="flex items-center gap-[3px]"
-                            animate={{ opacity: 1 }}
-                          >
+                          <div className="flex items-center gap-[3px]">
                             {[0, 1, 2].map(i => (
                               <motion.div
                                 key={i}
@@ -702,12 +687,12 @@ export function ExpertConsultationDialog({
                                 transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
                               />
                             ))}
-                          </motion.div>
+                          </div>
                         ) : (
                           <Phone className="w-5 h-5" />
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[11px] text-muted-foreground">
                         {isAgentSpeaking ? 'Speaking' : 'Audio'}
                       </span>
                     </div>
