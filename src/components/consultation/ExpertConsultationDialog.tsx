@@ -58,7 +58,7 @@ export function ExpertConsultationDialog({
   initialTab = 'chat' 
 }: ExpertConsultationDialogProps) {
   const { user } = useAuth();
-  const { balance, deductCredits } = useCredits();
+  const { balance, deductCredits, refetch } = useCredits();
   const [activeTab, setActiveTab] = useState<'chat' | 'call'>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -418,11 +418,16 @@ export function ExpertConsultationDialog({
     if (isAI) {
       let assistantContent = "";
       try {
+        // Get user's auth token for credit deduction
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
+        
         const resp = await fetch(CHAT_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${accessToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({ 
             messages: [...messages, userMessage],
@@ -479,6 +484,9 @@ export function ExpertConsultationDialog({
             }
           }
         }
+        
+        // Refetch credit balance after response completes (server deducted credits)
+        refetch();
       } catch (error) {
         console.error("Chat error:", error);
         toast.error("Failed to send message.");
