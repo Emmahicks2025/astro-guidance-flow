@@ -286,7 +286,7 @@ export function ExpertConsultationDialog({
           headers: {
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({}),
         }),
@@ -582,9 +582,9 @@ export function ExpertConsultationDialog({
 
           {/* Call Tab — Phone-style full layout */}
           <TabsContent value="call" className="flex-1 flex flex-col m-0 p-0 overflow-hidden">
-            <div className="flex-1 flex flex-col items-center justify-between bg-gradient-to-b from-background via-background to-muted/30 py-8 px-6">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-gradient-to-b from-background via-background to-muted/30 py-4 px-6">
               {/* Top section — avatar & info */}
-              <div className="flex flex-col items-center gap-4 pt-4">
+              <div className="flex flex-col items-center gap-3">
                 {/* Ringing ripple rings */}
                 <div className="relative">
                   {(isConnecting || isCallActive) && (
@@ -648,7 +648,7 @@ export function ExpertConsultationDialog({
               </div>
 
               {/* Bottom section — action buttons */}
-              <div className="w-full max-w-[280px] pb-4">
+              <div className="w-full max-w-[280px]">
                 {!isCallActive && !isConnecting ? (
                   <button
                     onClick={startCall}
