@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchUserProfile } from "@/lib/profileService";
+import { supabase } from "@/integrations/supabase/client";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import UserDashboard from "@/components/dashboard/UserDashboard";
 import JotshiDashboard from "@/components/jotshi/JotshiDashboard";
@@ -35,6 +36,19 @@ const Index = () => {
       }
 
       try {
+        // Check if user is a registered astrologer/jotshi provider
+        const { data: jotshiProfile } = await supabase
+          .from('jotshi_profiles')
+          .select('id, approval_status')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (jotshiProfile) {
+          // Astrologer user — redirect to their dashboard
+          navigate('/astrologer');
+          return;
+        }
+
         const profile = await fetchUserProfile(user.id);
         
         // If profile exists and has a name (meaning onboarding was completed before)
