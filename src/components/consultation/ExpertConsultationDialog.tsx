@@ -32,6 +32,7 @@ interface Expert {
   ai_personality?: string;
   voice_id?: string;
   user_id?: string;
+  first_message?: string;
 }
 
 interface Message {
@@ -433,7 +434,8 @@ export function ExpertConsultationDialog({
             messages: [...messages, userMessage],
             expertId: expert.id,
             expertName: expert.name,
-            expertPersonality: expert.ai_personality
+            expertPersonality: expert.ai_personality,
+            systemPrompt: expert.first_message,
           }),
         });
 
