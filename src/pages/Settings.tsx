@@ -11,7 +11,11 @@ import {
   HelpCircle, 
   LogOut,
   ChevronRight,
-  Edit2
+  Edit2,
+  Trash2,
+  FileText,
+  Info,
+  Star
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -19,6 +23,17 @@ import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -26,13 +41,15 @@ const SettingsPage = () => {
   const { signOut, user } = useAuth();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const settingsSections = [
     {
       title: 'Account',
       items: [
         { icon: User, label: 'Edit Profile', action: () => toast.info("Edit profile coming soon!") },
-        { icon: Shield, label: 'Privacy & Security', action: () => toast.info("Privacy settings coming soon!") },
+        { icon: Shield, label: 'Privacy & Security', action: () => navigate('/privacy-policy') },
       ]
     },
     {
@@ -56,9 +73,18 @@ const SettingsPage = () => {
       ]
     },
     {
+      title: 'Legal',
+      items: [
+        { icon: FileText, label: 'Terms & Conditions', action: () => navigate('/terms') },
+        { icon: Shield, label: 'Privacy Policy', action: () => navigate('/privacy-policy') },
+      ]
+    },
+    {
       title: 'Support',
       items: [
         { icon: HelpCircle, label: 'Help & FAQ', action: () => toast.info("Help center coming soon!") },
+        { icon: Star, label: 'Rate Us', action: () => toast.info("Rate us on the App Store!") },
+        { icon: Info, label: 'App Version', value: 'v1.0.0' },
       ]
     },
   ];
@@ -68,6 +94,34 @@ const SettingsPage = () => {
     resetOnboarding();
     toast.success("Logged out successfully");
     navigate('/auth');
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in to delete your account.");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (error) throw error;
+
+      resetOnboarding();
+      await supabase.auth.signOut();
+      toast.success("Your account has been permanently deleted.");
+      navigate('/auth');
+    } catch (error: any) {
+      toast.error("Failed to delete account. Please try again.");
+      console.error("Delete account error:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
+    }
   };
 
   return (
@@ -166,11 +220,51 @@ const SettingsPage = () => {
           Log Out
         </SpiritualButton>
 
+        {/* Delete Account Button */}
+        <SpiritualButton
+          variant="ghost"
+          size="lg"
+          className="w-full text-destructive hover:bg-destructive/10"
+          onClick={() => setShowDeleteDialog(true)}
+        >
+          <Trash2 className="w-5 h-5" />
+          Delete Account
+        </SpiritualButton>
+
         {/* App Version */}
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-muted-foreground pb-4">
           AstroGuru v1.0.0
         </p>
       </main>
+
+      {/* Delete Account Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account Permanently?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>This action is <strong>irreversible</strong>. All of the following will be permanently deleted:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Your profile and personal information</li>
+                <li>Consultation history and messages</li>
+                <li>Wallet balance and transaction history</li>
+                <li>Kundli charts and saved readings</li>
+              </ul>
+              <p className="pt-2">You will not be able to recover any of this data.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Yes, Delete My Account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };
