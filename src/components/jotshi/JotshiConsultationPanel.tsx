@@ -151,7 +151,7 @@ const JotshiConsultationPanel = ({ user, onBack }: JotshiConsultationPanelProps)
       className="min-h-screen bg-background flex flex-col"
     >
       {/* Top Bar - User Info */}
-      <header className="sticky top-0 z-50 bg-secondary text-secondary-foreground p-4">
+      <header className="sticky top-0 z-50 bg-secondary text-secondary-foreground p-4 safe-area-top">
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
