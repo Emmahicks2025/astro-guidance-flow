@@ -37,11 +37,13 @@ const Index = () => {
 
       try {
         // Check if user is a registered astrologer/jotshi provider
-        const { data: jotshiProfile } = await supabase
+        const { data: jotshiProfiles } = await supabase
           .from('jotshi_profiles')
           .select('id, approval_status')
           .eq('user_id', user.id)
-          .maybeSingle();
+          .limit(1);
+
+        const jotshiProfile = jotshiProfiles?.[0] ?? null;
 
         if (jotshiProfile) {
           // Astrologer user — redirect to their dashboard
