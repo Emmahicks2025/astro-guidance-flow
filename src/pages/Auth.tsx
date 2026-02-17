@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Mail, Lock, Eye, EyeOff, Sun, Moon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { SpiritualInput } from "@/components/ui/spiritual-input";
@@ -67,6 +68,22 @@ const Auth = () => {
             toast.error(error.message);
           }
         } else {
+          // Check if user has admin role
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            const { data: roles } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', authUser.id)
+              .eq('role', 'admin')
+              .maybeSingle();
+            
+            if (roles) {
+              toast.success("Welcome back, Admin! 🙏");
+              navigate('/admin');
+              return;
+            }
+          }
           toast.success("Welcome back! 🙏");
           navigate('/');
         }
