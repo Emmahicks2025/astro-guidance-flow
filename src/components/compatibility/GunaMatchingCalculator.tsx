@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Users, Calendar, MapPin, Clock, Loader2, Star, AlertTriangle, CheckCircle } from "lucide-react";
+import { Heart, Users, Calendar, MapPin, Clock, Loader2, Star, AlertTriangle, CheckCircle, MessageCircle, Phone, Video, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualInput } from "@/components/ui/spiritual-input";
@@ -30,6 +31,8 @@ interface MatchResult {
 }
 
 const GunaMatchingCalculator = () => {
+  const navigate = useNavigate();
+  const [expandedGuna, setExpandedGuna] = useState<number | null>(null);
   const [person1, setPerson1] = useState({
     name: '',
     dateOfBirth: '',
@@ -239,37 +242,83 @@ const GunaMatchingCalculator = () => {
             {/* Score Header */}
             <SpiritualCard variant="spiritual" className="p-6 text-center">
               <div className="space-y-4">
-                <div className={`text-5xl font-bold font-display ${getScoreColor(result.percentage)}`}>
+                <motion.div 
+                  initial={{ scale: 0 }} 
+                  animate={{ scale: 1 }} 
+                  transition={{ type: "spring", delay: 0.2 }}
+                  className={`text-5xl font-bold font-display ${getScoreColor(result.percentage)}`}
+                >
                   {result.totalScore}/{result.maxScore}
-                </div>
-                <Progress 
-                  value={result.percentage} 
-                  className="h-3"
-                />
+                </motion.div>
+                <Progress value={result.percentage} className="h-3" />
                 <p className="text-lg font-medium">{result.verdict}</p>
                 <div className="flex justify-center gap-2">
                   <Badge variant="outline">{person1.name}</Badge>
                   <Heart className="w-4 h-4 text-destructive" />
                   <Badge variant="outline">{person2.name}</Badge>
                 </div>
+                {result.percentage >= 50 ? (
+                  <p className="text-sm text-muted-foreground">
+                    ✨ This is a promising match! An expert can help you understand the deeper nuances.
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    🙏 Every match has its strengths. Consult an expert for remedies and deeper insight.
+                  </p>
+                )}
               </div>
             </SpiritualCard>
 
-            {/* Guna Breakdown */}
+            {/* Guna Breakdown - Expandable */}
             <SpiritualCard variant="elevated" className="p-4">
               <h4 className="font-bold font-display mb-4">Ashtakoot Guna Breakdown</h4>
               <div className="space-y-3">
                 {result.gunaBreakdown.map((guna, idx) => (
-                  <div key={idx} className="flex items-center justify-between">
-                    <div className="flex-1">
+                  <motion.div 
+                    key={idx}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                  >
+                    <button
+                      className="w-full text-left"
+                      onClick={() => setExpandedGuna(expandedGuna === idx ? null : idx)}
+                    >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">{guna.name}</span>
-                        <span className="text-sm font-bold">{guna.obtained}/{guna.maximum}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{guna.name}</span>
+                          {guna.obtained === guna.maximum ? (
+                            <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                          ) : guna.obtained === 0 ? (
+                            <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                          ) : null}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold">{guna.obtained}/{guna.maximum}</span>
+                          {expandedGuna === idx ? (
+                            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
                       </div>
                       <Progress value={(guna.obtained / guna.maximum) * 100} className="h-1.5" />
-                      <p className="text-xs text-muted-foreground mt-1">{guna.description}</p>
-                    </div>
-                  </div>
+                    </button>
+                    <AnimatePresence>
+                      {expandedGuna === idx && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <p className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded-lg">
+                            {guna.description}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
                 ))}
               </div>
             </SpiritualCard>
@@ -297,6 +346,11 @@ const GunaMatchingCalculator = () => {
                       : 'Neither is Manglik - Good match!'
                     }
                   </p>
+                  {!result.manglikStatus.compatible && (
+                    <p className="text-xs text-destructive mt-1">
+                      ⚠️ Manglik Dosha detected. An expert can suggest specific remedies.
+                    </p>
+                  )}
                 </div>
               </div>
             </SpiritualCard>
@@ -314,12 +368,92 @@ const GunaMatchingCalculator = () => {
               </ul>
             </SpiritualCard>
 
+            {/* Expert Consultation CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <SpiritualCard variant="spiritual" className="p-5">
+                <div className="text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-primary-foreground/20 flex items-center justify-center mx-auto">
+                    <Sparkles className="w-7 h-7 text-primary-foreground" />
+                  </div>
+                  <h4 className="font-bold font-display text-lg text-primary-foreground">
+                    Get Expert Interpretation
+                  </h4>
+                  <p className="text-sm text-primary-foreground/80">
+                    Numbers only tell part of the story. A Vedic astrology expert can analyze planetary positions, doshas & suggest powerful remedies.
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 pt-2">
+                    <SpiritualButton
+                      variant="golden"
+                      size="sm"
+                      className="flex-col h-auto py-3 gap-1"
+                      onClick={() => navigate('/talk')}
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      <span className="text-xs">Chat</span>
+                    </SpiritualButton>
+                    <SpiritualButton
+                      variant="golden"
+                      size="sm"
+                      className="flex-col h-auto py-3 gap-1"
+                      onClick={() => navigate('/talk')}
+                    >
+                      <Phone className="w-5 h-5" />
+                      <span className="text-xs">Call</span>
+                    </SpiritualButton>
+                    <SpiritualButton
+                      variant="golden"
+                      size="sm"
+                      className="flex-col h-auto py-3 gap-1"
+                      onClick={() => navigate('/talk')}
+                    >
+                      <Video className="w-5 h-5" />
+                      <span className="text-xs">Video</span>
+                    </SpiritualButton>
+                  </div>
+                </div>
+              </SpiritualCard>
+            </motion.div>
+
+            {/* Quick Expert Nudge for Low Scores */}
+            {result.percentage < 50 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+              >
+                <SpiritualCard variant="golden" className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-sm">Don't worry — remedies exist!</h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Low Guna scores can often be balanced with specific pujas, gemstones, or mantras. 
+                        An experienced Jotshi can guide you with personalized solutions.
+                      </p>
+                      <SpiritualButton
+                        variant="primary"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => navigate('/talk')}
+                      >
+                        Talk to an Expert Now
+                      </SpiritualButton>
+                    </div>
+                  </div>
+                </SpiritualCard>
+              </motion.div>
+            )}
+
             {/* New Match Button */}
             <SpiritualButton
               variant="outline"
               size="lg"
               className="w-full"
-              onClick={() => setResult(null)}
+              onClick={() => { setResult(null); setExpandedGuna(null); }}
             >
               Check Another Match
             </SpiritualButton>
