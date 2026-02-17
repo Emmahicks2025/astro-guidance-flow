@@ -6,7 +6,7 @@ import {
   Sparkles, BadgeCheck, IndianRupee, Languages, ToggleLeft, ToggleRight,
   Upload, Camera, Bot, Brain, AlertCircle, Mail, CheckCircle, XCircle,
   CheckSquare, Square, MinusSquare, Key, Settings, TestTube, RefreshCw,
-  UserCircle, Calendar, MapPin
+  UserCircle, Calendar, MapPin, LogOut, Activity, TrendingUp
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -79,7 +79,7 @@ const categories = [
 
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<JotshiProfile[]>([]);
@@ -577,9 +577,6 @@ const AdminPanel = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 safe-area-top">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ArrowLeft className="w-5 h-5" />
-          </SpiritualButton>
           <div className="flex items-center gap-3 flex-1">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
               <Shield className="w-5 h-5 text-primary-foreground" />
@@ -589,9 +586,22 @@ const AdminPanel = () => {
               <p className="text-xs text-muted-foreground">Manage your platform</p>
             </div>
           </div>
-          {pendingProviders.length > 0 && (
-            <Badge variant="destructive" className="animate-pulse">{pendingProviders.length} Pending</Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {pendingProviders.length > 0 && (
+              <Badge variant="destructive" className="animate-pulse">{pendingProviders.length} Pending</Badge>
+            )}
+            <SpiritualButton
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                await signOut();
+                navigate('/auth');
+              }}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <LogOut className="w-5 h-5" />
+            </SpiritualButton>
+          </div>
         </div>
       </header>
 
