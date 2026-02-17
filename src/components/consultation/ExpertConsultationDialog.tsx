@@ -121,8 +121,8 @@ export function ExpertConsultationDialog({
       setIsConnecting(false);
       toast.success(`Connected with ${expert?.name}`);
     },
-    onDisconnect: () => {
-      console.log("ElevenLabs conversation disconnected");
+    onDisconnect: (reason: any) => {
+      console.log("ElevenLabs conversation disconnected, reason:", JSON.stringify(reason));
       stopRingtone();
       handleCallEnd();
     },
@@ -136,8 +136,8 @@ export function ExpertConsultationDialog({
         if (text) callTranscriptRef.current.push(`Expert: ${text}`);
       }
     },
-    onError: (error) => {
-      console.error("Conversation error:", error);
+    onError: (error: any) => {
+      console.error("Conversation error:", error, "type:", typeof error, "keys:", error ? Object.keys(error) : "null");
       toast.error("Voice connection error. Please try again.");
       stopRingtone();
       setIsConnecting(false);
