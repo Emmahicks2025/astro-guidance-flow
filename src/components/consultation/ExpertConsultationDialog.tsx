@@ -53,7 +53,7 @@ export function ExpertConsultationDialog({
   initialTab = 'chat' 
 }: ExpertConsultationDialogProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'chat' | 'call'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'chat' | 'call'>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -69,16 +69,16 @@ export function ExpertConsultationDialog({
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const prevOpenRef = useRef(false);
 
   // Treat as AI if has ai_personality OR has no real user_id (admin-created without linked user)
   const isAI = !!expert?.ai_personality || !expert?.user_id;
 
+  // Reset state only when dialog first opens (not on every render)
   useEffect(() => {
-    setActiveTab(initialTab);
-  }, [initialTab]);
-
-  useEffect(() => {
-    if (open && expert) {
+    if (open && !prevOpenRef.current && expert) {
+      // Dialog just opened — reset everything
+      setActiveTab(initialTab);
       setMessages([]);
       setCallMessages([]);
       setInputMessage("");
@@ -87,15 +87,14 @@ export function ExpertConsultationDialog({
       setCurrentTranscript("");
       setConsultationId(null);
       
-      // For human experts, create a consultation and subscribe to realtime
       if (!isAI && user) {
         createConsultation();
       }
     }
+    prevOpenRef.current = open;
     
     return () => {
-      // Cleanup realtime subscription
-      if (consultationId) {
+      if (!open && consultationId) {
         supabase.removeChannel(supabase.channel(`messages-${consultationId}`));
       }
     };
