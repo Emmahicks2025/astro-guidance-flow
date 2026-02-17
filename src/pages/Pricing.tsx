@@ -70,7 +70,7 @@ const PricingPage = () => {
     >
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <SpiritualButton variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <SpiritualButton variant="ghost" size="icon" onClick={() => window.history.back()}>
             <ArrowLeft className="w-5 h-5" />
           </SpiritualButton>
           <span className="font-display font-bold text-xl">Plans & Pricing</span>
@@ -87,19 +87,6 @@ const PricingPage = () => {
           </p>
         </SpiritualCard>
 
-        {/* Credit Rates Info */}
-        <div className="flex gap-3">
-          <div className="flex-1 bg-muted rounded-xl p-3 text-center">
-            <p className="text-xs text-muted-foreground">Chat Rate</p>
-            <p className="font-bold text-primary">Per tokens used</p>
-            <p className="text-[10px] text-muted-foreground">250% of AI cost</p>
-          </div>
-          <div className="flex-1 bg-muted rounded-xl p-3 text-center">
-            <p className="text-xs text-muted-foreground">Call Rate</p>
-            <p className="font-bold text-secondary">8-12 cr/min</p>
-            <p className="text-[10px] text-muted-foreground">Based on plan</p>
-          </div>
-        </div>
 
         {/* Tab Switcher */}
         <div className="flex gap-2 bg-muted rounded-xl p-1">

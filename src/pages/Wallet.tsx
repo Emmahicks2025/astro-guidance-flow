@@ -57,9 +57,6 @@ const WalletPage = () => {
         <SpiritualCard variant="golden" className="p-6 text-center">
           <p className="text-sm text-muted-foreground mb-1">{t.availableBalance}</p>
           <p className="text-4xl font-bold text-accent">{loading ? "..." : balance} credits</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Chat: per tokens · Call: {subscription.plan === 'premium' ? '8' : subscription.plan === 'pro' ? '10' : '12'} cr/min
-          </p>
           <div className="flex items-center justify-center gap-2 mt-3">
             <Crown className="w-4 h-4 text-secondary" />
             <span className="text-sm font-medium">{subscription.plan_name} Plan</span>
@@ -86,17 +83,6 @@ const WalletPage = () => {
           </SpiritualButton>
         </div>
 
-        {/* Credit Rates */}
-        <div className="flex gap-3">
-          <div className="flex-1 bg-muted rounded-xl p-3 text-center">
-            <p className="text-xs text-muted-foreground">Chat</p>
-            <p className="font-bold text-primary">2 cr/min</p>
-          </div>
-          <div className="flex-1 bg-muted rounded-xl p-3 text-center">
-            <p className="text-xs text-muted-foreground">Call</p>
-            <p className="font-bold text-secondary">8 cr/min</p>
-          </div>
-        </div>
 
         {/* Transaction History */}
         <section className="space-y-3">
