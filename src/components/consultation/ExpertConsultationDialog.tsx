@@ -347,10 +347,11 @@ export function ExpertConsultationDialog({
       // Store timeout so onConnect can clear it
       (window as any).__callConnectTimeout = connectTimeout;
 
-      console.log("Starting ElevenLabs session (no overrides)...");
+      console.log("Starting ElevenLabs session with overrides:", JSON.stringify(overrides));
       await conversation.startSession({
         conversationToken: tokenData.token,
         connectionType: "webrtc",
+        overrides,
       });
       console.log("startSession() resolved");
     } catch (err: any) {
