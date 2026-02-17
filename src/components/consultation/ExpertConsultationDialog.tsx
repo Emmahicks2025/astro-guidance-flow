@@ -605,9 +605,15 @@ export function ExpertConsultationDialog({
                 {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
                   <div className="flex justify-start">
                     <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        {isAI ? 'Thinking...' : 'Waiting for reply...'}
+                      <div className="flex items-center gap-1.5">
+                        {[0, 1, 2].map(i => (
+                          <motion.div
+                            key={i}
+                            className="w-2 h-2 rounded-full bg-muted-foreground/50"
+                            animate={{ opacity: [0.3, 1, 0.3], scale: [0.85, 1.1, 0.85] }}
+                            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
