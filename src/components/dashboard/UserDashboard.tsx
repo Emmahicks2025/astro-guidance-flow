@@ -5,50 +5,15 @@ import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-c
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useWalkthroughStore } from "@/stores/walkthroughStore";
+import { useTranslation } from "@/stores/languageStore";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import jotshiWoman from "@/assets/jotshi-woman.jpg";
 import AppWalkthrough from "@/components/walkthrough/AppWalkthrough";
 
-const serviceCards = [
-  {
-    id: 'talk',
-    title: 'Talk to Jotshi',
-    description: 'Live consultation with expert Vedic astrologers',
-    icon: MessageCircle,
-    gradient: 'from-primary to-primary-dark',
-    variant: 'spiritual' as const,
-    path: '/talk',
-  },
-  {
-    id: 'palm',
-    title: 'Palm Reading',
-    description: 'Upload your palm for detailed analysis',
-    icon: Hand,
-    gradient: 'from-accent to-accent-dark',
-    variant: 'golden' as const,
-    path: '/palm-reading',
-  },
-  {
-    id: 'compatibility',
-    title: 'Guna Milan',
-    description: '36-point Kundli matching & compatibility',
-    icon: Heart,
-    gradient: 'from-secondary to-secondary-dark',
-    variant: 'mystic' as const,
-    path: '/compatibility',
-  },
-];
-
-const quickActions = [
-  { icon: Star, label: 'My Kundli', path: '/kundli' },
-  { icon: Book, label: 'Explore', path: '/explore' },
-  { icon: Calendar, label: 'Panchang', path: '/panchang' },
-  { icon: Sun, label: 'Horoscope', path: '/horoscope' },
-];
-
 const UserDashboard = () => {
   const { userData, resetOnboarding } = useOnboardingStore();
+  const { t } = useTranslation();
   const { 
     hasCompletedWalkthrough, 
     isWalkthroughOpen, 
@@ -57,6 +22,43 @@ const UserDashboard = () => {
     setWalkthroughComplete 
   } = useWalkthroughStore();
   const navigate = useNavigate();
+
+  const serviceCards = [
+    {
+      id: 'talk',
+      title: t.talkToJotshi,
+      description: t.talkToJotshiDesc,
+      icon: MessageCircle,
+      gradient: 'from-primary to-primary-dark',
+      variant: 'spiritual' as const,
+      path: '/talk',
+    },
+    {
+      id: 'palm',
+      title: t.palmReading,
+      description: t.palmReadingDesc,
+      icon: Hand,
+      gradient: 'from-accent to-accent-dark',
+      variant: 'golden' as const,
+      path: '/palm-reading',
+    },
+    {
+      id: 'compatibility',
+      title: t.gunaMilan,
+      description: t.gunaMilanDesc,
+      icon: Heart,
+      gradient: 'from-secondary to-secondary-dark',
+      variant: 'mystic' as const,
+      path: '/compatibility',
+    },
+  ];
+
+  const quickActions = [
+    { icon: Star, label: t.myKundli, path: '/kundli' },
+    { icon: Book, label: t.explore, path: '/explore' },
+    { icon: Calendar, label: t.panchang, path: '/panchang' },
+    { icon: Sun, label: t.horoscope, path: '/horoscope' },
+  ];
 
   // Auto-open walkthrough for first-time users
   useEffect(() => {
@@ -112,7 +114,7 @@ const UserDashboard = () => {
                 variant="ghost" 
                 size="icon" 
                 onClick={openWalkthrough}
-                title="App Guide"
+                title={t.appGuide}
               >
                 <HelpCircle className="w-5 h-5" />
               </SpiritualButton>
@@ -140,12 +142,12 @@ const UserDashboard = () => {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold font-display">
-                      Namaste, {userData.fullName || 'Seeker'} 🙏
+                      {t.namaste}, {userData.fullName || 'Seeker'} 🙏
                     </h2>
                     <p className="text-sm text-muted-foreground">
                       {userData.dateOfBirth
-                        ? `Born on ${format(userData.dateOfBirth, 'PPP')}`
-                        : 'Your cosmic journey awaits'}
+                        ? `${t.bornOn} ${format(userData.dateOfBirth, 'PPP')}`
+                        : t.cosmicJourneyAwaits}
                     </p>
                   </div>
                 </div>
@@ -166,9 +168,9 @@ const UserDashboard = () => {
                     <HelpCircle className="w-5 h-5 text-secondary" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold text-sm">New to Astrology?</h4>
+                    <h4 className="font-semibold text-sm">{t.newToAstrology}</h4>
                     <p className="text-xs text-muted-foreground">
-                      Tap here for a guided tour of the app and learn astrology basics
+                      {t.newToAstrologyDesc}
                     </p>
                   </div>
                   <span className="text-secondary">→</span>
@@ -197,9 +199,9 @@ const UserDashboard = () => {
 
           {/* Services */}
           <motion.section variants={itemVariants} className="space-y-4">
-            <h3 className="text-lg font-bold font-display">Our Services</h3>
+            <h3 className="text-lg font-bold font-display">{t.ourServices}</h3>
             <div className="grid gap-4">
-              {serviceCards.map((service, index) => (
+              {serviceCards.map((service) => (
                 <motion.div
                   key={service.id}
                   variants={itemVariants}
@@ -249,10 +251,9 @@ const UserDashboard = () => {
                     <Star className="w-6 h-6 text-accent" />
                   </div>
                   <div>
-                    <h4 className="font-semibold mb-1">Today's Cosmic Insight</h4>
+                    <h4 className="font-semibold mb-1">{t.todaysCosmicInsight}</h4>
                     <p className="text-sm text-muted-foreground">
-                      The planets align favorably for new beginnings. Trust your intuition 
-                      and take that first step towards your goals. Venus blesses matters of the heart.
+                      {t.todaysInsightText}
                     </p>
                   </div>
                 </div>
@@ -270,7 +271,7 @@ const UserDashboard = () => {
               <div className="flex items-center gap-3">
                 <HelpCircle className="w-5 h-5 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">
-                  Need help? Tap here for the app guide
+                  {t.needHelp}
                 </span>
               </div>
             </SpiritualCard>

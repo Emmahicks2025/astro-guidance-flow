@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ExpertConsultationDialog } from "@/components/consultation/ExpertConsultationDialog";
+import { useTranslation } from "@/stores/languageStore";
 
 const tips = [
   "Use natural lighting, avoid shadows",
@@ -75,6 +76,7 @@ const analyzingMessages = [
 const PalmReading = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [analyzingMsgIndex, setAnalyzingMsgIndex] = useState(0);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -203,10 +205,10 @@ const PalmReading = () => {
   };
 
   const lineCards = analysis ? [
-    { key: "life", icon: Activity, label: "Life Line", data: analysis.life_line, color: "from-green-500/20 to-green-500/5" },
-    { key: "heart", icon: Heart, label: "Heart Line", data: analysis.heart_line, color: "from-pink-500/20 to-pink-500/5" },
-    { key: "head", icon: Brain, label: "Head Line", data: analysis.head_line, color: "from-blue-500/20 to-blue-500/5" },
-    { key: "fate", icon: Star, label: "Fate Line", data: analysis.fate_line, color: "from-purple-500/20 to-purple-500/5" },
+    { key: "life", icon: Activity, label: t.lifeLine, data: analysis.life_line, color: "from-green-500/20 to-green-500/5" },
+    { key: "heart", icon: Heart, label: t.heartLine, data: analysis.heart_line, color: "from-pink-500/20 to-pink-500/5" },
+    { key: "head", icon: Brain, label: t.headLine, data: analysis.head_line, color: "from-blue-500/20 to-blue-500/5" },
+    { key: "fate", icon: Star, label: t.fateLine, data: analysis.fate_line, color: "from-purple-500/20 to-purple-500/5" },
   ] : [];
 
   return (
@@ -221,7 +223,7 @@ const PalmReading = () => {
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center">
               <Hand className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl">Palm Reading</span>
+            <span className="font-display font-bold text-xl">{t.palmReadingTitle}</span>
           </div>
         </div>
       </header>
@@ -235,7 +237,7 @@ const PalmReading = () => {
                 <div className="flex items-start gap-3">
                   <Info className="w-5 h-5 text-accent mt-0.5" />
                   <div>
-                    <h4 className="font-semibold mb-2">Photo Tips for Best Results</h4>
+                    <h4 className="font-semibold mb-2">{t.photoTips}</h4>
                     <ul className="text-sm text-muted-foreground space-y-1">
                       {tips.map((tip, i) => <li key={i}>• {tip}</li>)}
                     </ul>
@@ -253,13 +255,13 @@ const PalmReading = () => {
                         <label className="flex-1">
                           <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                           <SpiritualButton variant="outline" size="lg" className="w-full" asChild>
-                            <span><Upload className="w-5 h-5" /> Change Image</span>
+                            <span><Upload className="w-5 h-5" /> {t.changeImage}</span>
                           </SpiritualButton>
                         </label>
                         <SpiritualButton variant="primary" size="lg" className="flex-1" onClick={handleAnalyze} disabled={isAnalyzing}>
                           {isAnalyzing ? (
-                            <><Loader2 className="w-5 h-5 animate-spin" /> Analyzing...</>
-                          ) : "Get Reading"}
+                            <><Loader2 className="w-5 h-5 animate-spin" /> {t.analyzing}</>
+                          ) : t.getReading}
                         </SpiritualButton>
                       </div>
                       {isAnalyzing && (
@@ -275,7 +277,7 @@ const PalmReading = () => {
                               {analyzingMessages[analyzingMsgIndex]}
                             </motion.p>
                           </AnimatePresence>
-                          <p className="text-xs text-muted-foreground mt-2">This may take 15-30 seconds. Please wait...</p>
+                          <p className="text-xs text-muted-foreground mt-2">{t.pleaseWait}</p>
                           <div className="mt-3 w-full h-1.5 rounded-full bg-muted overflow-hidden">
                             <motion.div
                               className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
@@ -292,19 +294,19 @@ const PalmReading = () => {
                       <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                         <Hand className="w-12 h-12 text-muted-foreground" />
                       </div>
-                      <h3 className="font-semibold mb-2">Upload Your Palm Photo</h3>
-                      <p className="text-sm text-muted-foreground mb-6">AI will analyze your palm lines, mounts, and markings</p>
+                       <h3 className="font-semibold mb-2">{t.uploadPalmPhoto}</h3>
+                      <p className="text-sm text-muted-foreground mb-6">{t.aiWillAnalyze}</p>
                       <div className="flex gap-3 justify-center">
                         <label>
                           <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                           <SpiritualButton variant="primary" size="lg" asChild>
-                            <span><Upload className="w-5 h-5" /> Upload Photo</span>
+                            <span><Upload className="w-5 h-5" /> {t.uploadPhoto}</span>
                           </SpiritualButton>
                         </label>
                         <label>
                           <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileUpload} />
                           <SpiritualButton variant="outline" size="lg" asChild>
-                            <span><Camera className="w-5 h-5" /> Take Photo</span>
+                            <span><Camera className="w-5 h-5" /> {t.takePhoto}</span>
                           </SpiritualButton>
                         </label>
                       </div>
@@ -315,9 +317,9 @@ const PalmReading = () => {
 
               {/* What You'll Get */}
               <section className="space-y-3">
-                <h3 className="text-lg font-bold font-display">What You'll Discover</h3>
+                <h3 className="text-lg font-bold font-display">{t.whatYouDiscover}</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {['Life Line', 'Heart Line', 'Head Line', 'Fate Line', 'Mounts Analysis', 'Lucky Elements'].map((line) => (
+                  {[t.lifeLine, t.heartLine, t.headLine, t.fateLine, t.mountsAnalysis, t.luckyElements].map((line) => (
                     <SpiritualCard key={line} variant="default" className="p-4 text-center">
                       <p className="font-medium">{line}</p>
                     </SpiritualCard>
@@ -334,10 +336,10 @@ const PalmReading = () => {
                     <Sparkles className="w-6 h-6 text-accent" />
                   </div>
                   <div>
-                    <h3 className="font-display font-bold text-lg">Your Palm Reading</h3>
+                    <h3 className="font-display font-bold text-lg">{t.yourPalmReading}</h3>
                     <p className="text-sm text-muted-foreground mt-1">{analysis.overall_summary}</p>
                     {analysis.confidence_score && (
-                      <Badge variant="outline" className="mt-2 text-xs">Confidence: {analysis.confidence_score}%</Badge>
+                      <Badge variant="outline" className="mt-2 text-xs">{t.confidence}: {analysis.confidence_score}%</Badge>
                     )}
                   </div>
                 </div>
@@ -356,7 +358,7 @@ const PalmReading = () => {
               {/* Line Analysis Cards */}
               <div className="space-y-4">
                 <h3 className="text-lg font-bold font-display flex items-center gap-2">
-                  <Hand className="w-5 h-5 text-accent" /> Line Analysis
+                  <Hand className="w-5 h-5 text-accent" /> {t.lineAnalysis}
                 </h3>
                 {lineCards.map((card, index) => (
                   <motion.div key={card.key} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.1 }}>
@@ -392,7 +394,7 @@ const PalmReading = () => {
                 <SpiritualCard variant="mystic" className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Heart className="w-5 h-5 text-pink-500" />
-                    <h4 className="font-bold">Marriage & Relationship Lines</h4>
+                     <h4 className="font-bold">{t.marriageLines}</h4>
                     <Badge variant="outline">{analysis.marriage_lines.count} line(s)</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">{analysis.marriage_lines.description}</p>
@@ -407,12 +409,12 @@ const PalmReading = () => {
                       <Sparkles className="w-5 h-5 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-sm">🚨 Your palm reveals important patterns</p>
+                      <p className="font-bold text-sm">{t.palmRevealsPatterns}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        An expert palmist can decode hidden signs AI can't fully interpret — timing of events, specific remedies, and future strategy. <span className="font-semibold text-primary">Don't delay, consult now.</span>
+                        {t.palmRevealsDesc} <span className="font-semibold text-primary">{t.talkToExpertNow}</span>
                       </p>
                       <SpiritualButton variant="primary" size="sm" className="mt-2" onClick={() => navigate('/talk')}>
-                        <Phone className="w-3.5 h-3.5" /> Talk to Expert Now
+                        <Phone className="w-3.5 h-3.5" /> {t.talkToExpertNow}
                       </SpiritualButton>
                     </div>
                   </div>
@@ -422,7 +424,7 @@ const PalmReading = () => {
               {/* Personality Traits */}
               {analysis.personality_traits?.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-bold font-display mb-3">Personality Traits</h3>
+                  <h3 className="text-lg font-bold font-display mb-3">{t.personalityTraits}</h3>
                   <div className="flex flex-wrap gap-2">
                     {analysis.personality_traits.map((trait, i) => (
                       <Badge key={i} variant="secondary" className="px-3 py-1">{trait}</Badge>
@@ -435,19 +437,19 @@ const PalmReading = () => {
               <div className="grid gap-4">
                 {analysis.career_guidance && (
                   <SpiritualCard variant="default" className="p-4">
-                    <h4 className="font-bold flex items-center gap-2 mb-2"><Star className="w-4 h-4 text-accent" /> Career Guidance</h4>
+                    <h4 className="font-bold flex items-center gap-2 mb-2"><Star className="w-4 h-4 text-accent" /> {t.careerGuidance}</h4>
                     <p className="text-sm text-muted-foreground">{analysis.career_guidance}</p>
                   </SpiritualCard>
                 )}
                 {analysis.health_indicators && (
                   <SpiritualCard variant="default" className="p-4">
-                    <h4 className="font-bold flex items-center gap-2 mb-2"><Shield className="w-4 h-4 text-green-500" /> Health Indicators</h4>
+                    <h4 className="font-bold flex items-center gap-2 mb-2"><Shield className="w-4 h-4 text-green-500" /> {t.healthIndicators}</h4>
                     <p className="text-sm text-muted-foreground">{analysis.health_indicators}</p>
                   </SpiritualCard>
                 )}
                 {analysis.relationship_outlook && (
                   <SpiritualCard variant="default" className="p-4">
-                    <h4 className="font-bold flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-pink-500" /> Relationship Outlook</h4>
+                    <h4 className="font-bold flex items-center gap-2 mb-2"><Heart className="w-4 h-4 text-pink-500" /> {t.relationshipOutlook}</h4>
                     <p className="text-sm text-muted-foreground">{analysis.relationship_outlook}</p>
                   </SpiritualCard>
                 )}
@@ -456,12 +458,12 @@ const PalmReading = () => {
               {/* Lucky Elements */}
               {analysis.lucky_elements && (
                 <SpiritualCard variant="golden" className="p-4">
-                  <h4 className="font-bold mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4 text-accent" /> Lucky Elements</h4>
+                   <h4 className="font-bold mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4 text-accent" /> {t.luckyElements}</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><p className="text-xs text-muted-foreground">Color</p><p className="font-medium">{analysis.lucky_elements.color}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Number</p><p className="font-medium">{analysis.lucky_elements.number}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Day</p><p className="font-medium">{analysis.lucky_elements.day}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Gemstone</p><p className="font-medium">{analysis.lucky_elements.gemstone}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{t.color}</p><p className="font-medium">{analysis.lucky_elements.color}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{t.number}</p><p className="font-medium">{analysis.lucky_elements.number}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{t.day}</p><p className="font-medium">{analysis.lucky_elements.day}</p></div>
+                    <div><p className="text-xs text-muted-foreground">{t.gemstone}</p><p className="font-medium">{analysis.lucky_elements.gemstone}</p></div>
                   </div>
                 </SpiritualCard>
               )}
@@ -497,7 +499,7 @@ const PalmReading = () => {
                 <SpiritualCard variant="spiritual" className="overflow-hidden">
                   <SpiritualCardHeader className="border-b border-primary/20">
                     <SpiritualCardTitle className="flex items-center gap-2">
-                      <Gem className="w-5 h-5 text-primary" /> Remedies & Guidance
+                      <Gem className="w-5 h-5 text-primary" /> {t.remediesGuidance}
                     </SpiritualCardTitle>
                   </SpiritualCardHeader>
                   <SpiritualCardContent className="p-4 space-y-3">
@@ -517,10 +519,10 @@ const PalmReading = () => {
               {/* Expert Recommendations */}
               <SpiritualCard variant="mystic" className="p-5 border-2 border-accent/40">
                 <div className="text-center space-y-3 mb-4">
-                  <Badge className="bg-destructive/90 text-destructive-foreground animate-pulse">⚡ Limited Slots Available</Badge>
-                  <h3 className="font-display font-bold text-lg">Your Reading Needs Expert Attention</h3>
+                  <Badge className="bg-destructive/90 text-destructive-foreground animate-pulse">{t.limitedSlots}</Badge>
+                  <h3 className="font-display font-bold text-lg">{t.expertAttention}</h3>
                   <p className="text-sm text-muted-foreground">
-                    AI analysis gives you the overview — but only a <span className="font-semibold text-foreground">certified palmist</span> can reveal timing of events, hidden challenges, and your <span className="font-semibold text-foreground">personalized future strategy</span>. Act now before slots fill up.
+                    {t.expertAttentionDesc}
                   </p>
                 </div>
 
@@ -560,11 +562,11 @@ const PalmReading = () => {
                   </div>
                 ) : (
                   <div className="flex gap-3 justify-center">
-                    <SpiritualButton variant="outline" onClick={() => navigate("/talk")}>
-                      <MessageCircle className="w-4 h-4 mr-2" /> Chat with Expert
+                     <SpiritualButton variant="outline" onClick={() => navigate("/talk")}>
+                      <MessageCircle className="w-4 h-4 mr-2" /> {t.chatWithExpert}
                     </SpiritualButton>
                     <SpiritualButton variant="primary" onClick={() => navigate("/talk")}>
-                      <Phone className="w-4 h-4 mr-2" /> Call an Expert
+                      <Phone className="w-4 h-4 mr-2" /> {t.callExpert}
                     </SpiritualButton>
                   </div>
                 )}
