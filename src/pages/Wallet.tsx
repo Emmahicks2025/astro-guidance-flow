@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { toast } from "sonner";
+import { useTranslation } from "@/stores/languageStore";
 
 const rechargeOptions = [
   { amount: 100, bonus: 0 },
@@ -22,6 +23,7 @@ const transactionHistory = [
 
 const WalletPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [balance] = useState(495);
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
 
@@ -49,7 +51,7 @@ const WalletPage = () => {
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center">
               <Wallet className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl">My Wallet</span>
+            <span className="font-display font-bold text-xl">{t.myWallet}</span>
           </div>
         </div>
       </header>
@@ -57,10 +59,10 @@ const WalletPage = () => {
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Balance Card */}
         <SpiritualCard variant="golden" className="p-6 text-center">
-          <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
+          <p className="text-sm text-muted-foreground mb-1">{t.availableBalance}</p>
           <p className="text-4xl font-bold text-accent">₹{balance}</p>
           <p className="text-sm text-muted-foreground mt-2">
-            ≈ {Math.floor(balance / 25)} minutes with top astrologers
+            ≈ {Math.floor(balance / 25)} {t.minutesWithAstrologers}
           </p>
         </SpiritualCard>
 
@@ -68,7 +70,7 @@ const WalletPage = () => {
         <section className="space-y-3">
           <h3 className="text-lg font-bold font-display flex items-center gap-2">
             <Plus className="w-5 h-5 text-primary" />
-            Recharge Wallet
+            {t.rechargeWallet}
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {rechargeOptions.map((option) => (
@@ -81,14 +83,14 @@ const WalletPage = () => {
               >
                 {option.popular && (
                   <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs px-2 py-0.5 rounded-full">
-                    Popular
+                    {t.popular}
                   </span>
                 )}
                 <p className="text-2xl font-bold">₹{option.amount}</p>
                 {option.bonus > 0 && (
                   <p className="text-sm text-green-500 flex items-center justify-center gap-1 mt-1">
                     <Gift className="w-4 h-4" />
-                    +₹{option.bonus} bonus
+                    +₹{option.bonus} {t.bonus}
                   </p>
                 )}
               </SpiritualCard>
@@ -102,7 +104,7 @@ const WalletPage = () => {
             disabled={!selectedAmount}
           >
             <CreditCard className="w-5 h-5" />
-            Recharge ₹{selectedAmount || 0}
+            {t.recharge} ₹{selectedAmount || 0}
           </SpiritualButton>
         </section>
 
@@ -110,7 +112,7 @@ const WalletPage = () => {
         <section className="space-y-3">
           <h3 className="text-lg font-bold font-display flex items-center gap-2">
             <History className="w-5 h-5 text-secondary" />
-            Recent Transactions
+            {t.recentTransactions}
           </h3>
           <SpiritualCard variant="elevated" className="overflow-hidden">
             <div className="divide-y divide-border">
@@ -139,7 +141,7 @@ const WalletPage = () => {
             </div>
           </SpiritualCard>
           <SpiritualButton variant="ghost" className="w-full">
-            View All Transactions
+            {t.viewAllTransactions}
             <ChevronRight className="w-4 h-4" />
           </SpiritualButton>
         </section>

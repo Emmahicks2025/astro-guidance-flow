@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLanguageStore, useTranslation, type Language } from "@/stores/languageStore";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,18 +45,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { userData, resetOnboarding } = useOnboardingStore();
   const { signOut, user } = useAuth();
+  const { t } = useTranslation();
+  const { language, setLanguage: setAppLanguage } = useLanguageStore();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -65,7 +61,6 @@ const SettingsPage = () => {
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
-  const [language, setLanguage] = useState('English');
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -116,7 +111,6 @@ const SettingsPage = () => {
     try {
       const updates: Record<string, string | null> = { full_name: profileName };
       
-      // Upload avatar to storage if changed
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
         const filePath = `${user.id}/avatar.${fileExt}`;
@@ -143,18 +137,18 @@ const SettingsPage = () => {
 
   const settingsSections = [
     {
-      title: 'Account',
+      title: t.account,
       items: [
-        { icon: User, label: 'Edit Profile', action: () => setShowEditProfile(true) },
-        { icon: Shield, label: 'Privacy & Security', action: () => navigate('/privacy-policy') },
+        { icon: User, label: t.editProfile, action: () => setShowEditProfile(true) },
+        { icon: Shield, label: t.privacySecurity, action: () => navigate('/privacy-policy') },
       ]
     },
     {
-      title: 'Preferences',
+      title: t.preferences,
       items: [
         { 
           icon: Bell, 
-          label: 'Notifications', 
+          label: t.notifications, 
           toggle: true, 
           value: notifications, 
           action: () => {
@@ -164,29 +158,29 @@ const SettingsPage = () => {
         },
         { 
           icon: Moon, 
-          label: 'Dark Mode', 
+          label: t.darkMode, 
           toggle: true, 
           value: darkMode, 
           action: () => setDarkMode(!darkMode) 
         },
-        { icon: Globe, label: 'Language', value: language, action: () => setShowLanguageDialog(true) },
+        { icon: Globe, label: t.language, value: language, action: () => setShowLanguageDialog(true) },
       ]
     },
     {
-      title: 'Legal',
+      title: t.legal,
       items: [
-        { icon: FileText, label: 'Terms & Conditions', action: () => navigate('/terms') },
-        { icon: Shield, label: 'Privacy Policy', action: () => navigate('/privacy-policy') },
+        { icon: FileText, label: t.termsConditions, action: () => navigate('/terms') },
+        { icon: Shield, label: t.privacyPolicy, action: () => navigate('/privacy-policy') },
       ]
     },
     {
-      title: 'Support',
+      title: t.support,
       items: [
-        { icon: HelpCircle, label: 'Help & FAQ', action: () => setShowHelpDialog(true) },
-        { icon: Star, label: 'Rate Us', action: () => {
+        { icon: HelpCircle, label: t.helpFaq, action: () => setShowHelpDialog(true) },
+        { icon: Star, label: t.rateUs, action: () => {
           toast.success("Thank you for your support! ⭐");
         }},
-        { icon: Info, label: 'App Version', value: 'v1.0.0' },
+        { icon: Info, label: t.appVersion, value: 'v1.0.0' },
       ]
     },
   ];
@@ -226,6 +220,8 @@ const SettingsPage = () => {
     }
   };
 
+  const availableLanguages: Language[] = ['English', 'Hindi', 'Tamil', 'Telugu', 'Bengali', 'Marathi'];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -242,7 +238,7 @@ const SettingsPage = () => {
             <div className="w-10 h-10 rounded-full bg-gradient-spiritual flex items-center justify-center">
               <Settings className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl">Settings</span>
+            <span className="font-display font-bold text-xl">{t.settings}</span>
           </div>
         </div>
       </header>
@@ -325,7 +321,7 @@ const SettingsPage = () => {
           onClick={handleLogout}
         >
           <LogOut className="w-5 h-5" />
-          Log Out
+          {t.logOut}
         </SpiritualButton>
 
         {/* Delete Account Button */}
@@ -336,7 +332,7 @@ const SettingsPage = () => {
           onClick={() => setShowDeleteDialog(true)}
         >
           <Trash2 className="w-5 h-5" />
-          Delete Account
+          {t.deleteAccount}
         </SpiritualButton>
 
         {/* App Version */}
@@ -349,7 +345,7 @@ const SettingsPage = () => {
       <Dialog open={showEditProfile} onOpenChange={setShowEditProfile}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle>{t.editProfile}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="flex flex-col items-center gap-3">
@@ -372,10 +368,10 @@ const SettingsPage = () => {
                 className="hidden"
                 onChange={handleAvatarUpload}
               />
-              <p className="text-xs text-muted-foreground">Tap photo to change</p>
+              <p className="text-xs text-muted-foreground">{t.tapPhotoToChange}</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="profileName">Full Name</Label>
+              <Label htmlFor="profileName">{t.fullName}</Label>
               <Input
                 id="profileName"
                 value={profileName}
@@ -386,7 +382,7 @@ const SettingsPage = () => {
             <div className="space-y-2">
               <Label>Email</Label>
               <Input value={user?.email || ''} disabled className="opacity-60" />
-              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+              <p className="text-xs text-muted-foreground">{t.emailCannotChange}</p>
             </div>
             <SpiritualButton
               variant="primary"
@@ -395,7 +391,7 @@ const SettingsPage = () => {
               onClick={handleSaveProfile}
               disabled={isSavingProfile}
             >
-              {isSavingProfile ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : "Save Changes"}
+              {isSavingProfile ? <><Loader2 className="w-4 h-4 animate-spin" /> {t.loading}</> : t.saveChanges}
             </SpiritualButton>
           </div>
         </DialogContent>
@@ -405,14 +401,14 @@ const SettingsPage = () => {
       <Dialog open={showLanguageDialog} onOpenChange={setShowLanguageDialog}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Select Language</DialogTitle>
+            <DialogTitle>{t.selectLanguage}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 pt-2">
-            {['English', 'Hindi', 'Tamil', 'Telugu', 'Bengali', 'Marathi'].map((lang) => (
+            {availableLanguages.map((lang) => (
               <button
                 key={lang}
                 onClick={() => {
-                  setLanguage(lang);
+                  setAppLanguage(lang);
                   setShowLanguageDialog(false);
                   toast.success(`Language changed to ${lang}`);
                 }}
@@ -431,7 +427,7 @@ const SettingsPage = () => {
       <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
         <DialogContent className="max-w-sm max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Help & FAQ</DialogTitle>
+            <DialogTitle>{t.helpFaq}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             {[
@@ -455,26 +451,19 @@ const SettingsPage = () => {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account Permanently?</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>This action is <strong>irreversible</strong>. All of the following will be permanently deleted:</p>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>Your profile and personal information</li>
-                <li>Consultation history and messages</li>
-                <li>Wallet balance and transaction history</li>
-                <li>Kundli charts and saved readings</li>
-              </ul>
-              <p className="pt-2">You will not be able to recover any of this data.</p>
+            <AlertDialogTitle>{t.deleteAccountTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.deleteAccountDesc}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{t.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Deleting..." : "Yes, Delete My Account"}
+              {isDeleting ? t.loading : t.yesDeleteAccount}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
