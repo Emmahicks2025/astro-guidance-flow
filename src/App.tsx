@@ -14,6 +14,7 @@ import DailyHoroscope from "./pages/DailyHoroscope";
 import Panchang from "./pages/Panchang";
 import MyKundli from "./pages/MyKundli";
 import WalletPage from "./pages/Wallet";
+import PricingPage from "./pages/Pricing";
 import SettingsPage from "./pages/Settings";
 import Explore from "./pages/Explore";
 import AdminPanel from "./pages/AdminPanel";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/panchang" element={<Panchang />} />
             <Route path="/kundli" element={<MyKundli />} />
             <Route path="/wallet" element={<WalletPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/admin" element={<AdminPanel />} />
