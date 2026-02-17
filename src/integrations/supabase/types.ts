@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          id: string
+          key_name: string
+          key_value: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          key_name: string
+          key_value: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          key_name?: string
+          key_value?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       consultations: {
         Row: {
           amount_charged: number | null

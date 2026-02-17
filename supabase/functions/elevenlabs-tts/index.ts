@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { getApiKey } from "../_shared/get-api-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +16,7 @@ serve(async (req) => {
     
     console.log("ElevenLabs TTS request:", { voiceId, textLength: text?.length });
 
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    const ELEVENLABS_API_KEY = await getApiKey("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ELEVENLABS_API_KEY is not configured");
     }
