@@ -83,6 +83,42 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_memories: {
+        Row: {
+          created_at: string
+          expert_id: string
+          id: string
+          key_points: Json
+          last_call_at: string | null
+          summary: string | null
+          total_calls: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expert_id: string
+          id?: string
+          key_points?: Json
+          last_call_at?: string | null
+          summary?: string | null
+          total_calls?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expert_id?: string
+          id?: string
+          key_points?: Json
+          last_call_at?: string | null
+          summary?: string | null
+          total_calls?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       jotshi_profiles: {
         Row: {
           ai_personality: string | null
@@ -199,7 +235,9 @@ export type Database = {
           full_name: string | null
           gender: string | null
           id: string
+          kundli_analysis_text: string | null
           major_concern: string | null
+          palm_analysis_text: string | null
           partner_dob: string | null
           partner_name: string | null
           partner_place_of_birth: string | null
@@ -219,7 +257,9 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          kundli_analysis_text?: string | null
           major_concern?: string | null
+          palm_analysis_text?: string | null
           partner_dob?: string | null
           partner_name?: string | null
           partner_place_of_birth?: string | null
@@ -239,7 +279,9 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          kundli_analysis_text?: string | null
           major_concern?: string | null
+          palm_analysis_text?: string | null
           partner_dob?: string | null
           partner_name?: string | null
           partner_place_of_birth?: string | null

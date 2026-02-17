@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
-import { useScribe, CommitStrategy } from "@elevenlabs/react";
+import { useConversation } from "@elevenlabs/react";
 
 interface Expert {
   id: string;
@@ -45,8 +45,9 @@ interface ExpertConsultationDialogProps {
 }
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/expert-chat`;
-const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
-const SCRIBE_TOKEN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-scribe-token`;
+const CONTEXT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-call-context`;
+const TOKEN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-conversation-token`;
+const SAVE_MEMORY_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/save-conversation-memory`;
 
 export function ExpertConsultationDialog({ 
   expert, 
@@ -61,36 +62,58 @@ export function ExpertConsultationDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [consultationId, setConsultationId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const isCallActiveRef = useRef(false);
-  const isMutedRef = useRef(false);
-  const isSpeakingRef = useRef(false);
-  const isProcessingRef = useRef(false);
-  const callMessagesRef = useRef<Message[]>([]);
   const prevOpenRef = useRef(false);
-  const getAIResponseRef = useRef<(text: string) => void>(() => {});
-  const scribeRef = useRef<any>(null);
+  const callTranscriptRef = useRef<string[]>([]);
+  const expertIdRef = useRef<string>("");
 
-  // Treat as AI if has ai_personality OR has no real user_id (admin-created without linked user)
+  // Treat as AI if has ai_personality OR has no real user_id
   const isAI = !!expert?.ai_personality || !expert?.user_id;
 
-  // Reset state only when dialog first opens (not on every render)
+  // ElevenLabs Conversational AI — single WebRTC connection handles STT+LLM+TTS
+  const conversation = useConversation({
+    onConnect: () => {
+      console.log("ElevenLabs conversation connected");
+      setIsCallActive(true);
+      setIsConnecting(false);
+      toast.success(`Connected with ${expert?.name}`);
+    },
+    onDisconnect: () => {
+      console.log("ElevenLabs conversation disconnected");
+      handleCallEnd();
+    },
+    onMessage: (message: any) => {
+      // Collect transcript for memory extraction
+      if (message.type === "user_transcript") {
+        const text = message.user_transcription_event?.user_transcript;
+        if (text) callTranscriptRef.current.push(`User: ${text}`);
+      } else if (message.type === "agent_response") {
+        const text = message.agent_response_event?.agent_response;
+        if (text) callTranscriptRef.current.push(`Expert: ${text}`);
+      }
+    },
+    onError: (error) => {
+      console.error("Conversation error:", error);
+      toast.error("Voice connection error. Please try again.");
+      setIsConnecting(false);
+    },
+  });
+
+  // Reset state when dialog opens
   useEffect(() => {
     if (open && !prevOpenRef.current && expert) {
-      // Dialog just opened — reset everything
       setActiveTab(initialTab);
       setMessages([]);
       setInputMessage("");
       setIsCallActive(false);
       setCallDuration(0);
       setConsultationId(null);
+      callTranscriptRef.current = [];
+      expertIdRef.current = expert.id;
       
       if (!isAI && user) {
         createConsultation();
@@ -105,61 +128,34 @@ export function ExpertConsultationDialog({
     };
   }, [open, expert?.id]);
 
-  // Subscribe to realtime messages when consultationId is set
+  // Realtime messages for human experts
   useEffect(() => {
     if (!consultationId || isAI) return;
-
     const channel = supabase
       .channel(`messages-${consultationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `consultation_id=eq.${consultationId}`,
-        },
-        (payload) => {
-          const msg = payload.new as any;
-          // Only add messages from the expert (not from us)
-          if (msg.sender_id !== user?.id) {
-            setMessages(prev => [...prev, { role: 'assistant', content: msg.content }]);
-          }
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'messages',
+        filter: `consultation_id=eq.${consultationId}`,
+      }, (payload) => {
+        const msg = payload.new as any;
+        if (msg.sender_id !== user?.id) {
+          setMessages(prev => [...prev, { role: 'assistant', content: msg.content }]);
         }
-      )
+      })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [consultationId, isAI, user?.id]);
 
   const createConsultation = async () => {
     if (!expert || !user) return;
     try {
-      // Find the expert's user_id from their jotshi_profile
       const { data: profileData } = await supabase
-        .from('jotshi_profiles')
-        .select('user_id')
-        .eq('id', expert.id)
-        .maybeSingle();
-
-      if (!profileData?.user_id) {
-        toast.error("Unable to connect with this expert");
-        return;
-      }
-
+        .from('jotshi_profiles').select('user_id').eq('id', expert.id).maybeSingle();
+      if (!profileData?.user_id) { toast.error("Unable to connect with this expert"); return; }
       const { data, error } = await supabase
         .from('consultations')
-        .insert({
-          user_id: user.id,
-          jotshi_id: profileData.user_id,
-          status: 'waiting',
-          concern: 'Chat consultation',
-        })
-        .select('id')
-        .single();
-
+        .insert({ user_id: user.id, jotshi_id: profileData.user_id, status: 'waiting', concern: 'Chat consultation' })
+        .select('id').single();
       if (error) throw error;
       setConsultationId(data.id);
     } catch (err) {
@@ -170,19 +166,15 @@ export function ExpertConsultationDialog({
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
+      const el = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (el) el.scrollTop = el.scrollHeight;
     }
   }, [messages]);
 
   // Call timer
   useEffect(() => {
     if (isCallActive) {
-      callTimerRef.current = setInterval(() => {
-        setCallDuration(prev => prev + 1);
-      }, 1000);
+      callTimerRef.current = setInterval(() => setCallDuration(prev => prev + 1), 1000);
     } else {
       if (callTimerRef.current) clearInterval(callTimerRef.current);
       setCallDuration(0);
@@ -196,192 +188,129 @@ export function ExpertConsultationDialog({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Helper to restart scribe listening — reconnect if disconnected
-  const restartScribeListening = useCallback(async () => {
-    if (!isCallActiveRef.current || isMutedRef.current) return;
+  // Save conversation memory after call ends
+  const saveMemory = useCallback(async () => {
+    const transcript = callTranscriptRef.current.join("\n");
+    if (!transcript || !expertIdRef.current || !user) return;
     
-    // If scribe disconnected during AI response, reconnect
-    if (scribeRef.current && !scribeRef.current.isConnected) {
-      console.log("Scribe disconnected, reconnecting...");
-      try {
-        const tokenResp = await fetch(SCRIBE_TOKEN_URL, {
+    try {
+      await fetch(SAVE_MEMORY_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({ expertId: expertIdRef.current, transcript }),
+      });
+      console.log("Conversation memory saved");
+    } catch (err) {
+      console.error("Failed to save memory:", err);
+    }
+  }, [user]);
+
+  const handleCallEnd = useCallback(() => {
+    setIsCallActive(false);
+    setIsConnecting(false);
+    // Save memory in background
+    saveMemory();
+  }, [saveMemory]);
+
+  // Start voice call using ElevenLabs Conversational AI
+  const startCall = async () => {
+    if (!expert || !expert.voice_id) {
+      toast.error("Voice not configured for this expert. Please use chat instead.");
+      return;
+    }
+
+    setIsConnecting(true);
+    callTranscriptRef.current = [];
+
+    try {
+      // Request mic permission
+      await navigator.mediaDevices.getUserMedia({ audio: true }).then(s => s.getTracks().forEach(t => t.stop()));
+
+      // Fetch call context (profile + memories + expert personality) and token in parallel
+      const session = await supabase.auth.getSession();
+      const accessToken = session.data.session?.access_token;
+
+      const [contextResp, tokenResp] = await Promise.all([
+        fetch(CONTEXT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ expertId: expert.id }),
+        }),
+        fetch(TOKEN_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
-        });
-        if (tokenResp.ok) {
-          const { token } = await tokenResp.json();
-          if (token) {
-            await scribeRef.current.connect({
-              token,
-              microphone: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-            });
-          }
-        }
-      } catch (err) {
-        console.error("Scribe reconnect failed:", err);
-      }
-    }
-    
-    setIsListening(true);
-  }, []);
-
-  // AI voice call handler
-  const getAIResponseAndSpeak = useCallback(async (userText: string) => {
-    if (!expert || !expert.voice_id) return;
-    if (isProcessingRef.current) return; // Prevent overlapping requests
-    
-    isProcessingRef.current = true;
-    setIsProcessing(true);
-    setIsListening(false);
-    
-    const userMessage: Message = { role: 'user', content: userText };
-    callMessagesRef.current = [...callMessagesRef.current, userMessage];
-
-    try {
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ 
-          messages: callMessagesRef.current,
-          expertId: expert.id,
-          expertName: expert.name,
-          expertPersonality: expert.ai_personality
+          body: JSON.stringify({}),
         }),
-      });
+      ]);
 
-      if (!resp.ok || !resp.body) throw new Error("Failed to get response");
+      if (!tokenResp.ok) throw new Error("Failed to get conversation token");
+      const { token } = await tokenResp.json();
+      if (!token) throw new Error("No token received");
 
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let fullResponse = "";
-      let textBuffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) fullResponse += content;
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
+      let overrides: any = {};
+      if (contextResp.ok) {
+        const context = await contextResp.json();
+        overrides = {
+          agent: {
+            prompt: { prompt: context.systemPrompt },
+            firstMessage: context.firstMessage,
+            language: "en",
+          },
+          tts: {
+            voiceId: expert.voice_id,
+          },
+        };
       }
 
-      if (!fullResponse.trim() || !isCallActiveRef.current) {
-        isProcessingRef.current = false;
-        setIsProcessing(false);
-        restartScribeListening();
-        return;
-      }
-
-      const assistantMessage: Message = { role: 'assistant', content: fullResponse };
-      callMessagesRef.current = [...callMessagesRef.current, assistantMessage];
-
-      setIsSpeaking(true);
-      isSpeakingRef.current = true;
-      isProcessingRef.current = false;
-      setIsProcessing(false);
-
-      const ttsResponse = await fetch(TTS_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ text: fullResponse, voiceId: expert.voice_id }),
+      // Start the conversation — single WebRTC connection handles everything
+      await conversation.startSession({
+        conversationToken: token,
+        connectionType: "webrtc",
+        overrides,
       });
-
-      if (ttsResponse.ok) {
-        const audioBlob = await ttsResponse.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        if (audioRef.current) audioRef.current.pause();
-        const audio = new Audio(audioUrl);
-        audioRef.current = audio;
-        audio.onended = () => {
-          setIsSpeaking(false);
-          isSpeakingRef.current = false;
-          URL.revokeObjectURL(audioUrl);
-          restartScribeListening();
-        };
-        audio.onerror = () => { 
-          setIsSpeaking(false);
-          isSpeakingRef.current = false;
-          URL.revokeObjectURL(audioUrl);
-          restartScribeListening();
-        };
-        await audio.play();
+    } catch (err: any) {
+      console.error("Start call error:", err);
+      setIsConnecting(false);
+      if (err?.name === 'NotAllowedError') {
+        toast.error("Microphone permission denied.", { duration: 6000 });
       } else {
-        setIsSpeaking(false);
-        isSpeakingRef.current = false;
-        restartScribeListening();
+        toast.error(err?.message || "Failed to start voice call. Try again.", { duration: 5000 });
       }
-    } catch (error) {
-      console.error("Call AI error:", error);
-      setIsSpeaking(false);
-      isSpeakingRef.current = false;
-      isProcessingRef.current = false;
-      setIsProcessing(false);
-      restartScribeListening();
     }
-  }, [expert, restartScribeListening]);
+  };
 
-  // Keep ref in sync
-  getAIResponseRef.current = getAIResponseAndSpeak;
+  const endCall = async () => {
+    try {
+      await conversation.endSession();
+    } catch {
+      // Force cleanup
+      handleCallEnd();
+    }
+    toast.info(`Call ended — Duration: ${formatDuration(callDuration)}`);
+  };
 
-  // ElevenLabs Scribe for realtime STT
-  const scribe = useScribe({
-    modelId: "scribe_v2_realtime",
-    commitStrategy: CommitStrategy.VAD,
-    onConnect: () => {
-      console.log("Scribe connected");
-    },
-    onDisconnect: () => {
-      console.log("Scribe disconnected");
-      if (isCallActiveRef.current) {
-        setIsListening(false);
-      }
-    },
-    onCommittedTranscript: (data) => {
-      const transcript = data.text?.trim();
-      console.log("Scribe committed:", transcript, "speaking:", isSpeakingRef.current, "processing:", isProcessingRef.current, "muted:", isMutedRef.current);
-      if (transcript && isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-        setIsListening(false);
-        getAIResponseRef.current(transcript);
-      }
-    },
-    onPartialTranscript: (data) => {
-      if (data.text?.trim() && isCallActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-        setIsListening(true);
-      }
-    },
-    onError: (error) => {
-      console.error("Scribe error:", error);
-    },
-  });
-
-  // Keep scribe ref in sync
-  scribeRef.current = scribe;
+  const toggleMute = () => {
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+    // ElevenLabs handles mute via volume or we just track state
+    if (newMuted) {
+      conversation.setVolume({ volume: 0 });
+    } else {
+      conversation.setVolume({ volume: 1 });
+    }
+  };
 
   // Send message — AI or human (chat tab)
   const sendMessage = useCallback(async () => {
@@ -472,18 +401,11 @@ export function ExpertConsultationDialog({
       try {
         const { error } = await supabase
           .from('messages')
-          .insert({
-            consultation_id: consultationId,
-            sender_id: user.id,
-            content: userMessage.content,
-            message_type: 'text',
-          });
+          .insert({ consultation_id: consultationId, sender_id: user.id, content: userMessage.content, message_type: 'text' });
         if (error) throw error;
-        await supabase
-          .from('consultations')
+        await supabase.from('consultations')
           .update({ status: 'active', started_at: new Date().toISOString() })
-          .eq('id', consultationId)
-          .eq('status', 'waiting');
+          .eq('id', consultationId).eq('status', 'waiting');
       } catch (error) {
         console.error("Message send error:", error);
         toast.error("Failed to send message.");
@@ -494,90 +416,15 @@ export function ExpertConsultationDialog({
     }
   }, [inputMessage, messages, expert, isLoading, isAI, consultationId, user]);
 
-  const startCall = async () => {
-    if (!expert) return;
-    if (!expert.voice_id) {
-      toast.error("Voice not configured for this expert. Please use chat instead.");
-      return;
-    }
-
-    try {
-      // Request mic permission first (needed for scribe)
-      await navigator.mediaDevices.getUserMedia({ audio: true }).then(s => s.getTracks().forEach(t => t.stop()));
-      
-      // Get scribe token
-      const tokenResp = await fetch(SCRIBE_TOKEN_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-      });
-      
-      if (!tokenResp.ok) throw new Error("Failed to get scribe token");
-      const { token } = await tokenResp.json();
-      if (!token) throw new Error("No scribe token received");
-
-      // Connect scribe
-      await scribe.connect({
-        token,
-        microphone: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-
-      setIsCallActive(true);
-      isCallActiveRef.current = true;
-      callMessagesRef.current = [];
-      setIsListening(true);
-      toast.success(`Connected with ${expert.name}`);
-    } catch (err: any) {
-      console.error("Start call error:", err);
-      if (err?.name === 'NotAllowedError') {
-        toast.error("Microphone permission denied.", { duration: 6000 });
-      } else {
-        toast.error(err?.message || "Failed to start voice call. Try again.", { duration: 5000 });
-      }
-    }
-  };
-
-  const endCall = () => {
-    isCallActiveRef.current = false;
-    scribe.disconnect();
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    setIsCallActive(false);
-    setIsListening(false);
-    setIsSpeaking(false);
-    isSpeakingRef.current = false;
-    isProcessingRef.current = false;
-    setIsProcessing(false);
-    toast.info(`Call ended - Duration: ${formatDuration(callDuration)}`);
-  };
-
-  const toggleMute = () => {
-    const newMuted = !isMuted;
-    setIsMuted(newMuted);
-    isMutedRef.current = newMuted;
-    if (newMuted) {
-      setIsListening(false);
-      // Note: scribe stays connected but we ignore transcripts via isMutedRef
-    } else {
-      if (!isSpeakingRef.current && !isProcessingRef.current) {
-        setIsListening(true);
-      }
-    }
-  };
-
   if (!expert) return null;
+
+  const isAgentSpeaking = conversation.isSpeaking;
+  const isConnected = conversation.status === "connected";
 
   return (
     <Dialog open={open} onOpenChange={(open) => {
       if (!open && isCallActive) endCall();
       if (!open && consultationId) {
-        // End consultation when closing
         supabase.from('consultations').update({ status: 'completed', ended_at: new Date().toISOString() }).eq('id', consultationId);
       }
       onOpenChange(open);
@@ -700,7 +547,7 @@ export function ExpertConsultationDialog({
             <div className="text-center space-y-6 w-full max-w-xs">
               <div className="relative mx-auto w-28 h-28">
                 <div className={`w-28 h-28 rounded-full overflow-hidden ring-4 ${
-                  isCallActive ? (isSpeaking ? 'ring-primary animate-pulse' : 'ring-green-500') : 'ring-border'
+                  isCallActive ? (isAgentSpeaking ? 'ring-primary animate-pulse' : 'ring-green-500') : 'ring-border'
                 }`}>
                   <img src={expert.avatar} alt={expert.name} className="w-full h-full object-cover" />
                 </div>
@@ -721,21 +568,25 @@ export function ExpertConsultationDialog({
                 )}
               </div>
 
+              {isConnecting && (
+                <div className="text-sm text-muted-foreground animate-pulse flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Connecting...
+                </div>
+              )}
+
               {isCallActive && (
                 <div className="text-sm text-muted-foreground">
-                  {isSpeaking && <p className="text-primary animate-pulse">🔊 Speaking...</p>}
-                  {isProcessing && !isSpeaking && <p className="text-muted-foreground animate-pulse">💭 Thinking...</p>}
-                  {isListening && !isSpeaking && !isProcessing && <p className="text-green-500 animate-pulse">🎙 Listening...</p>}
-                  {!isListening && !isSpeaking && !isProcessing && <p className="text-muted-foreground">Ready</p>}
+                  {isAgentSpeaking && <p className="text-primary animate-pulse">🔊 Speaking...</p>}
+                  {!isAgentSpeaking && <p className="text-green-500 animate-pulse">🎙 Listening...</p>}
                 </div>
               )}
 
               <div className="flex justify-center gap-4">
-                {!isCallActive ? (
+                {!isCallActive && !isConnecting ? (
                   <SpiritualButton variant="primary" size="lg" className="w-full gap-2" onClick={startCall}>
                     <Phone className="w-5 h-5" /> Start Voice Call
                   </SpiritualButton>
-                ) : (
+                ) : isCallActive ? (
                   <>
                     <SpiritualButton
                       variant={isMuted ? "primary" : "outline"}
@@ -754,7 +605,7 @@ export function ExpertConsultationDialog({
                       <PhoneOff className="w-6 h-6" />
                     </SpiritualButton>
                   </>
-                )}
+                ) : null}
               </div>
             </div>
           </TabsContent>
