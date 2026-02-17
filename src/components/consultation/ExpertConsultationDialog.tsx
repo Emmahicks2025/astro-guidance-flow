@@ -542,70 +542,139 @@ export function ExpertConsultationDialog({
             </div>
           </TabsContent>
 
-          {/* Call Tab */}
-          <TabsContent value="call" className="flex-1 flex flex-col items-center justify-center m-0 p-4">
-            <div className="text-center space-y-6 w-full max-w-xs">
-              <div className="relative mx-auto w-28 h-28">
-                <div className={`w-28 h-28 rounded-full overflow-hidden ring-4 ${
-                  isCallActive ? (isAgentSpeaking ? 'ring-primary animate-pulse' : 'ring-green-500') : 'ring-border'
-                }`}>
-                  <img src={expert.avatar} alt={expert.name} className="w-full h-full object-cover" />
+          {/* Call Tab — Phone-style full layout */}
+          <TabsContent value="call" className="flex-1 flex flex-col m-0 p-0 overflow-hidden">
+            <div className="flex-1 flex flex-col items-center justify-between bg-gradient-to-b from-background via-background to-muted/30 py-8 px-6">
+              {/* Top section — avatar & info */}
+              <div className="flex flex-col items-center gap-4 pt-4">
+                {/* Ringing ripple rings */}
+                <div className="relative">
+                  {(isConnecting || isCallActive) && (
+                    <>
+                      <motion.div
+                        className="absolute inset-[-12px] rounded-full border border-primary/30"
+                        animate={{ scale: [1, 1.4], opacity: [0.4, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+                      />
+                      <motion.div
+                        className="absolute inset-[-12px] rounded-full border border-primary/20"
+                        animate={{ scale: [1, 1.6], opacity: [0.3, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.4 }}
+                      />
+                      {isConnecting && (
+                        <motion.div
+                          className="absolute inset-[-12px] rounded-full border border-primary/10"
+                          animate={{ scale: [1, 1.8], opacity: [0.2, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut", delay: 0.8 }}
+                        />
+                      )}
+                    </>
+                  )}
+                  <div className={`w-24 h-24 rounded-full overflow-hidden ring-4 transition-all duration-300 ${
+                    isCallActive
+                      ? isAgentSpeaking ? 'ring-primary shadow-lg shadow-primary/20' : 'ring-green-500 shadow-lg shadow-green-500/20'
+                      : isConnecting ? 'ring-primary/50' : 'ring-border'
+                  }`}>
+                    <img src={expert.avatar} alt={expert.name} className="w-full h-full object-cover" />
+                  </div>
                 </div>
-                {isCallActive && (
-                  <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-primary"
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                )}
+
+                <div className="text-center">
+                  <h3 className="font-semibold text-lg text-foreground">{expert.name}</h3>
+                  <p className="text-sm text-muted-foreground">{expert.specialty}</p>
+                </div>
+
+                {/* Status text */}
+                <div className="h-8 flex items-center">
+                  {isConnecting && (
+                    <motion.p
+                      className="text-sm text-muted-foreground"
+                      animate={{ opacity: [0.4, 1, 0.4] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      Calling...
+                    </motion.p>
+                  )}
+                  {isCallActive && (
+                    <div className="flex flex-col items-center gap-1">
+                      <p className="text-primary font-mono text-lg tracking-wider">{formatDuration(callDuration)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isAgentSpeaking ? 'Speaking...' : 'Listening...'}
+                      </p>
+                    </div>
+                  )}
+                  {!isConnecting && !isCallActive && (
+                    <p className="text-sm text-muted-foreground">Tap to call</p>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <h3 className="font-bold text-lg">{expert.name}</h3>
-                <p className="text-sm text-muted-foreground">{expert.specialty}</p>
-                {isCallActive && (
-                  <p className="text-primary font-mono mt-2">{formatDuration(callDuration)}</p>
-                )}
-              </div>
-
-              {isConnecting && (
-                <div className="text-sm text-muted-foreground animate-pulse flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Connecting...
-                </div>
-              )}
-
-              {isCallActive && (
-                <div className="text-sm text-muted-foreground">
-                  {isAgentSpeaking && <p className="text-primary animate-pulse">🔊 Speaking...</p>}
-                  {!isAgentSpeaking && <p className="text-green-500 animate-pulse">🎙 Listening...</p>}
-                </div>
-              )}
-
-              <div className="flex justify-center gap-4">
+              {/* Bottom section — action buttons */}
+              <div className="w-full max-w-[280px] pb-4">
                 {!isCallActive && !isConnecting ? (
-                  <SpiritualButton variant="primary" size="lg" className="w-full gap-2" onClick={startCall}>
-                    <Phone className="w-5 h-5" /> Start Voice Call
-                  </SpiritualButton>
-                ) : isCallActive ? (
-                  <>
-                    <SpiritualButton
-                      variant={isMuted ? "primary" : "outline"}
-                      size="icon"
-                      className="w-14 h-14 rounded-full"
-                      onClick={toggleMute}
-                    >
-                      {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-                    </SpiritualButton>
-                    <SpiritualButton
-                      variant="primary"
-                      size="icon"
-                      className="w-14 h-14 rounded-full bg-destructive hover:bg-destructive/90"
-                      onClick={endCall}
-                    >
-                      <PhoneOff className="w-6 h-6" />
-                    </SpiritualButton>
-                  </>
-                ) : null}
+                  <button
+                    onClick={startCall}
+                    className="mx-auto flex items-center justify-center w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 active:scale-95 transition-all shadow-lg shadow-green-500/30"
+                  >
+                    <Phone className="w-7 h-7 text-white" />
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-center gap-8">
+                    {/* Mute */}
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={toggleMute}
+                        className={`flex items-center justify-center w-14 h-14 rounded-full transition-all active:scale-95 ${
+                          isMuted
+                            ? 'bg-primary/20 text-primary'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                      </button>
+                      <span className="text-xs text-muted-foreground">{isMuted ? 'Unmute' : 'Mute'}</span>
+                    </div>
+
+                    {/* End call */}
+                    <div className="flex flex-col items-center gap-2">
+                      <button
+                        onClick={endCall}
+                        className="flex items-center justify-center w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90 active:scale-95 transition-all shadow-lg shadow-destructive/30"
+                      >
+                        <PhoneOff className="w-7 h-7 text-white" />
+                      </button>
+                      <span className="text-xs text-muted-foreground">End</span>
+                    </div>
+
+                    {/* Speaker indicator */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className={`flex items-center justify-center w-14 h-14 rounded-full transition-all ${
+                        isAgentSpeaking ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {isAgentSpeaking ? (
+                          <motion.div
+                            className="flex items-center gap-[3px]"
+                            animate={{ opacity: 1 }}
+                          >
+                            {[0, 1, 2].map(i => (
+                              <motion.div
+                                key={i}
+                                className="w-1 bg-primary rounded-full"
+                                animate={{ height: [8, 20, 8] }}
+                                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                              />
+                            ))}
+                          </motion.div>
+                        ) : (
+                          <Phone className="w-5 h-5" />
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {isAgentSpeaking ? 'Speaking' : 'Audio'}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>
