@@ -96,6 +96,14 @@ const AdminPanel = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const addFileInputRef = useRef<HTMLInputElement>(null);
+  const [newProvider, setNewProvider] = useState<Partial<JotshiProfile>>({
+    display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
+    hourly_rate: 20, bio: '', ai_personality: '', voice_id: '', is_online: false,
+    verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
+  });
+  const [addingProvider, setAddingProvider] = useState(false);
+  const [uploadingAddImage, setUploadingAddImage] = useState(false);
   
   // Chat as Astrologer state
   const [chatAsProvider, setChatAsProvider] = useState<JotshiProfile | null>(null);
@@ -377,6 +385,60 @@ const AdminPanel = () => {
       setSelectedIds(new Set());
     } catch { toast.error("Failed to delete"); }
     finally { setBulkActionLoading(false); }
+  };
+
+  // Add new provider handler
+  const handleAddProvider = async () => {
+    if (!newProvider.display_name?.trim()) { toast.error("Display name is required"); return; }
+    setAddingProvider(true);
+    try {
+      const { data, error } = await supabase.from('jotshi_profiles').insert({
+        display_name: newProvider.display_name,
+        specialty: newProvider.specialty || null,
+        category: newProvider.category || 'astrologer',
+        experience_years: newProvider.experience_years || 0,
+        hourly_rate: newProvider.hourly_rate || 20,
+        bio: newProvider.bio || null,
+        ai_personality: newProvider.ai_personality || null,
+        voice_id: newProvider.voice_id || null,
+        is_online: newProvider.is_online || false,
+        verified: newProvider.verified || true,
+        approval_status: 'approved',
+        approved_at: new Date().toISOString(),
+        avatar_url: newProvider.avatar_url || null,
+        languages: newProvider.languages || ['Hindi', 'English'],
+      }).select().single();
+      if (error) throw error;
+      setProviders(prev => [data as JotshiProfile, ...prev]);
+      setShowAddDialog(false);
+      setNewProvider({
+        display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
+        hourly_rate: 20, bio: '', ai_personality: '', voice_id: '', is_online: false,
+        verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
+      });
+      toast.success("Provider created successfully! ✅");
+    } catch (err) {
+      console.error("Failed to create provider:", err);
+      toast.error("Failed to create provider");
+    } finally {
+      setAddingProvider(false);
+    }
+  };
+
+  const handleAddProviderImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+    const file = event.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `new-${Date.now()}.${fileExt}`;
+    setUploadingAddImage(true);
+    try {
+      const { error: uploadError } = await supabase.storage.from('provider-avatars').upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage.from('provider-avatars').getPublicUrl(fileName);
+      setNewProvider(prev => ({ ...prev, avatar_url: publicUrl }));
+      toast.success("Image uploaded!");
+    } catch { toast.error("Failed to upload image"); }
+    finally { setUploadingAddImage(false); }
   };
 
   // Chat as astrologer handler
@@ -966,23 +1028,65 @@ const AdminPanel = () => {
 
       {/* Add Provider Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Add New Provider</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Providers register through the provider registration page and appear in "Pending Approvals".</p>
-            <SpiritualCard variant="elevated" className="bg-muted/30">
-              <SpiritualCardContent className="p-4">
-                <h4 className="font-medium mb-2">Registration Flow:</h4>
-                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                  <li>Provider creates account at <code className="text-primary">/auth</code></li>
-                  <li>Provider registers at <code className="text-primary">/provider-register</code></li>
-                  <li>Application appears here for approval</li>
-                  <li>Admin approves → provider gets notification</li>
-                </ol>
-              </SpiritualCardContent>
-            </SpiritualCard>
+            {/* Profile Image */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Camera className="w-4 h-4" />Profile Image</Label>
+              <div className="flex items-center gap-4">
+                <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-muted border-2 border-dashed border-border">
+                  {newProvider.avatar_url ? <img src={newProvider.avatar_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Sparkles className="w-8 h-8 text-muted-foreground" /></div>}
+                </div>
+                <div className="flex-1">
+                  <input type="file" ref={addFileInputRef} onChange={handleAddProviderImageUpload} accept="image/*" className="hidden" />
+                  <SpiritualButton variant="outline" size="sm" onClick={() => addFileInputRef.current?.click()} disabled={uploadingAddImage}>
+                    {uploadingAddImage ? <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" /> : <Upload className="w-4 h-4 mr-2" />}
+                    {uploadingAddImage ? 'Uploading...' : 'Upload Image'}
+                  </SpiritualButton>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2"><Label>Display Name *</Label><SpiritualInput value={newProvider.display_name || ""} onChange={(e) => setNewProvider({ ...newProvider, display_name: e.target.value })} placeholder="e.g., Pandit Sharma" /></div>
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select value={newProvider.category || "astrologer"} onValueChange={(v) => setNewProvider({ ...newProvider, category: v })}>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>{categories.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Specialty</Label>
+              <Select value={newProvider.specialty || ""} onValueChange={(v) => setNewProvider({ ...newProvider, specialty: v })}>
+                <SelectTrigger><SelectValue placeholder="Select specialty" /></SelectTrigger>
+                <SelectContent>{specialties.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Experience (years)</Label><SpiritualInput type="number" value={newProvider.experience_years || 0} onChange={(e) => setNewProvider({ ...newProvider, experience_years: parseInt(e.target.value) || 0 })} /></div>
+              <div className="space-y-2"><Label>Rate (₹/min)</Label><SpiritualInput type="number" value={newProvider.hourly_rate || 20} onChange={(e) => setNewProvider({ ...newProvider, hourly_rate: parseInt(e.target.value) || 0 })} /></div>
+            </div>
+            <div className="space-y-2"><Label>Bio</Label><Textarea value={newProvider.bio || ""} onChange={(e) => setNewProvider({ ...newProvider, bio: e.target.value })} rows={3} placeholder="Brief description of the provider..." /></div>
+            <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <Label className="flex items-center gap-2 text-primary"><Brain className="w-4 h-4" />AI Personality Traits</Label>
+              <Textarea value={newProvider.ai_personality || ""} onChange={(e) => setNewProvider({ ...newProvider, ai_personality: e.target.value })} rows={4} placeholder="Example: Speak calmly, use Vedic terminology..." className="bg-background" />
+            </div>
+            <div className="space-y-2 p-3 rounded-lg bg-secondary/5 border border-secondary/20">
+              <Label className="flex items-center gap-2 text-secondary"><Phone className="w-4 h-4" />ElevenLabs Voice ID</Label>
+              <SpiritualInput value={newProvider.voice_id || ""} onChange={(e) => setNewProvider({ ...newProvider, voice_id: e.target.value })} placeholder="e.g., S3F8rLt9v7twQC170pA5" className="bg-background font-mono text-sm" />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><Switch checked={newProvider.is_online || false} onCheckedChange={(c) => setNewProvider({ ...newProvider, is_online: c })} /><Label>Online</Label></div>
+              <div className="flex items-center gap-2"><Switch checked={newProvider.verified !== false} onCheckedChange={(c) => setNewProvider({ ...newProvider, verified: c })} /><Label>Verified</Label></div>
+            </div>
           </div>
-          <DialogFooter><SpiritualButton variant="outline" onClick={() => setShowAddDialog(false)}>Close</SpiritualButton></DialogFooter>
+          <DialogFooter>
+            <SpiritualButton variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</SpiritualButton>
+            <SpiritualButton variant="primary" onClick={handleAddProvider} disabled={addingProvider}>
+              {addingProvider ? <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+              {addingProvider ? 'Creating...' : 'Create Provider'}
+            </SpiritualButton>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </motion.div>
