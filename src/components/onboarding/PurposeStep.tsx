@@ -93,7 +93,7 @@ const PurposeStep = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="flex gap-4 max-w-md mx-auto w-full"
+        className="flex gap-4 max-w-md mx-auto w-full safe-area-bottom"
       >
         <SpiritualButton
           variant="ghost"
