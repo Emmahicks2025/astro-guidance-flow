@@ -70,7 +70,8 @@ export function ExpertConsultationDialog({
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const isAI = !!expert?.ai_personality;
+  // Treat as AI if has ai_personality OR has no real user_id (admin-created without linked user)
+  const isAI = !!expert?.ai_personality || !expert?.user_id;
 
   useEffect(() => {
     setActiveTab(initialTab);
