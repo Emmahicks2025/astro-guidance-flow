@@ -251,6 +251,7 @@ export function ExpertConsultationDialog({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ text: fullResponse, voiceId: expert.voice_id }),
@@ -258,6 +259,7 @@ export function ExpertConsultationDialog({
 
       if (ttsResponse.ok) {
         const audioBlob = await ttsResponse.blob();
+        console.log("TTS audio blob size:", audioBlob.size, "type:", audioBlob.type);
         const audioUrl = URL.createObjectURL(audioBlob);
         if (audioRef.current) audioRef.current.pause();
         const audio = new Audio(audioUrl);
@@ -269,10 +271,17 @@ export function ExpertConsultationDialog({
             try { recognitionRef.current.start(); setIsListening(true); } catch {}
           }
         };
-        audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(audioUrl); };
+        audio.onerror = (e) => { 
+          console.error("Audio playback error:", e);
+          setIsSpeaking(false); 
+          URL.revokeObjectURL(audioUrl); 
+        };
         await audio.play();
       } else {
+        const errText = await ttsResponse.text();
+        console.error("TTS response error:", ttsResponse.status, errText);
         setIsSpeaking(false);
+        toast.error("Voice synthesis failed. Using text response only.");
       }
     } catch (error) {
       console.error("Call AI error:", error);
