@@ -6,13 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   MessageCircle, Phone, Send, Loader2, PhoneOff, Mic, MicOff, 
-  Volume2, VolumeX, Star, Clock, X 
+  Star, Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { useScribe, CommitStrategy } from "@elevenlabs/react";
 
 interface Expert {
   id: string;
@@ -45,6 +46,7 @@ interface ExpertConsultationDialogProps {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/expert-chat`;
 const TTS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`;
+const SCRIBE_TOKEN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-scribe-token`;
 
 export function ExpertConsultationDialog({ 
   expert, 
@@ -61,20 +63,20 @@ export function ExpertConsultationDialog({
   const [isMuted, setIsMuted] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [callMessages, setCallMessages] = useState<Message[]>([]);
-  const [currentTranscript, setCurrentTranscript] = useState("");
   const [consultationId, setConsultationId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isCallActiveRef = useRef(false);
   const isMutedRef = useRef(false);
   const isSpeakingRef = useRef(false);
+  const isProcessingRef = useRef(false);
   const callMessagesRef = useRef<Message[]>([]);
   const prevOpenRef = useRef(false);
   const getAIResponseRef = useRef<(text: string) => void>(() => {});
+  const scribeRef = useRef<any>(null);
 
   // Treat as AI if has ai_personality OR has no real user_id (admin-created without linked user)
   const isAI = !!expert?.ai_personality || !expert?.user_id;
@@ -85,11 +87,9 @@ export function ExpertConsultationDialog({
       // Dialog just opened — reset everything
       setActiveTab(initialTab);
       setMessages([]);
-      setCallMessages([]);
       setInputMessage("");
       setIsCallActive(false);
       setCallDuration(0);
-      setCurrentTranscript("");
       setConsultationId(null);
       
       if (!isAI && user) {
@@ -196,15 +196,24 @@ export function ExpertConsultationDialog({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Helper to restart scribe listening
+  const restartScribeListening = useCallback(() => {
+    if (isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current && !isProcessingRef.current && scribeRef.current?.isConnected) {
+      setIsListening(true);
+    }
+  }, []);
+
   // AI voice call handler
   const getAIResponseAndSpeak = useCallback(async (userText: string) => {
     if (!expert || !expert.voice_id) return;
+    if (isProcessingRef.current) return; // Prevent overlapping requests
+    
+    isProcessingRef.current = true;
+    setIsProcessing(true);
+    setIsListening(false);
+    
     const userMessage: Message = { role: 'user', content: userText };
     callMessagesRef.current = [...callMessagesRef.current, userMessage];
-
-    // Stop listening while processing
-    if (recognitionRef.current) try { recognitionRef.current.stop(); } catch {}
-    setIsListening(false);
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -252,13 +261,21 @@ export function ExpertConsultationDialog({
         }
       }
 
-      if (!fullResponse.trim() || !isCallActiveRef.current) return;
+      if (!fullResponse.trim() || !isCallActiveRef.current) {
+        isProcessingRef.current = false;
+        setIsProcessing(false);
+        restartScribeListening();
+        return;
+      }
 
       const assistantMessage: Message = { role: 'assistant', content: fullResponse };
       callMessagesRef.current = [...callMessagesRef.current, assistantMessage];
 
       setIsSpeaking(true);
       isSpeakingRef.current = true;
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+
       const ttsResponse = await fetch(TTS_URL, {
         method: "POST",
         headers: {
@@ -279,96 +296,56 @@ export function ExpertConsultationDialog({
           setIsSpeaking(false);
           isSpeakingRef.current = false;
           URL.revokeObjectURL(audioUrl);
-          // Auto-restart listening after speaking
-          if (isCallActiveRef.current && !isMutedRef.current && recognitionRef.current) {
-            try { recognitionRef.current.start(); setIsListening(true); } catch {}
-          }
+          restartScribeListening();
         };
-        audio.onerror = (e) => { 
-          console.error("Audio playback error:", e);
+        audio.onerror = () => { 
           setIsSpeaking(false);
           isSpeakingRef.current = false;
           URL.revokeObjectURL(audioUrl);
-          // Restart listening even on error
-          if (isCallActiveRef.current && !isMutedRef.current && recognitionRef.current) {
-            try { recognitionRef.current.start(); setIsListening(true); } catch {}
-          }
+          restartScribeListening();
         };
         await audio.play();
       } else {
-        const errText = await ttsResponse.text();
-        console.error("TTS response error:", ttsResponse.status, errText);
         setIsSpeaking(false);
         isSpeakingRef.current = false;
-        // Restart listening on TTS failure
-        if (isCallActiveRef.current && !isMutedRef.current && recognitionRef.current) {
-          try { recognitionRef.current.start(); setIsListening(true); } catch {}
-        }
+        restartScribeListening();
       }
     } catch (error) {
       console.error("Call AI error:", error);
       setIsSpeaking(false);
       isSpeakingRef.current = false;
-      // Restart listening on error
-      if (isCallActiveRef.current && !isMutedRef.current && recognitionRef.current) {
-        try { recognitionRef.current.start(); setIsListening(true); } catch {}
-      }
+      isProcessingRef.current = false;
+      setIsProcessing(false);
+      restartScribeListening();
     }
-  }, [expert]);
+  }, [expert, restartScribeListening]);
 
-  // Keep ref in sync so speech recognition always calls latest handler
+  // Keep ref in sync
   getAIResponseRef.current = getAIResponseAndSpeak;
 
-  const initSpeechRecognition = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      toast.error("Speech recognition not supported in this browser");
-      return null;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false; // Only final results to reduce lag
-    recognition.lang = 'en-IN';
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event: any) => {
-      const lastResult = event.results[event.results.length - 1];
-      if (lastResult.isFinal) {
-        const transcript = lastResult[0].transcript.trim();
+  // ElevenLabs Scribe for realtime STT
+  const scribe = useScribe({
+    modelId: "scribe_v2_realtime",
+    commitStrategy: CommitStrategy.VAD,
+    onCommittedTranscript: (data) => {
+      const transcript = data.text?.trim();
+      if (transcript && isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
+        console.log("Scribe committed:", transcript);
         setIsListening(false);
-        if (transcript) {
-          // Use ref to always get latest handler
-          getAIResponseRef.current(transcript);
-        }
+        getAIResponseRef.current(transcript);
       }
-    };
-
-    recognition.onerror = (event: any) => {
-      console.log("Speech recognition error:", event.error);
-      if (event.error === 'not-allowed') {
-        toast.error("Microphone permission denied.");
-        isCallActiveRef.current = false;
-        setIsCallActive(false);
+    },
+    onPartialTranscript: (data) => {
+      if (data.text?.trim() && isCallActiveRef.current) {
+        setIsListening(true);
       }
-      // For 'no-speech' or 'aborted', onend will auto-restart
-    };
+    },
+  });
 
-    // Auto-restart on end (silence timeout, etc.) — unless speaking or muted
-    recognition.onend = () => {
-      setIsListening(false);
-      if (isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current) {
-        setTimeout(() => {
-          if (isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current && recognitionRef.current) {
-            try { recognitionRef.current.start(); setIsListening(true); } catch {}
-          }
-        }, 200);
-      }
-    };
+  // Keep scribe ref in sync
+  scribeRef.current = scribe;
 
-    return recognition;
-  }, []); // No dependencies — uses refs internally
-
-  // Send message — AI or human
+  // Send message — AI or human (chat tab)
   const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading || !expert) return;
 
@@ -378,7 +355,6 @@ export function ExpertConsultationDialog({
     setIsLoading(true);
 
     if (isAI) {
-      // AI streaming chat
       let assistantContent = "";
       try {
         const resp = await fetch(CHAT_URL, {
@@ -450,13 +426,11 @@ export function ExpertConsultationDialog({
         setIsLoading(false);
       }
     } else {
-      // Human expert — send message to DB
       if (!consultationId || !user) {
         setIsLoading(false);
         toast.error("Consultation not ready. Please try again.");
         return;
       }
-
       try {
         const { error } = await supabase
           .from('messages')
@@ -466,16 +440,12 @@ export function ExpertConsultationDialog({
             content: userMessage.content,
             message_type: 'text',
           });
-
         if (error) throw error;
-        
-        // Also update consultation status
         await supabase
           .from('consultations')
           .update({ status: 'active', started_at: new Date().toISOString() })
           .eq('id', consultationId)
           .eq('status', 'waiting');
-
       } catch (error) {
         console.error("Message send error:", error);
         toast.error("Failed to send message.");
@@ -493,61 +463,59 @@ export function ExpertConsultationDialog({
       return;
     }
 
-    // Check if getUserMedia is available (blocked in some iframes)
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      toast.error("Microphone not available. Please open the app in a new tab or on your published site.", { duration: 5000 });
-      return;
-    }
-
-    // Check permission status first
     try {
-      if (navigator.permissions) {
-        const permStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-        if (permStatus.state === 'denied') {
-          toast.error("Microphone access is blocked. Please click the lock icon in your browser's address bar → Site settings → Allow Microphone, then reload.", { duration: 8000 });
-          return;
-        }
-      }
-    } catch {
-      // permissions.query may not support 'microphone' in all browsers — continue
-    }
-
-    try {
-      // CRITICAL: getUserMedia must be called directly in click handler
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Stop tracks immediately — SpeechRecognition manages its own mic access
-      stream.getTracks().forEach(t => t.stop());
+      // Request mic permission first (needed for scribe)
+      await navigator.mediaDevices.getUserMedia({ audio: true }).then(s => s.getTracks().forEach(t => t.stop()));
       
-      const recognition = initSpeechRecognition();
-      if (!recognition) return;
-      recognitionRef.current = recognition;
+      // Get scribe token
+      const tokenResp = await fetch(SCRIBE_TOKEN_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+      });
+      
+      if (!tokenResp.ok) throw new Error("Failed to get scribe token");
+      const { token } = await tokenResp.json();
+      if (!token) throw new Error("No scribe token received");
+
+      // Connect scribe
+      await scribe.connect({
+        token,
+        microphone: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
       setIsCallActive(true);
       isCallActiveRef.current = true;
       callMessagesRef.current = [];
-      setCallMessages([]);
+      setIsListening(true);
       toast.success(`Connected with ${expert.name}`);
-      try { recognition.start(); setIsListening(true); } catch {}
     } catch (err: any) {
-      console.error("Microphone access error:", err?.name, err?.message);
+      console.error("Start call error:", err);
       if (err?.name === 'NotAllowedError') {
-        toast.error("Microphone permission denied. Please allow microphone access in your browser settings and reload the page.", { duration: 6000 });
-      } else if (err?.name === 'NotFoundError') {
-        toast.error("No microphone found. Please connect a microphone and try again.", { duration: 5000 });
+        toast.error("Microphone permission denied.", { duration: 6000 });
       } else {
-        toast.error("Microphone access failed. Try opening the app directly in a new browser tab.", { duration: 5000 });
+        toast.error(err?.message || "Failed to start voice call. Try again.", { duration: 5000 });
       }
     }
   };
 
   const endCall = () => {
     isCallActiveRef.current = false;
-    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} recognitionRef.current = null; }
+    scribe.disconnect();
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     setIsCallActive(false);
     setIsListening(false);
     setIsSpeaking(false);
     isSpeakingRef.current = false;
-    setCurrentTranscript("");
+    isProcessingRef.current = false;
+    setIsProcessing(false);
     toast.info(`Call ended - Duration: ${formatDuration(callDuration)}`);
   };
 
@@ -556,11 +524,11 @@ export function ExpertConsultationDialog({
     setIsMuted(newMuted);
     isMutedRef.current = newMuted;
     if (newMuted) {
-      if (recognitionRef.current) try { recognitionRef.current.stop(); } catch {}
       setIsListening(false);
+      // Note: scribe stays connected but we ignore transcripts via isMutedRef
     } else {
-      if (!isSpeakingRef.current && recognitionRef.current) {
-        try { recognitionRef.current.start(); setIsListening(true); } catch {}
+      if (!isSpeakingRef.current && !isProcessingRef.current) {
+        setIsListening(true);
       }
     }
   };
@@ -718,8 +686,9 @@ export function ExpertConsultationDialog({
               {isCallActive && (
                 <div className="text-sm text-muted-foreground">
                   {isSpeaking && <p className="text-primary animate-pulse">🔊 Speaking...</p>}
-                  {isListening && !isSpeaking && <p className="text-green-500 animate-pulse">🎙 Listening...</p>}
-                  {!isListening && !isSpeaking && <p className="text-muted-foreground">Connecting...</p>}
+                  {isProcessing && !isSpeaking && <p className="text-muted-foreground animate-pulse">💭 Thinking...</p>}
+                  {isListening && !isSpeaking && !isProcessing && <p className="text-green-500 animate-pulse">🎙 Listening...</p>}
+                  {!isListening && !isSpeaking && !isProcessing && <p className="text-muted-foreground">Ready</p>}
                 </div>
               )}
 
