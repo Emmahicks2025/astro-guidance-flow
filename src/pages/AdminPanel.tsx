@@ -47,6 +47,7 @@ interface JotshiProfile {
   approval_status: string;
   approved_at: string | null;
   voice_id: string | null;
+  first_message: string | null;
 }
 
 interface UserProfile {
@@ -77,6 +78,8 @@ const categories = [
   { value: "relationship", label: "Relationship Expert" }
 ];
 
+const availableLanguages = ["Hindi", "English", "Sanskrit", "Tamil", "Telugu", "Bengali", "Marathi", "Gujarati", "Kannada", "Malayalam", "Punjabi"];
+
 const AdminPanel = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -101,6 +104,7 @@ const AdminPanel = () => {
     display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
     hourly_rate: 20, bio: '', ai_personality: '', voice_id: '', is_online: false,
     verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
+    first_message: '',
   });
   const [addingProvider, setAddingProvider] = useState(false);
   const [uploadingAddImage, setUploadingAddImage] = useState(false);
@@ -322,7 +326,8 @@ const AdminPanel = () => {
       is_online: selectedProvider.is_online, verified: selectedProvider.verified,
       display_name: selectedProvider.display_name, ai_personality: selectedProvider.ai_personality,
       avatar_url: selectedProvider.avatar_url, category: selectedProvider.category,
-      voice_id: selectedProvider.voice_id
+      voice_id: selectedProvider.voice_id, languages: selectedProvider.languages,
+      first_message: selectedProvider.first_message,
     }).eq('id', selectedProvider.id);
     if (error) { toast.error("Failed to update provider"); }
     else {
@@ -407,6 +412,7 @@ const AdminPanel = () => {
         approved_at: new Date().toISOString(),
         avatar_url: newProvider.avatar_url || null,
         languages: newProvider.languages || ['Hindi', 'English'],
+        first_message: newProvider.first_message || null,
       }).select().single();
       if (error) throw error;
       setProviders(prev => [data as JotshiProfile, ...prev]);
@@ -415,6 +421,7 @@ const AdminPanel = () => {
         display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
         hourly_rate: 20, bio: '', ai_personality: '', voice_id: '', is_online: false,
         verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
+        first_message: '',
       });
       toast.success("Provider created successfully! ✅");
     } catch (err) {
@@ -1017,6 +1024,27 @@ const AdminPanel = () => {
                 <Label className="flex items-center gap-2 text-secondary"><Phone className="w-4 h-4" />ElevenLabs Voice ID</Label>
                 <SpiritualInput value={selectedProvider.voice_id || ""} onChange={(e) => setSelectedProvider({ ...selectedProvider, voice_id: e.target.value })} placeholder="e.g., S3F8rLt9v7twQC170pA5" className="bg-background font-mono text-sm" />
               </div>
+              <div className="space-y-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                <Label className="flex items-center gap-2"><Languages className="w-4 h-4" />Languages</Label>
+                <div className="flex flex-wrap gap-2">
+                  {availableLanguages.map(lang => {
+                    const isSelected = (selectedProvider.languages || []).includes(lang);
+                    return (
+                      <button key={lang} type="button" onClick={() => {
+                        const current = selectedProvider.languages || [];
+                        const updated = isSelected ? current.filter(l => l !== lang) : [...current, lang];
+                        setSelectedProvider({ ...selectedProvider, languages: updated });
+                      }} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${isSelected ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:border-primary/50'}`}>
+                        {lang}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2"><MessageCircle className="w-4 h-4" />First Message (optional)</Label>
+                <Textarea value={selectedProvider.first_message || ""} onChange={(e) => setSelectedProvider({ ...selectedProvider, first_message: e.target.value })} rows={2} placeholder="Use {name} for user's name, {expertName} for expert's name. Leave empty for default." />
+              </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2"><Switch checked={selectedProvider.is_online || false} onCheckedChange={(c) => setSelectedProvider({ ...selectedProvider, is_online: c })} /><Label>Online</Label></div>
                 <div className="flex items-center gap-2"><Switch checked={selectedProvider.verified || false} onCheckedChange={(c) => setSelectedProvider({ ...selectedProvider, verified: c })} /><Label>Verified</Label></div>
@@ -1084,6 +1112,27 @@ const AdminPanel = () => {
             <div className="space-y-2 p-3 rounded-lg bg-secondary/5 border border-secondary/20">
               <Label className="flex items-center gap-2 text-secondary"><Phone className="w-4 h-4" />ElevenLabs Voice ID</Label>
               <SpiritualInput value={newProvider.voice_id || ""} onChange={(e) => setNewProvider({ ...newProvider, voice_id: e.target.value })} placeholder="e.g., S3F8rLt9v7twQC170pA5" className="bg-background font-mono text-sm" />
+            </div>
+            <div className="space-y-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+              <Label className="flex items-center gap-2"><Languages className="w-4 h-4" />Languages</Label>
+              <div className="flex flex-wrap gap-2">
+                {availableLanguages.map(lang => {
+                  const isSelected = (newProvider.languages || []).includes(lang);
+                  return (
+                    <button key={lang} type="button" onClick={() => {
+                      const current = newProvider.languages || [];
+                      const updated = isSelected ? current.filter(l => l !== lang) : [...current, lang];
+                      setNewProvider({ ...newProvider, languages: updated });
+                    }} className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${isSelected ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:border-primary/50'}`}>
+                      {lang}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><MessageCircle className="w-4 h-4" />First Message (optional)</Label>
+              <Textarea value={newProvider.first_message || ""} onChange={(e) => setNewProvider({ ...newProvider, first_message: e.target.value })} rows={2} placeholder="Use {name} for user's name, {expertName} for expert's name. Leave empty for default." />
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2"><Switch checked={newProvider.is_online || false} onCheckedChange={(c) => setNewProvider({ ...newProvider, is_online: c })} /><Label>Online</Label></div>
