@@ -110,7 +110,12 @@ export function ExpertConsultationDialog({
   // ElevenLabs Conversational AI — single WebRTC connection handles STT+LLM+TTS
   const conversation = useConversation({
     onConnect: () => {
-      console.log("ElevenLabs conversation connected");
+      console.log("ElevenLabs conversation connected!");
+      // Clear connection timeout
+      if ((window as any).__callConnectTimeout) {
+        clearTimeout((window as any).__callConnectTimeout);
+        delete (window as any).__callConnectTimeout;
+      }
       stopRingtone();
       setIsCallActive(true);
       setIsConnecting(false);
@@ -268,17 +273,20 @@ export function ExpertConsultationDialog({
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(t => t.stop());
+        console.log("Mic permission granted");
       } catch (micErr: any) {
         if (micErr?.name === 'NotAllowedError') {
-          throw micErr; // User explicitly denied — do hard fail
+          throw micErr;
         }
         console.warn("Mic not available, proceeding anyway:", micErr?.message);
       }
 
-      // Fetch call context (profile + memories + expert personality) and token in parallel
+      // Fetch call context and token in parallel
       const session = await supabase.auth.getSession();
       const accessToken = session.data.session?.access_token;
+      if (!accessToken) throw new Error("Please log in to make a call");
 
+      console.log("Fetching context and token...");
       const [contextResp, tokenResp] = await Promise.all([
         fetch(CONTEXT_URL, {
           method: "POST",
@@ -300,13 +308,19 @@ export function ExpertConsultationDialog({
         }),
       ]);
 
-      if (!tokenResp.ok) throw new Error("Failed to get conversation token");
-      const { token } = await tokenResp.json();
-      if (!token) throw new Error("No token received");
+      if (!tokenResp.ok) {
+        const errBody = await tokenResp.text();
+        console.error("Token fetch failed:", tokenResp.status, errBody);
+        throw new Error("Failed to get conversation token");
+      }
+      const tokenData = await tokenResp.json();
+      console.log("Token received:", !!tokenData.token, "AgentId:", tokenData.agentId);
+      if (!tokenData.token) throw new Error("No token received");
 
       let overrides: any = {};
       if (contextResp.ok) {
         const context = await contextResp.json();
+        console.log("Context received, expert:", context.expertName);
         overrides = {
           agent: {
             prompt: { prompt: context.systemPrompt },
@@ -317,14 +331,29 @@ export function ExpertConsultationDialog({
             voiceId: expert.voice_id,
           },
         };
+      } else {
+        console.warn("Context fetch failed:", contextResp.status);
       }
 
-      // Start the conversation — single WebRTC connection handles everything
+      // Set a timeout — if onConnect doesn't fire in 20s, stop trying
+      const connectTimeout = setTimeout(() => {
+        console.error("Connection timeout — onConnect never fired");
+        stopRingtone();
+        setIsConnecting(false);
+        toast.error("Connection timed out. Please try again.", { duration: 5000 });
+        try { conversation.endSession(); } catch {}
+      }, 20000);
+
+      // Store timeout so onConnect can clear it
+      (window as any).__callConnectTimeout = connectTimeout;
+
+      console.log("Starting ElevenLabs session...");
       await conversation.startSession({
-        conversationToken: token,
+        conversationToken: tokenData.token,
         connectionType: "webrtc",
         overrides,
       });
+      console.log("startSession() resolved");
     } catch (err: any) {
       console.error("Start call error:", err);
       stopRingtone();
