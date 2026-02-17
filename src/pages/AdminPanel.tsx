@@ -105,6 +105,9 @@ const AdminPanel = () => {
   const [apiKeyStatus, setApiKeyStatus] = useState<Record<string, string | null>>({});
   const [testingKey, setTestingKey] = useState<string | null>(null);
   const [loadingKeys, setLoadingKeys] = useState(false);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [geminiKeyInput, setGeminiKeyInput] = useState("");
+  const [elevenLabsKeyInput, setElevenLabsKeyInput] = useState("");
 
   // Check if current user is admin
   useEffect(() => {
@@ -183,6 +186,29 @@ const AdminPanel = () => {
       toast.error(`Failed to test ${keyName}`);
     } finally {
       setTestingKey(null);
+    }
+  };
+
+  const handleSaveApiKey = async (keyName: string, keyValue: string) => {
+    if (!keyValue.trim()) { toast.error("Please enter a key value"); return; }
+    setSavingKey(keyName);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-api-keys', {
+        body: { action: 'update_key', key_name: keyName, key_value: keyValue.trim() }
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success(`${keyName} updated successfully! ✅`);
+        if (keyName === 'GEMINI_API_KEY') setGeminiKeyInput("");
+        if (keyName === 'ELEVENLABS_API_KEY') setElevenLabsKeyInput("");
+        fetchApiKeyStatus();
+      } else {
+        toast.error(`Failed to save: ${data?.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      toast.error(`Failed to save ${keyName}`);
+    } finally {
+      setSavingKey(null);
     }
   };
 
@@ -779,13 +805,21 @@ const AdminPanel = () => {
                     <p className="text-xs text-muted-foreground font-mono bg-background px-3 py-2 rounded-lg">{apiKeyStatus.GEMINI_API_KEY}</p>
                   )}
                   <div className="flex gap-2">
+                    <SpiritualInput
+                      type="password"
+                      placeholder="Enter new Gemini API key..."
+                      value={geminiKeyInput}
+                      onChange={(e) => setGeminiKeyInput(e.target.value)}
+                      className="flex-1 h-10 text-sm"
+                    />
+                    <SpiritualButton variant="primary" size="sm" onClick={() => handleSaveApiKey('GEMINI_API_KEY', geminiKeyInput)} disabled={savingKey === 'GEMINI_API_KEY' || !geminiKeyInput.trim()}>
+                      {savingKey === 'GEMINI_API_KEY' ? <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" /> : <Check className="w-4 h-4 mr-1" />}
+                      Save
+                    </SpiritualButton>
                     <SpiritualButton variant="outline" size="sm" onClick={() => handleTestApiKey('GEMINI_API_KEY')} disabled={testingKey === 'GEMINI_API_KEY'}>
                       {testingKey === 'GEMINI_API_KEY' ? <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" /> : <TestTube className="w-4 h-4 mr-1" />}
-                      Test Key
+                      Test
                     </SpiritualButton>
-                    <p className="text-xs text-muted-foreground self-center">
-                      To update, use Lovable's secret management in project settings.
-                    </p>
                   </div>
                 </div>
 
@@ -809,13 +843,21 @@ const AdminPanel = () => {
                     <p className="text-xs text-muted-foreground font-mono bg-background px-3 py-2 rounded-lg">{apiKeyStatus.ELEVENLABS_API_KEY}</p>
                   )}
                   <div className="flex gap-2">
-                    <SpiritualButton variant="outline" size="sm" onClick={() => handleTestApiKey('ELEVENLABS_API_KEY')} disabled={testingKey === 'ELEVENLABS_API_KEY'}>
-                      {testingKey === 'ELEVENLABS_API_KEY' ? <div className="animate-spin w-4 h-4 border-2 border-secondary border-t-transparent rounded-full" /> : <TestTube className="w-4 h-4 mr-1" />}
-                      Test Key
+                    <SpiritualInput
+                      type="password"
+                      placeholder="Enter new ElevenLabs API key..."
+                      value={elevenLabsKeyInput}
+                      onChange={(e) => setElevenLabsKeyInput(e.target.value)}
+                      className="flex-1 h-10 text-sm"
+                    />
+                    <SpiritualButton variant="primary" size="sm" onClick={() => handleSaveApiKey('ELEVENLABS_API_KEY', elevenLabsKeyInput)} disabled={savingKey === 'ELEVENLABS_API_KEY' || !elevenLabsKeyInput.trim()}>
+                      {savingKey === 'ELEVENLABS_API_KEY' ? <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" /> : <Check className="w-4 h-4 mr-1" />}
+                      Save
                     </SpiritualButton>
-                    <p className="text-xs text-muted-foreground self-center">
-                      To update, use Lovable's secret management in project settings.
-                    </p>
+                    <SpiritualButton variant="outline" size="sm" onClick={() => handleTestApiKey('ELEVENLABS_API_KEY')} disabled={testingKey === 'ELEVENLABS_API_KEY'}>
+                      {testingKey === 'ELEVENLABS_API_KEY' ? <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" /> : <TestTube className="w-4 h-4 mr-1" />}
+                      Test
+                    </SpiritualButton>
                   </div>
                 </div>
 
@@ -823,11 +865,10 @@ const AdminPanel = () => {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium">How to update API keys</p>
+                      <p className="text-sm font-medium">How it works</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        For security, API keys can only be updated through Lovable's secret management system. 
-                        Ask Lovable AI to "update my GEMINI_API_KEY" or "update my ELEVENLABS_API_KEY" in the chat, 
-                        and it will securely prompt you to enter the new value.
+                        Enter your API key and click Save. The key is securely stored in the database and used by all AI services.
+                        Use the Test button to verify your key is working correctly.
                       </p>
                     </div>
                   </div>

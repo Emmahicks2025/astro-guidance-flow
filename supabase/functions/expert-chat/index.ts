@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getApiKey } from "../_shared/get-api-key.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +17,7 @@ serve(async (req) => {
     
     console.log("Expert chat request:", { expertId, expertName, messageCount: messages?.length });
 
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") || "AIzaSyDZ8Cm7sNY_Zw3qpC96xqKA9lO2NS1uwyE";
+    const GEMINI_API_KEY = await getApiKey("GEMINI_API_KEY");
     if (!GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured");
     }
