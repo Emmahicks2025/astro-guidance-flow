@@ -196,11 +196,37 @@ export function ExpertConsultationDialog({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Helper to restart scribe listening
-  const restartScribeListening = useCallback(() => {
-    if (isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current && !isProcessingRef.current && scribeRef.current?.isConnected) {
-      setIsListening(true);
+  // Helper to restart scribe listening — reconnect if disconnected
+  const restartScribeListening = useCallback(async () => {
+    if (!isCallActiveRef.current || isMutedRef.current) return;
+    
+    // If scribe disconnected during AI response, reconnect
+    if (scribeRef.current && !scribeRef.current.isConnected) {
+      console.log("Scribe disconnected, reconnecting...");
+      try {
+        const tokenResp = await fetch(SCRIBE_TOKEN_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        });
+        if (tokenResp.ok) {
+          const { token } = await tokenResp.json();
+          if (token) {
+            await scribeRef.current.connect({
+              token,
+              microphone: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Scribe reconnect failed:", err);
+      }
     }
+    
+    setIsListening(true);
   }, []);
 
   // AI voice call handler
@@ -327,18 +353,30 @@ export function ExpertConsultationDialog({
   const scribe = useScribe({
     modelId: "scribe_v2_realtime",
     commitStrategy: CommitStrategy.VAD,
+    onConnect: () => {
+      console.log("Scribe connected");
+    },
+    onDisconnect: () => {
+      console.log("Scribe disconnected");
+      if (isCallActiveRef.current) {
+        setIsListening(false);
+      }
+    },
     onCommittedTranscript: (data) => {
       const transcript = data.text?.trim();
+      console.log("Scribe committed:", transcript, "speaking:", isSpeakingRef.current, "processing:", isProcessingRef.current, "muted:", isMutedRef.current);
       if (transcript && isCallActiveRef.current && !isMutedRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-        console.log("Scribe committed:", transcript);
         setIsListening(false);
         getAIResponseRef.current(transcript);
       }
     },
     onPartialTranscript: (data) => {
-      if (data.text?.trim() && isCallActiveRef.current) {
+      if (data.text?.trim() && isCallActiveRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
         setIsListening(true);
       }
+    },
+    onError: (error) => {
+      console.error("Scribe error:", error);
     },
   });
 
