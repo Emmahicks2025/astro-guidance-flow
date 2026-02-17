@@ -326,7 +326,7 @@ export type Database = {
         Row: {
           apple_product_id: string
           call_credit_per_min: number
-          chat_credit_per_min: number
+          chat_credit_per_1k_tokens: number
           created_at: string
           features: Json
           id: string
@@ -338,7 +338,7 @@ export type Database = {
         Insert: {
           apple_product_id: string
           call_credit_per_min?: number
-          chat_credit_per_min?: number
+          chat_credit_per_1k_tokens?: number
           created_at?: string
           features?: Json
           id: string
@@ -350,7 +350,7 @@ export type Database = {
         Update: {
           apple_product_id?: string
           call_credit_per_min?: number
-          chat_credit_per_min?: number
+          chat_credit_per_1k_tokens?: number
           created_at?: string
           features?: Json
           id?: string
