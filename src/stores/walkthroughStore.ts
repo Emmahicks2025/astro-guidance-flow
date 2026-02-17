@@ -17,7 +17,7 @@ export const useWalkthroughStore = create<WalkthroughState>()(
       isWalkthroughOpen: false,
       setWalkthroughComplete: () => set({ hasCompletedWalkthrough: true, isWalkthroughOpen: false }),
       openWalkthrough: () => set({ isWalkthroughOpen: true }),
-      closeWalkthrough: () => set({ isWalkthroughOpen: false }),
+      closeWalkthrough: () => set({ isWalkthroughOpen: false, hasCompletedWalkthrough: true }),
       resetWalkthrough: () => set({ hasCompletedWalkthrough: false, isWalkthroughOpen: false }),
     }),
     {
