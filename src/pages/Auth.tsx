@@ -96,8 +96,14 @@ const Auth = () => {
             toast.error(error.message);
           }
         } else {
-          toast.success("Account created successfully! Welcome to AstroGuru 🌟");
-          navigate('/');
+          // Check if email confirmation is needed
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          if (currentSession) {
+            toast.success("Account created successfully! Welcome to AstroGuru 🌟");
+            navigate('/');
+          } else {
+            toast.success("Account created! Please check your email to verify your account. 📧");
+          }
         }
       }
     } catch (err) {
