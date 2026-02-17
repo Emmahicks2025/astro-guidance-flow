@@ -40,6 +40,8 @@ const ProviderRegister = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     display_name: "",
@@ -50,6 +52,17 @@ const ProviderRegister = () => {
     bio: "",
     languages: ["Hindi", "English"]
   });
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +81,27 @@ const ProviderRegister = () => {
     setLoading(true);
 
     try {
+      let avatarUrl: string | null = null;
+
+      // Upload avatar if selected
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('provider-avatars')
+          .upload(filePath, avatarFile);
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          toast.error("Failed to upload photo");
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('provider-avatars')
+            .getPublicUrl(filePath);
+          avatarUrl = urlData.publicUrl;
+        }
+      }
+
       const { error } = await supabase
         .from("jotshi_profiles")
         .insert({
@@ -81,7 +115,8 @@ const ProviderRegister = () => {
           languages: formData.languages,
           approval_status: "pending",
           is_online: false,
-          verified: false
+          verified: false,
+          avatar_url: avatarUrl
         });
 
       if (error) {
@@ -225,6 +260,36 @@ const ProviderRegister = () => {
           <SpiritualCard variant="elevated">
             <SpiritualCardContent className="p-5 space-y-4">
               <h3 className="font-semibold text-foreground">Personal Details</h3>
+
+              {/* Avatar Upload */}
+              <div className="space-y-2">
+                <Label>Profile Photo</Label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover rounded-2xl" />
+                    ) : (
+                      <Upload className="w-6 h-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <label htmlFor="avatar-upload">
+                      <SpiritualButton type="button" variant="outline" size="sm" onClick={() => document.getElementById('avatar-upload')?.click()}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        {avatarPreview ? "Change Photo" : "Upload Photo"}
+                      </SpiritualButton>
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG or WebP. Max 5MB.</p>
+                  </div>
+                </div>
+              </div>
               
               <div className="space-y-2">
                 <Label>Display Name *</Label>
