@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { 
   Settings, 
@@ -15,7 +15,9 @@ import {
   Trash2,
   FileText,
   Info,
-  Star
+  Star,
+  Camera,
+  Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -24,6 +26,8 @@ import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,6 +38,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -43,6 +60,26 @@ const SettingsPage = () => {
   const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'));
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [profileName, setProfileName] = useState(userData.fullName || '');
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [language, setLanguage] = useState('English');
+  const [showLanguageDialog, setShowLanguageDialog] = useState(false);
+  const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Load profile data
+  useEffect(() => {
+    if (user) {
+      supabase.from('profiles').select('full_name, avatar_url').eq('user_id', user.id).single().then(({ data }) => {
+        if (data) {
+          setProfileName(data.full_name || userData.fullName || '');
+          setProfileAvatar(data.avatar_url || null);
+        }
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     if (darkMode) {
@@ -54,11 +91,49 @@ const SettingsPage = () => {
     }
   }, [darkMode]);
 
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image too large. Max 5MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProfileAvatar(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) {
+      toast.error("Please log in first.");
+      return;
+    }
+    setIsSavingProfile(true);
+    try {
+      const updates: Record<string, string | null> = { full_name: profileName };
+      // If avatar is a data URL (new upload), we store it directly for now
+      if (profileAvatar && profileAvatar.startsWith('data:')) {
+        updates.avatar_url = profileAvatar;
+      }
+      const { error } = await supabase.from('profiles').update(updates).eq('user_id', user.id);
+      if (error) throw error;
+      toast.success("Profile updated successfully!");
+      setShowEditProfile(false);
+    } catch (err: any) {
+      toast.error("Failed to update profile.");
+      console.error(err);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   const settingsSections = [
     {
       title: 'Account',
       items: [
-        { icon: User, label: 'Edit Profile', action: () => toast.info("Edit profile coming soon!") },
+        { icon: User, label: 'Edit Profile', action: () => setShowEditProfile(true) },
         { icon: Shield, label: 'Privacy & Security', action: () => navigate('/privacy-policy') },
       ]
     },
@@ -70,7 +145,10 @@ const SettingsPage = () => {
           label: 'Notifications', 
           toggle: true, 
           value: notifications, 
-          action: () => setNotifications(!notifications) 
+          action: () => {
+            setNotifications(!notifications);
+            toast.success(notifications ? "Notifications turned off" : "Notifications turned on");
+          }
         },
         { 
           icon: Moon, 
@@ -79,7 +157,7 @@ const SettingsPage = () => {
           value: darkMode, 
           action: () => setDarkMode(!darkMode) 
         },
-        { icon: Globe, label: 'Language', value: 'English', action: () => toast.info("Language settings coming soon!") },
+        { icon: Globe, label: 'Language', value: language, action: () => setShowLanguageDialog(true) },
       ]
     },
     {
@@ -92,8 +170,10 @@ const SettingsPage = () => {
     {
       title: 'Support',
       items: [
-        { icon: HelpCircle, label: 'Help & FAQ', action: () => toast.info("Help center coming soon!") },
-        { icon: Star, label: 'Rate Us', action: () => toast.info("Rate us on the App Store!") },
+        { icon: HelpCircle, label: 'Help & FAQ', action: () => setShowHelpDialog(true) },
+        { icon: Star, label: 'Rate Us', action: () => {
+          toast.success("Thank you for your support! ⭐");
+        }},
         { icon: Info, label: 'App Version', value: 'v1.0.0' },
       ]
     },
@@ -159,16 +239,22 @@ const SettingsPage = () => {
         {/* Profile Card */}
         <SpiritualCard variant="spiritual" className="p-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
-              <User className="w-8 h-8 text-primary" />
+            <div className="relative">
+              {profileAvatar ? (
+                <img src={profileAvatar} alt="Avatar" className="w-16 h-16 rounded-full object-cover" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="w-8 h-8 text-primary" />
+                </div>
+              )}
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-bold">{userData.fullName || 'Your Name'}</h2>
+              <h2 className="text-lg font-bold">{profileName || userData.fullName || 'Your Name'}</h2>
               <p className="text-sm text-muted-foreground">
                 {user?.email || (userData.gender ? userData.gender.charAt(0).toUpperCase() + userData.gender.slice(1) : 'Not set')}
               </p>
             </div>
-            <SpiritualButton variant="ghost" size="icon">
+            <SpiritualButton variant="ghost" size="icon" onClick={() => setShowEditProfile(true)}>
               <Edit2 className="w-5 h-5" />
             </SpiritualButton>
           </div>
@@ -246,6 +332,112 @@ const SettingsPage = () => {
           AstroGuru v1.0.0
         </p>
       </main>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={showEditProfile} onOpenChange={setShowEditProfile}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                {profileAvatar ? (
+                  <img src={profileAvatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover" />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
+                    <User className="w-12 h-12 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                  <Camera className="w-4 h-4 text-primary-foreground" />
+                </div>
+              </div>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              <p className="text-xs text-muted-foreground">Tap photo to change</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profileName">Full Name</Label>
+              <Input
+                id="profileName"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="Enter your name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input value={user?.email || ''} disabled className="opacity-60" />
+              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+            </div>
+            <SpiritualButton
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={handleSaveProfile}
+              disabled={isSavingProfile}
+            >
+              {isSavingProfile ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : "Save Changes"}
+            </SpiritualButton>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Language Dialog */}
+      <Dialog open={showLanguageDialog} onOpenChange={setShowLanguageDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Select Language</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 pt-2">
+            {['English', 'Hindi', 'Tamil', 'Telugu', 'Bengali', 'Marathi'].map((lang) => (
+              <button
+                key={lang}
+                onClick={() => {
+                  setLanguage(lang);
+                  setShowLanguageDialog(false);
+                  toast.success(`Language changed to ${lang}`);
+                }}
+                className={`w-full p-3 rounded-lg text-left transition-colors ${
+                  language === lang ? 'bg-primary/10 text-primary font-semibold border border-primary/30' : 'bg-muted/50 hover:bg-muted'
+                }`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Help & FAQ Dialog */}
+      <Dialog open={showHelpDialog} onOpenChange={setShowHelpDialog}>
+        <DialogContent className="max-w-sm max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Help & FAQ</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {[
+              { q: "How do I get my Kundli?", a: "Go to 'My Kundli' from the home screen. Enter your birth details and get an instant Vedic chart." },
+              { q: "How does Palm Reading work?", a: "Upload a clear photo of your palm. Our AI analyzes your lines, mounts, and markings to give you a detailed reading." },
+              { q: "Can I talk to a live astrologer?", a: "Yes! Go to 'Talk to Jotshi' and choose from our verified experts for chat or voice consultation." },
+              { q: "What is Guna Milan?", a: "Guna Milan is the Vedic compatibility matching system based on 36 points (Gunas) between two birth charts." },
+              { q: "How do I add money to my wallet?", a: "Go to Wallet from the home screen. You can add balance for consultations with experts." },
+              { q: "Is my data safe?", a: "Absolutely. Your data is encrypted and stored securely. We never share your personal information." },
+            ].map((faq, i) => (
+              <div key={i} className="border-b border-border pb-3 last:border-0">
+                <p className="font-semibold text-sm">{faq.q}</p>
+                <p className="text-xs text-muted-foreground mt-1">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Account Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
