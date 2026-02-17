@@ -385,7 +385,7 @@ const GunaMatchingCalculator = () => {
                   <p className="text-sm text-primary-foreground/80">
                     Numbers only tell part of the story. A Vedic astrology expert can analyze planetary positions, doshas & suggest powerful remedies.
                   </p>
-                  <div className="grid grid-cols-3 gap-2 pt-2">
+                  <div className="grid grid-cols-2 gap-2 pt-2">
                     <SpiritualButton
                       variant="golden"
                       size="sm"
@@ -403,15 +403,6 @@ const GunaMatchingCalculator = () => {
                     >
                       <Phone className="w-5 h-5" />
                       <span className="text-xs">Call</span>
-                    </SpiritualButton>
-                    <SpiritualButton
-                      variant="golden"
-                      size="sm"
-                      className="flex-col h-auto py-3 gap-1"
-                      onClick={() => navigate('/talk')}
-                    >
-                      <Video className="w-5 h-5" />
-                      <span className="text-xs">Video</span>
                     </SpiritualButton>
                   </div>
                 </div>
