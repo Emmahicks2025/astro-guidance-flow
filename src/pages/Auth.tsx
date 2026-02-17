@@ -29,7 +29,16 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
-      navigate('/');
+      // Check if admin — send to admin panel
+      const checkAndRedirect = async () => {
+        const { data } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+        if (data === true) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      };
+      checkAndRedirect();
     }
   }, [user, loading, navigate]);
 

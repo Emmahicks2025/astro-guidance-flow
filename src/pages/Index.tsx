@@ -14,11 +14,21 @@ const Index = () => {
   const navigate = useNavigate();
   const [checkingProfile, setCheckingProfile] = useState(true);
 
-  // Redirect to auth if not logged in
+  // Redirect to auth if not logged in, or to admin if admin
   useEffect(() => {
-    if (!loading && !user) {
+    if (loading) return;
+    if (!user) {
       navigate('/auth');
+      return;
     }
+    // Check if user is admin — redirect to admin panel
+    const checkAdmin = async () => {
+      const { data } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      if (data === true) {
+        navigate('/admin');
+      }
+    };
+    checkAdmin();
   }, [user, loading, navigate]);
 
   // Load saved profile from DB on mount
@@ -36,6 +46,13 @@ const Index = () => {
       }
 
       try {
+        // Check if user is admin — skip user flow
+        const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+        if (isAdmin === true) {
+          setCheckingProfile(false);
+          return;
+        }
+
         // Check if user is a registered astrologer/jotshi provider
         const { data: jotshiProfiles } = await supabase
           .from('jotshi_profiles')
