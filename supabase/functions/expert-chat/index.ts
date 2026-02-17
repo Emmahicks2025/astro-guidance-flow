@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, expertId, expertName, expertPersonality } = await req.json();
+    const { messages, expertId, expertName, expertPersonality, systemPrompt: customSystemPrompt } = await req.json();
     
     console.log("Expert chat request:", { expertId, expertName, messageCount: messages?.length });
 
@@ -74,9 +74,12 @@ JOTSHI EXPERTISE:
 
     const defaultPersonality = `You are ${expertName || 'an experienced Vedic Jyotishi'}, a captivating and deeply intuitive astrologer. You have a magnetic personality that makes people want to keep talking to you. You speak like a warm, wise elder who knows fascinating secrets about their stars. You genuinely care about every person and make them feel like they're the most important person you've talked to today. You mix Hindi and English naturally.`;
 
-    const systemPrompt = expertPersonality 
-      ? `${expertPersonality}\n\nYou are ${expertName}. Respond as this expert would, maintaining their unique personality and expertise.\n${conversationalRules}`
-      : `${defaultPersonality}\n${conversationalRules}`;
+    // Priority: customSystemPrompt (full prompt from admin) > expertPersonality (trait tag) > default
+    const systemPrompt = customSystemPrompt
+      ? `${customSystemPrompt}\n\n${conversationalRules}`
+      : expertPersonality 
+        ? `${expertPersonality}\n\nYou are ${expertName}. Respond as this expert would, maintaining their unique personality and expertise.\n${conversationalRules}`
+        : `${defaultPersonality}\n${conversationalRules}`;
 
     const apiMessages = [
       { role: "system", content: systemPrompt },

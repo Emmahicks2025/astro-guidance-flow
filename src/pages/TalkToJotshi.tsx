@@ -26,6 +26,7 @@ interface Expert {
   ai_personality?: string;
   voice_id?: string;
   user_id?: string;
+  first_message?: string;
 }
 
 const categoryConfig: { id: Category; label: string; icon: React.ReactNode }[] = [
@@ -76,6 +77,7 @@ const TalkToJotshi = () => {
           ai_personality: p.ai_personality || undefined,
           voice_id: p.voice_id || undefined,
           user_id: p.user_id || undefined,
+          first_message: p.first_message || undefined,
         }));
 
         setExperts(mappedExperts);
