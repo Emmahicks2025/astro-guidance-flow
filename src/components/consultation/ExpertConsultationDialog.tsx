@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { SpiritualInput } from "@/components/ui/spiritual-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 
@@ -27,6 +28,7 @@ interface Expert {
   sessions: number;
   ai_personality?: string;
   voice_id?: string;
+  user_id?: string;
 }
 
 interface Message {
@@ -50,6 +52,7 @@ export function ExpertConsultationDialog({
   onOpenChange,
   initialTab = 'chat' 
 }: ExpertConsultationDialogProps) {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'chat' | 'call'>(initialTab);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -61,10 +64,13 @@ export function ExpertConsultationDialog({
   const [callDuration, setCallDuration] = useState(0);
   const [callMessages, setCallMessages] = useState<Message[]>([]);
   const [currentTranscript, setCurrentTranscript] = useState("");
+  const [consultationId, setConsultationId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const isAI = !!expert?.ai_personality;
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -78,8 +84,84 @@ export function ExpertConsultationDialog({
       setIsCallActive(false);
       setCallDuration(0);
       setCurrentTranscript("");
+      setConsultationId(null);
+      
+      // For human experts, create a consultation and subscribe to realtime
+      if (!isAI && user) {
+        createConsultation();
+      }
     }
+    
+    return () => {
+      // Cleanup realtime subscription
+      if (consultationId) {
+        supabase.removeChannel(supabase.channel(`messages-${consultationId}`));
+      }
+    };
   }, [open, expert?.id]);
+
+  // Subscribe to realtime messages when consultationId is set
+  useEffect(() => {
+    if (!consultationId || isAI) return;
+
+    const channel = supabase
+      .channel(`messages-${consultationId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `consultation_id=eq.${consultationId}`,
+        },
+        (payload) => {
+          const msg = payload.new as any;
+          // Only add messages from the expert (not from us)
+          if (msg.sender_id !== user?.id) {
+            setMessages(prev => [...prev, { role: 'assistant', content: msg.content }]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [consultationId, isAI, user?.id]);
+
+  const createConsultation = async () => {
+    if (!expert || !user) return;
+    try {
+      // Find the expert's user_id from their jotshi_profile
+      const { data: profileData } = await supabase
+        .from('jotshi_profiles')
+        .select('user_id')
+        .eq('id', expert.id)
+        .maybeSingle();
+
+      if (!profileData?.user_id) {
+        toast.error("Unable to connect with this expert");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('consultations')
+        .insert({
+          user_id: user.id,
+          jotshi_id: profileData.user_id,
+          status: 'waiting',
+          concern: 'Chat consultation',
+        })
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      setConsultationId(data.id);
+    } catch (err) {
+      console.error('Error creating consultation:', err);
+      toast.error("Failed to start consultation");
+    }
+  };
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -97,16 +179,10 @@ export function ExpertConsultationDialog({
         setCallDuration(prev => prev + 1);
       }, 1000);
     } else {
-      if (callTimerRef.current) {
-        clearInterval(callTimerRef.current);
-      }
+      if (callTimerRef.current) clearInterval(callTimerRef.current);
       setCallDuration(0);
     }
-    return () => {
-      if (callTimerRef.current) {
-        clearInterval(callTimerRef.current);
-      }
-    };
+    return () => { if (callTimerRef.current) clearInterval(callTimerRef.current); };
   }, [isCallActive]);
 
   const formatDuration = (seconds: number) => {
@@ -115,15 +191,13 @@ export function ExpertConsultationDialog({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Get AI response and speak it
+  // AI voice call handler
   const getAIResponseAndSpeak = useCallback(async (userText: string) => {
     if (!expert || !expert.voice_id) return;
-
     const userMessage: Message = { role: 'user', content: userText };
     setCallMessages(prev => [...prev, userMessage]);
 
     try {
-      // Get AI text response
       const resp = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -138,11 +212,8 @@ export function ExpertConsultationDialog({
         }),
       });
 
-      if (!resp.ok || !resp.body) {
-        throw new Error("Failed to get response");
-      }
+      if (!resp.ok || !resp.body) throw new Error("Failed to get response");
 
-      // Collect full response from stream
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let fullResponse = "";
@@ -151,27 +222,20 @@ export function ExpertConsultationDialog({
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
         textBuffer += decoder.decode(value, { stream: true });
-        
         let newlineIndex: number;
         while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
           let line = textBuffer.slice(0, newlineIndex);
           textBuffer = textBuffer.slice(newlineIndex + 1);
-
           if (line.endsWith("\r")) line = line.slice(0, -1);
           if (line.startsWith(":") || line.trim() === "") continue;
           if (!line.startsWith("data: ")) continue;
-
           const jsonStr = line.slice(6).trim();
           if (jsonStr === "[DONE]") break;
-
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              fullResponse += content;
-            }
+            if (content) fullResponse += content;
           } catch {
             textBuffer = line + "\n" + textBuffer;
             break;
@@ -179,59 +243,36 @@ export function ExpertConsultationDialog({
         }
       }
 
-      // Add assistant message
       const assistantMessage: Message = { role: 'assistant', content: fullResponse };
       setCallMessages(prev => [...prev, assistantMessage]);
 
-      // Convert to speech using ElevenLabs
       setIsSpeaking(true);
-      
       const ttsResponse = await fetch(TTS_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({
-          text: fullResponse,
-          voiceId: expert.voice_id
-        }),
+        body: JSON.stringify({ text: fullResponse, voiceId: expert.voice_id }),
       });
 
       if (ttsResponse.ok) {
         const audioBlob = await ttsResponse.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
-        
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        
+        if (audioRef.current) audioRef.current.pause();
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
-        
         audio.onended = () => {
           setIsSpeaking(false);
           URL.revokeObjectURL(audioUrl);
-          // Resume listening after speaking
           if (isCallActive && !isMuted && recognitionRef.current) {
-            try {
-              recognitionRef.current.start();
-              setIsListening(true);
-            } catch (e) {
-              console.log("Recognition already started");
-            }
+            try { recognitionRef.current.start(); setIsListening(true); } catch {}
           }
         };
-        
-        audio.onerror = () => {
-          setIsSpeaking(false);
-          URL.revokeObjectURL(audioUrl);
-        };
-        
+        audio.onerror = () => { setIsSpeaking(false); URL.revokeObjectURL(audioUrl); };
         await audio.play();
       } else {
         setIsSpeaking(false);
-        console.error("TTS error:", await ttsResponse.text());
       }
     } catch (error) {
       console.error("Call AI error:", error);
@@ -240,50 +281,39 @@ export function ExpertConsultationDialog({
     }
   }, [expert, callMessages, isCallActive, isMuted]);
 
-  // Initialize speech recognition
   const initSpeechRecognition = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast.error("Speech recognition not supported in this browser");
       return null;
     }
-
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
     recognition.lang = 'en-IN';
-
     recognition.onresult = (event: any) => {
       let transcript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         transcript += event.results[i][0].transcript;
       }
       setCurrentTranscript(transcript);
-
       if (event.results[event.results.length - 1].isFinal) {
         setIsListening(false);
-        if (transcript.trim()) {
-          getAIResponseAndSpeak(transcript.trim());
-        }
+        if (transcript.trim()) getAIResponseAndSpeak(transcript.trim());
         setCurrentTranscript("");
       }
     };
-
     recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
       setIsListening(false);
       if (event.error !== 'no-speech' && event.error !== 'aborted') {
         toast.error("Speech recognition error. Please try again.");
       }
     };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
+    recognition.onend = () => setIsListening(false);
     return recognition;
   }, [getAIResponseAndSpeak]);
 
+  // Send message — AI or human
   const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading || !expert) return;
 
@@ -292,140 +322,140 @@ export function ExpertConsultationDialog({
     setInputMessage("");
     setIsLoading(true);
 
-    let assistantContent = "";
-
-    try {
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ 
-          messages: [...messages, userMessage],
-          expertId: expert.id,
-          expertName: expert.name,
-          expertPersonality: expert.ai_personality
-        }),
-      });
-
-      if (!resp.ok || !resp.body) {
-        if (resp.status === 429) {
-          toast.error("Rate limit exceeded. Please wait a moment.");
-          throw new Error("Rate limit exceeded");
-        }
-        if (resp.status === 402) {
-          toast.error("Service temporarily unavailable.");
-          throw new Error("Payment required");
-        }
-        throw new Error("Failed to get response");
-      }
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-
-      const updateAssistant = (content: string) => {
-        assistantContent = content;
-        setMessages(prev => {
-          const last = prev[prev.length - 1];
-          if (last?.role === "assistant") {
-            return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent } : m));
-          }
-          return [...prev, { role: "assistant", content: assistantContent }];
+    if (isAI) {
+      // AI streaming chat
+      let assistantContent = "";
+      try {
+        const resp = await fetch(CHAT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ 
+            messages: [...messages, userMessage],
+            expertId: expert.id,
+            expertName: expert.name,
+            expertPersonality: expert.ai_personality
+          }),
         });
-      };
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        textBuffer += decoder.decode(value, { stream: true });
-        
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
+        if (!resp.ok || !resp.body) {
+          if (resp.status === 429) toast.error("Rate limit exceeded. Please wait.");
+          if (resp.status === 402) toast.error("Service temporarily unavailable.");
+          throw new Error("Failed to get response");
+        }
 
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let textBuffer = "";
 
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              updateAssistant(assistantContent);
+        const updateAssistant = (content: string) => {
+          assistantContent = content;
+          setMessages(prev => {
+            const last = prev[prev.length - 1];
+            if (last?.role === "assistant") {
+              return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantContent } : m));
             }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
+            return [...prev, { role: "assistant", content: assistantContent }];
+          });
+        };
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          textBuffer += decoder.decode(value, { stream: true });
+          let newlineIndex: number;
+          while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+            let line = textBuffer.slice(0, newlineIndex);
+            textBuffer = textBuffer.slice(newlineIndex + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (line.startsWith(":") || line.trim() === "") continue;
+            if (!line.startsWith("data: ")) continue;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") break;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+              if (content) {
+                assistantContent += content;
+                updateAssistant(assistantContent);
+              }
+            } catch {
+              textBuffer = line + "\n" + textBuffer;
+              break;
+            }
           }
         }
+      } catch (error) {
+        console.error("Chat error:", error);
+        toast.error("Failed to send message.");
+        setMessages(prev => prev.slice(0, -1));
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Chat error:", error);
-      toast.error("Failed to send message. Please try again.");
-      setMessages(prev => prev.slice(0, -1));
-    } finally {
-      setIsLoading(false);
+    } else {
+      // Human expert — send message to DB
+      if (!consultationId || !user) {
+        setIsLoading(false);
+        toast.error("Consultation not ready. Please try again.");
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from('messages')
+          .insert({
+            consultation_id: consultationId,
+            sender_id: user.id,
+            content: userMessage.content,
+            message_type: 'text',
+          });
+
+        if (error) throw error;
+        
+        // Also update consultation status
+        await supabase
+          .from('consultations')
+          .update({ status: 'active', started_at: new Date().toISOString() })
+          .eq('id', consultationId)
+          .eq('status', 'waiting');
+
+      } catch (error) {
+        console.error("Message send error:", error);
+        toast.error("Failed to send message.");
+        setMessages(prev => prev.slice(0, -1));
+      } finally {
+        setIsLoading(false);
+      }
     }
-  }, [inputMessage, messages, expert, isLoading]);
+  }, [inputMessage, messages, expert, isLoading, isAI, consultationId, user]);
 
   const startCall = async () => {
     if (!expert) return;
-    
     if (!expert.voice_id) {
       toast.error("Voice not configured for this expert. Please use chat instead.");
       return;
     }
-    
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
-      
       const recognition = initSpeechRecognition();
       if (!recognition) return;
-      
       recognitionRef.current = recognition;
       setIsCallActive(true);
       setCallMessages([]);
       toast.success(`Connected with ${expert.name}`);
-      
-      // Start listening
       setTimeout(() => {
-        try {
-          recognition.start();
-          setIsListening(true);
-        } catch (e) {
-          console.error("Failed to start recognition:", e);
-        }
+        try { recognition.start(); setIsListening(true); } catch {}
       }, 500);
-      
-    } catch (error) {
-      console.error("Microphone access error:", error);
+    } catch {
       toast.error("Please enable microphone access to use voice calls.");
     }
   };
 
   const endCall = () => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        console.log("Recognition already stopped");
-      }
-      recognitionRef.current = null;
-    }
-    
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    
+    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} recognitionRef.current = null; }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     setIsCallActive(false);
     setIsListening(false);
     setIsSpeaking(false);
@@ -435,24 +465,12 @@ export function ExpertConsultationDialog({
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
-    
     if (!isMuted) {
-      // Muting - stop listening
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {}
-      }
+      if (recognitionRef.current) try { recognitionRef.current.stop(); } catch {}
       setIsListening(false);
     } else {
-      // Unmuting - start listening if not speaking
       if (!isSpeaking && recognitionRef.current) {
-        try {
-          recognitionRef.current.start();
-          setIsListening(true);
-        } catch (e) {
-          console.log("Recognition error:", e);
-        }
+        try { recognitionRef.current.start(); setIsListening(true); } catch {}
       }
     }
   };
@@ -461,8 +479,10 @@ export function ExpertConsultationDialog({
 
   return (
     <Dialog open={open} onOpenChange={(open) => {
-      if (!open && isCallActive) {
-        endCall();
+      if (!open && isCallActive) endCall();
+      if (!open && consultationId) {
+        // End consultation when closing
+        supabase.from('consultations').update({ status: 'completed', ended_at: new Date().toISOString() }).eq('id', consultationId);
       }
       onOpenChange(open);
     }}>
@@ -472,11 +492,7 @@ export function ExpertConsultationDialog({
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="w-14 h-14 rounded-2xl overflow-hidden ring-2 ring-primary/20">
-                <img 
-                  src={expert.avatar} 
-                  alt={expert.name}
-                  className="w-full h-full object-cover"
-                />
+                <img src={expert.avatar} alt={expert.name} className="w-full h-full object-cover" />
               </div>
               <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-background ${
                 expert.status === 'online' ? 'bg-green-500' : 'bg-muted-foreground/40'
@@ -487,12 +503,10 @@ export function ExpertConsultationDialog({
               <p className="text-sm text-secondary truncate">{expert.specialty}</p>
               <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Star className="w-3 h-3 text-gold fill-gold" />
-                  {expert.rating}
+                  <Star className="w-3 h-3 text-gold fill-gold" />{expert.rating}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  {expert.experience}
+                  <Clock className="w-3 h-3" />{expert.experience}
                 </span>
                 <span className="text-primary font-medium">₹{expert.rate}/min</span>
               </div>
@@ -501,247 +515,165 @@ export function ExpertConsultationDialog({
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'chat' | 'call')} className="flex-1 flex flex-col">
-          <TabsList className="grid grid-cols-2 mx-4 mt-2">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'chat' | 'call')} className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid grid-cols-2 mx-4 mt-3">
             <TabsTrigger value="chat" className="gap-2">
-              <MessageCircle className="w-4 h-4" />
-              Chat
+              <MessageCircle className="w-4 h-4" /> Chat
             </TabsTrigger>
-            <TabsTrigger value="call" className="gap-2" disabled={!expert.voice_id}>
-              <Phone className="w-4 h-4" />
-              Call
-              {!expert.voice_id && <span className="text-[10px] text-muted-foreground ml-1">(N/A)</span>}
+            <TabsTrigger value="call" className="gap-2" disabled={!isAI || !expert.voice_id}>
+              <Phone className="w-4 h-4" /> Voice Call
             </TabsTrigger>
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 flex flex-col m-0 data-[state=inactive]:hidden">
-            <ScrollArea ref={scrollAreaRef} className="flex-1 px-4">
+          <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 m-0 p-0">
+            <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
               <div className="py-4 space-y-4">
                 {messages.length === 0 && (
-                  <div className="text-center py-12">
-                    <MessageCircle className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-                    <p className="text-muted-foreground text-sm">
-                      Start a conversation with {expert.name}
+                  <div className="text-center py-8">
+                    <MessageCircle className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">
+                      Start your consultation with {expert.name}
                     </p>
-                    <p className="text-xs text-muted-foreground/70 mt-1">
-                      Ask about your concerns and get spiritual guidance
-                    </p>
+                    {!isAI && !consultationId && (
+                      <p className="text-xs text-muted-foreground mt-2">Connecting...</p>
+                    )}
                   </div>
                 )}
-                
-                <AnimatePresence>
-                  {messages.map((msg, idx) => (
+                <AnimatePresence mode="popLayout">
+                  {messages.map((msg, i) => (
                     <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, y: 10 }}
+                      key={i}
+                      initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                        msg.role === 'user' 
-                          ? 'bg-primary text-primary-foreground rounded-br-md' 
-                          : 'bg-muted rounded-bl-md'
+                      <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                        msg.role === 'user'
+                          ? 'bg-primary text-primary-foreground rounded-br-md'
+                          : 'bg-muted text-foreground rounded-bl-md'
                       }`}>
                         {msg.role === 'assistant' ? (
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                           </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-sm">{msg.content}</p>
                         )}
                       </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
-
-                {isLoading && messages[messages.length - 1]?.role === 'user' && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex justify-start"
-                  >
+                {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+                  <div className="flex justify-start">
                     <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        <span className="text-sm text-muted-foreground">Typing...</span>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {isAI ? 'Thinking...' : 'Waiting for reply...'}
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
               </div>
             </ScrollArea>
 
-            {/* Chat Input */}
+            {/* Input */}
             <div className="p-4 border-t border-border bg-background">
-              <form 
-                onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
-                className="flex gap-2"
-              >
+              <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-2">
                 <SpiritualInput
+                  placeholder={`Message ${expert.name}...`}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Type your message..."
                   className="flex-1"
-                  disabled={isLoading}
+                  disabled={!isAI && !consultationId}
                 />
-                <SpiritualButton 
-                  type="submit" 
+                <SpiritualButton
+                  type="submit"
                   variant="primary"
-                  disabled={!inputMessage.trim() || isLoading}
-                  className="px-4"
+                  size="icon"
+                  disabled={!inputMessage.trim() || isLoading || (!isAI && !consultationId)}
                 >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
+                  <Send className="w-4 h-4" />
                 </SpiritualButton>
               </form>
             </div>
           </TabsContent>
 
           {/* Call Tab */}
-          <TabsContent value="call" className="flex-1 flex flex-col m-0 data-[state=inactive]:hidden">
-            <div className="flex-1 flex flex-col items-center justify-center p-8">
-              {!isCallActive ? (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center"
-                >
-                  <div className="w-32 h-32 rounded-full overflow-hidden ring-4 ring-primary/20 mx-auto mb-6">
-                    <img 
-                      src={expert.avatar} 
-                      alt={expert.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{expert.name}</h3>
-                  <p className="text-muted-foreground mb-1">{expert.specialty}</p>
-                  <p className="text-sm text-primary mb-8">₹{expert.rate}/min</p>
-                  
-                  <SpiritualButton 
-                    variant="primary" 
-                    size="lg"
-                    onClick={startCall}
-                    className="gap-3 px-8"
-                    disabled={expert.status !== 'online' || !expert.voice_id}
-                  >
-                    <Phone className="w-5 h-5" />
-                    Start Call
+          <TabsContent value="call" className="flex-1 flex flex-col items-center justify-center m-0 p-4">
+            <div className="text-center space-y-6 w-full max-w-xs">
+              <div className="relative mx-auto w-28 h-28">
+                <div className={`w-28 h-28 rounded-full overflow-hidden ring-4 ${
+                  isCallActive ? (isSpeaking ? 'ring-primary animate-pulse' : 'ring-green-500') : 'ring-border'
+                }`}>
+                  <img src={expert.avatar} alt={expert.name} className="w-full h-full object-cover" />
+                </div>
+                {isCallActive && (
+                  <motion.div
+                    className="absolute inset-0 rounded-full border-2 border-primary"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-bold text-lg">{expert.name}</h3>
+                <p className="text-sm text-muted-foreground">{expert.specialty}</p>
+                {isCallActive && (
+                  <p className="text-primary font-mono mt-2">{formatDuration(callDuration)}</p>
+                )}
+              </div>
+
+              {isCallActive && (
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  {isListening && <p className="text-green-500 animate-pulse">🎙 Listening...</p>}
+                  {isSpeaking && <p className="text-primary animate-pulse">🔊 Speaking...</p>}
+                  {currentTranscript && <p className="italic text-foreground">"{currentTranscript}"</p>}
+                </div>
+              )}
+
+              <div className="flex justify-center gap-4">
+                {!isCallActive ? (
+                  <SpiritualButton variant="primary" size="lg" className="w-full gap-2" onClick={startCall}>
+                    <Phone className="w-5 h-5" /> Start Voice Call
                   </SpiritualButton>
-                  
-                  {expert.status !== 'online' && (
-                    <p className="text-sm text-muted-foreground mt-4">
-                      Expert is currently offline
-                    </p>
-                  )}
-                  
-                  {!expert.voice_id && (
-                    <p className="text-sm text-amber-500 mt-4">
-                      Voice not configured for this expert
-                    </p>
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center w-full"
-                >
-                  <div className="relative mb-6">
-                    <div className={`w-32 h-32 rounded-full overflow-hidden ring-4 mx-auto ${
-                      isSpeaking ? 'ring-secondary' : isListening ? 'ring-green-500' : 'ring-primary/50'
-                    }`}>
-                      <img 
-                        src={expert.avatar} 
-                        alt={expert.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {(isListening || isSpeaking) && (
-                      <motion.div 
-                        className={`absolute inset-0 rounded-full border-4 ${
-                          isSpeaking ? 'border-secondary/50' : 'border-green-500/50'
-                        }`}
-                        animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      />
-                    )}
-                  </div>
-                  
-                  <h3 className="text-xl font-semibold text-foreground mb-1">{expert.name}</h3>
-                  <p className={`font-medium mb-2 ${
-                    isSpeaking ? 'text-secondary' : isListening ? 'text-green-500' : 'text-primary'
-                  }`}>
-                    {isSpeaking ? 'Speaking...' : isListening ? 'Listening...' : 'Connected'}
-                  </p>
-                  <p className="text-2xl font-mono text-foreground mb-4">
-                    {formatDuration(callDuration)}
-                  </p>
-                  
-                  {/* Current transcript */}
-                  {currentTranscript && (
-                    <div className="bg-muted/50 rounded-lg p-3 mb-4 mx-4 text-sm text-muted-foreground italic">
-                      "{currentTranscript}"
-                    </div>
-                  )}
-                  
-                  {/* Recent messages */}
-                  {callMessages.length > 0 && (
-                    <div className="max-h-32 overflow-y-auto mb-4 mx-4 space-y-2">
-                      {callMessages.slice(-2).map((msg, idx) => (
-                        <div 
-                          key={idx}
-                          className={`text-xs p-2 rounded-lg ${
-                            msg.role === 'user' 
-                              ? 'bg-primary/10 text-right' 
-                              : 'bg-secondary/10 text-left'
-                          }`}
-                        >
-                          <span className="font-medium">
-                            {msg.role === 'user' ? 'You' : expert.name}:
-                          </span>{' '}
-                          {msg.content.substring(0, 100)}
-                          {msg.content.length > 100 && '...'}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center justify-center gap-4">
-                    <SpiritualButton 
-                      variant="outline" 
+                ) : (
+                  <>
+                    <SpiritualButton
+                      variant={isMuted ? "primary" : "outline"}
                       size="icon"
+                      className="w-14 h-14 rounded-full"
                       onClick={toggleMute}
-                      className={`w-14 h-14 rounded-full ${isMuted ? 'bg-destructive/10 text-destructive' : ''}`}
                     >
                       {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
                     </SpiritualButton>
-                    
-                    <SpiritualButton 
-                      variant="primary" 
+                    <SpiritualButton
+                      variant="primary"
                       size="icon"
+                      className="w-14 h-14 rounded-full bg-destructive hover:bg-destructive/90"
                       onClick={endCall}
-                      className="w-16 h-16 rounded-full bg-destructive hover:bg-destructive/90"
                     >
                       <PhoneOff className="w-6 h-6" />
                     </SpiritualButton>
-                    
-                    <SpiritualButton 
-                      variant="outline" 
-                      size="icon"
-                      className="w-14 h-14 rounded-full"
-                    >
-                      <Volume2 className="w-6 h-6" />
-                    </SpiritualButton>
+                  </>
+                )}
+              </div>
+
+              {/* Call Messages */}
+              {callMessages.length > 0 && (
+                <ScrollArea className="h-32 w-full text-left">
+                  <div className="space-y-2">
+                    {callMessages.map((msg, i) => (
+                      <div key={i} className={`text-xs p-2 rounded ${
+                        msg.role === 'user' ? 'bg-primary/10 text-primary' : 'bg-muted text-foreground'
+                      }`}>
+                        <span className="font-medium">{msg.role === 'user' ? 'You' : expert.name}:</span>{' '}
+                        {msg.content.substring(0, 100)}{msg.content.length > 100 ? '...' : ''}
+                      </div>
+                    ))}
                   </div>
-                  
-                  <p className="text-xs text-muted-foreground mt-6">
-                    Speak clearly • AI-powered voice consultation
-                  </p>
-                </motion.div>
+                </ScrollArea>
               )}
             </div>
           </TabsContent>
