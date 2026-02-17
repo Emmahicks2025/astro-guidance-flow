@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface PartnerDetails {
   name: string;
@@ -15,7 +16,6 @@ export interface UserData {
   placeOfBirth: string;
   purpose: string;
   role: 'user' | 'jotshi';
-  // New professional fields
   birthTimeExactness: 'exact' | 'approximate' | 'unknown' | '';
   majorConcern: string;
   relationshipStatus: 'single' | 'dating' | 'engaged' | 'married' | 'separated' | '';
@@ -34,46 +34,43 @@ interface OnboardingStore {
   resetOnboarding: () => void;
 }
 
-export const useOnboardingStore = create<OnboardingStore>((set) => ({
-  currentStep: 0,
-  userData: {
-    fullName: '',
-    gender: '',
-    dateOfBirth: null,
-    timeOfBirth: '',
-    placeOfBirth: '',
-    purpose: '',
-    role: 'user',
-    birthTimeExactness: '',
-    majorConcern: '',
-    relationshipStatus: '',
-    partnerDetails: null,
-  },
-  isComplete: false,
-  setStep: (step) => set({ currentStep: step }),
-  nextStep: () => set((state) => ({ currentStep: state.currentStep + 1 })),
-  prevStep: () => set((state) => ({ currentStep: Math.max(0, state.currentStep - 1) })),
-  updateUserData: (key, value) =>
-    set((state) => ({
-      userData: { ...state.userData, [key]: value },
-    })),
-  completeOnboarding: () => set({ isComplete: true }),
-  resetOnboarding: () =>
-    set({
+const initialUserData: UserData = {
+  fullName: '',
+  gender: '',
+  dateOfBirth: null,
+  timeOfBirth: '',
+  placeOfBirth: '',
+  purpose: '',
+  role: 'user',
+  birthTimeExactness: '',
+  majorConcern: '',
+  relationshipStatus: '',
+  partnerDetails: null,
+};
+
+export const useOnboardingStore = create<OnboardingStore>()(
+  persist(
+    (set) => ({
       currentStep: 0,
-      userData: {
-        fullName: '',
-        gender: '',
-        dateOfBirth: null,
-        timeOfBirth: '',
-        placeOfBirth: '',
-        purpose: '',
-        role: 'user',
-        birthTimeExactness: '',
-        majorConcern: '',
-        relationshipStatus: '',
-        partnerDetails: null,
-      },
+      userData: { ...initialUserData },
       isComplete: false,
+      setStep: (step) => set({ currentStep: step }),
+      nextStep: () => set((state) => ({ currentStep: state.currentStep + 1 })),
+      prevStep: () => set((state) => ({ currentStep: Math.max(0, state.currentStep - 1) })),
+      updateUserData: (key, value) =>
+        set((state) => ({
+          userData: { ...state.userData, [key]: value },
+        })),
+      completeOnboarding: () => set({ isComplete: true }),
+      resetOnboarding: () =>
+        set({
+          currentStep: 0,
+          userData: { ...initialUserData },
+          isComplete: false,
+        }),
     }),
-}));
+    {
+      name: 'astroguru-onboarding',
+    }
+  )
+);
