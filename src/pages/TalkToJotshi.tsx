@@ -117,7 +117,7 @@ const TalkToJotshi = () => {
       className="min-h-screen bg-background"
     >
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 safe-area-top">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/')}>
             <ArrowLeft className="w-5 h-5" />

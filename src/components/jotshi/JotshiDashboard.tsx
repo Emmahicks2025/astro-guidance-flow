@@ -97,7 +97,7 @@ const JotshiDashboard = () => {
       className="min-h-screen bg-background"
     >
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-secondary text-secondary-foreground">
+      <header className="sticky top-0 z-50 bg-secondary text-secondary-foreground safe-area-top">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-secondary-foreground/10 flex items-center justify-center">
