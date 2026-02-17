@@ -14,7 +14,7 @@ interface Plan {
   apple_product_id: string;
   price_usd: number;
   monthly_credits: number;
-  chat_credit_per_min: number;
+  chat_credit_per_1k_tokens: number;
   call_credit_per_min: number;
   features: string[];
 }
@@ -91,11 +91,13 @@ const PricingPage = () => {
         <div className="flex gap-3">
           <div className="flex-1 bg-muted rounded-xl p-3 text-center">
             <p className="text-xs text-muted-foreground">Chat Rate</p>
-            <p className="font-bold text-primary">2 cr/min</p>
+            <p className="font-bold text-primary">Per tokens used</p>
+            <p className="text-[10px] text-muted-foreground">250% of AI cost</p>
           </div>
           <div className="flex-1 bg-muted rounded-xl p-3 text-center">
             <p className="text-xs text-muted-foreground">Call Rate</p>
-            <p className="font-bold text-secondary">8 cr/min</p>
+            <p className="font-bold text-secondary">8-12 cr/min</p>
+            <p className="text-[10px] text-muted-foreground">Based on plan</p>
           </div>
         </div>
 

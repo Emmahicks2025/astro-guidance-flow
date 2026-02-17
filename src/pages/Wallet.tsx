@@ -58,7 +58,7 @@ const WalletPage = () => {
           <p className="text-sm text-muted-foreground mb-1">{t.availableBalance}</p>
           <p className="text-4xl font-bold text-accent">{loading ? "..." : balance} credits</p>
           <p className="text-sm text-muted-foreground mt-2">
-            ≈ {Math.floor(balance / 2)} min chat · {Math.floor(balance / 8)} min call
+            Chat: per tokens · Call: {subscription.plan === 'premium' ? '8' : subscription.plan === 'pro' ? '10' : '12'} cr/min
           </p>
           <div className="flex items-center justify-center gap-2 mt-3">
             <Crown className="w-4 h-4 text-secondary" />
