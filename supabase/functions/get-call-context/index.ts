@@ -1,0 +1,125 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { expertId } = await req.json();
+
+    // Get user from auth header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Not authenticated");
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error("Unauthorized");
+
+    // Fetch user profile, memories, and expert info in parallel
+    const [profileResult, memoriesResult, expertResult] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("conversation_memories").select("*").eq("user_id", user.id).eq("expert_id", expertId).maybeSingle(),
+      supabase.from("jotshi_profiles").select("*").eq("id", expertId).maybeSingle(),
+    ]);
+
+    const profile = profileResult.data;
+    const memories = memoriesResult.data;
+    const expert = expertResult.data;
+
+    // Build user context string
+    const userContextParts: string[] = [];
+
+    if (profile) {
+      if (profile.full_name) userContextParts.push(`User's name: ${profile.full_name}`);
+      if (profile.gender) userContextParts.push(`Gender: ${profile.gender}`);
+      if (profile.date_of_birth) userContextParts.push(`Date of birth: ${profile.date_of_birth}`);
+      if (profile.time_of_birth) userContextParts.push(`Time of birth: ${profile.time_of_birth}`);
+      if (profile.place_of_birth) userContextParts.push(`Place of birth: ${profile.place_of_birth}`);
+      if (profile.birth_time_exactness) userContextParts.push(`Birth time exactness: ${profile.birth_time_exactness}`);
+      if (profile.major_concern) userContextParts.push(`Major concern: ${profile.major_concern}`);
+      if (profile.relationship_status) userContextParts.push(`Relationship status: ${profile.relationship_status}`);
+      if (profile.partner_name) {
+        userContextParts.push(`Partner: ${profile.partner_name}`);
+        if (profile.partner_dob) userContextParts.push(`Partner DOB: ${profile.partner_dob}`);
+        if (profile.partner_time_of_birth) userContextParts.push(`Partner birth time: ${profile.partner_time_of_birth}`);
+        if (profile.partner_place_of_birth) userContextParts.push(`Partner birth place: ${profile.partner_place_of_birth}`);
+      }
+      if (profile.kundli_analysis_text) userContextParts.push(`\nKundli Analysis:\n${profile.kundli_analysis_text}`);
+      if (profile.palm_analysis_text) userContextParts.push(`\nPalm Reading Analysis:\n${profile.palm_analysis_text}`);
+    }
+
+    // Build memories context
+    let memoriesContext = "";
+    if (memories) {
+      const keyPoints = memories.key_points || [];
+      if (keyPoints.length > 0) {
+        memoriesContext = `\n\nPrevious conversation key points with this user (${memories.total_calls} past calls):\n${keyPoints.map((p: string) => `- ${p}`).join("\n")}`;
+        if (memories.summary) {
+          memoriesContext += `\n\nOverall summary: ${memories.summary}`;
+        }
+      }
+    }
+
+    const userContext = userContextParts.length > 0
+      ? `\n\nUser Profile Information:\n${userContextParts.join("\n")}`
+      : "";
+
+    // Build expert personality
+    const expertPersonality = expert?.ai_personality || "";
+    const expertName = expert?.display_name || "Spiritual Expert";
+    const expertVoiceId = expert?.voice_id || "";
+
+    const conversationalRules = `
+
+CRITICAL RULES FOR ALL RESPONSES:
+- You are having a REAL-TIME VOICE CONVERSATION. Behave like a real human on a phone call.
+- Keep responses SHORT — 1 to 3 sentences max. Never give long monologues.
+- LISTEN and RESPOND to what the user just said. Don't ignore their questions.
+- Ask follow-up questions. Show curiosity. Make it a two-way conversation.
+- Use casual, warm language. Say things like "Hmm, interesting...", "Tell me more about that", "Accha, I see..."
+- Don't dump all information at once. Share one insight, then pause and let them respond.
+- If they ask a question, answer IT directly first, then maybe add one small insight.
+- Use natural filler words occasionally: "So...", "Well...", "You know..."
+- Never start with a greeting if the conversation is already ongoing.
+- Match the user's energy — if they're brief, be brief. If they're curious, engage more.
+- Remember: this is a CONVERSATION, not a lecture. Short turns, back and forth.
+- You have access to the user's detailed profile and past conversation history. Use this to personalize your responses.
+- Reference things from past conversations naturally: "Last time we talked about...", "As I mentioned before..."`;
+
+    const systemPrompt = expertPersonality
+      ? `${expertPersonality}\n\nYou are ${expertName}. Respond as this expert would, maintaining their unique personality and expertise.${conversationalRules}${userContext}${memoriesContext}`
+      : `You are ${expertName}, a wise and compassionate expert in Vedic astrology and spiritual guidance. You're warm, approachable, and talk like a real person.${conversationalRules}${userContext}${memoriesContext}`;
+
+    const firstName = profile?.full_name?.split(" ")[0] || "";
+    const firstMessage = memories && memories.total_calls > 0
+      ? `Namaste ${firstName}! Good to hear from you again. How have things been since we last spoke?`
+      : `Namaste ${firstName}! I'm ${expertName}. Tell me, what's on your mind today?`;
+
+    return new Response(JSON.stringify({
+      systemPrompt,
+      firstMessage,
+      expertName,
+      expertVoiceId,
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Get call context error:", error);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
