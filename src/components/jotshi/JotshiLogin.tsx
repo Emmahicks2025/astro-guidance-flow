@@ -141,7 +141,7 @@ const JotshiLogin = () => {
           className="text-center text-sm text-muted-foreground mt-8"
         >
           Not a registered Jotshi?{" "}
-          <button className="text-primary hover:underline">Apply here</button>
+          <a href="/provider-register" className="text-primary hover:underline">Apply here</a>
         </motion.p>
       </div>
 
