@@ -70,6 +70,39 @@ export function ExpertConsultationDialog({
   const prevOpenRef = useRef(false);
   const callTranscriptRef = useRef<string[]>([]);
   const expertIdRef = useRef<string>("");
+  const ringtoneRef = useRef<{ ctx: AudioContext; interval: NodeJS.Timeout } | null>(null);
+
+  // Ringtone using Web Audio API — plays a classic "ring-ring" tone
+  const startRingtone = useCallback(() => {
+    try {
+      const ctx = new AudioContext();
+      const playRing = () => {
+        // Two-tone burst (440Hz + 480Hz) like a real phone ring
+        [440, 480].forEach(freq => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.value = freq;
+          osc.type = "sine";
+          gain.gain.setValueAtTime(0.06, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.8);
+        });
+      };
+      playRing();
+      const interval = setInterval(playRing, 2500); // Ring every 2.5s
+      ringtoneRef.current = { ctx, interval };
+    } catch { /* audio not supported */ }
+  }, []);
+
+  const stopRingtone = useCallback(() => {
+    if (ringtoneRef.current) {
+      clearInterval(ringtoneRef.current.interval);
+      ringtoneRef.current.ctx.close().catch(() => {});
+      ringtoneRef.current = null;
+    }
+  }, []);
 
   // Treat as AI if has ai_personality OR has no real user_id
   const isAI = !!expert?.ai_personality || !expert?.user_id;
@@ -78,12 +111,14 @@ export function ExpertConsultationDialog({
   const conversation = useConversation({
     onConnect: () => {
       console.log("ElevenLabs conversation connected");
+      stopRingtone();
       setIsCallActive(true);
       setIsConnecting(false);
       toast.success(`Connected with ${expert?.name}`);
     },
     onDisconnect: () => {
       console.log("ElevenLabs conversation disconnected");
+      stopRingtone();
       handleCallEnd();
     },
     onMessage: (message: any) => {
@@ -99,6 +134,7 @@ export function ExpertConsultationDialog({
     onError: (error) => {
       console.error("Conversation error:", error);
       toast.error("Voice connection error. Please try again.");
+      stopRingtone();
       setIsConnecting(false);
     },
   });
@@ -224,6 +260,7 @@ export function ExpertConsultationDialog({
     }
 
     setIsConnecting(true);
+    startRingtone();
     callTranscriptRef.current = [];
 
     try {
@@ -282,6 +319,7 @@ export function ExpertConsultationDialog({
       });
     } catch (err: any) {
       console.error("Start call error:", err);
+      stopRingtone();
       setIsConnecting(false);
       if (err?.name === 'NotAllowedError') {
         toast.error("Microphone permission denied.", { duration: 6000 });
