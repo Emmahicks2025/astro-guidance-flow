@@ -259,8 +259,8 @@ export function ExpertConsultationDialog({
 
   // Start voice call using ElevenLabs Conversational AI
   const startCall = async () => {
-    if (!expert || !expert.voice_id) {
-      toast.error("Voice not configured for this expert. Please use chat instead.");
+    if (!expert) {
+      toast.error("No expert selected.");
       return;
     }
 
@@ -320,17 +320,19 @@ export function ExpertConsultationDialog({
       let overrides: any = {};
       if (contextResp.ok) {
         const context = await contextResp.json();
-        console.log("Context received, expert:", context.expertName);
+        console.log("Context received, expert:", context.expertName, "voiceId:", context.expertVoiceId);
         overrides = {
           agent: {
             prompt: { prompt: context.systemPrompt },
             firstMessage: context.firstMessage,
             language: "en",
           },
-          tts: {
-            voiceId: expert.voice_id,
-          },
         };
+        // Only override voice if a valid voice_id exists
+        const voiceId = context.expertVoiceId || expert.voice_id;
+        if (voiceId) {
+          overrides.tts = { voiceId };
+        }
       } else {
         console.warn("Context fetch failed:", contextResp.status);
       }
