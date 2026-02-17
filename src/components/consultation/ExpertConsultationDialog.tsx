@@ -325,7 +325,7 @@ export function ExpertConsultationDialog({
           agent: {
             prompt: { prompt: context.systemPrompt },
             firstMessage: context.firstMessage,
-            language: "en",
+            language: context.languageCode || "hi",
           },
         };
         // Only override voice if a valid voice_id exists

@@ -81,6 +81,13 @@ serve(async (req) => {
     const expertName = expert?.display_name || "Spiritual Expert";
     const expertVoiceId = expert?.voice_id || "";
 
+    // Determine language preference from expert's languages setting
+    const expertLanguages = expert?.languages || ["Hindi", "English"];
+    const primaryLanguage = expertLanguages[0] || "Hindi";
+    const languageInstruction = expertLanguages.length === 1
+      ? `You MUST speak ONLY in ${primaryLanguage}. Do not use any other language.`
+      : `You should speak in ${expertLanguages.join(" or ")} based on which language the user speaks. Match the user's language.`;
+
     const conversationalRules = `
 
 CRITICAL RULES FOR ALL RESPONSES:
@@ -95,8 +102,10 @@ CRITICAL RULES FOR ALL RESPONSES:
 - Never start with a greeting if the conversation is already ongoing.
 - Match the user's energy — if they're brief, be brief. If they're curious, engage more.
 - Remember: this is a CONVERSATION, not a lecture. Short turns, back and forth.
-- You have access to the user's detailed profile and past conversation history. Use this to personalize your responses.
-- Reference things from past conversations naturally: "Last time we talked about...", "As I mentioned before..."`;
+- Do NOT repeat the user's name in every response. Use their name only occasionally and naturally — at most once every 4-5 responses.
+- You have access to the user's profile info for context. Use it subtly, don't recite it back to them.
+- Reference things from past conversations naturally but briefly: "Last time we talked about...", "As I mentioned before..."
+- LANGUAGE: ${languageInstruction}`;
 
     const systemPrompt = expertPersonality
       ? `${expertPersonality}\n\nYou are ${expertName}. Respond as this expert would, maintaining their unique personality and expertise.${conversationalRules}${userContext}${memoriesContext}`
@@ -107,11 +116,16 @@ CRITICAL RULES FOR ALL RESPONSES:
       ? `Namaste ${firstName}! Good to hear from you again. How have things been since we last spoke?`
       : `Namaste ${firstName}! I'm ${expertName}. Tell me, what's on your mind today?`;
 
+    // Map language to ElevenLabs language code
+    const langMap: Record<string, string> = { "Hindi": "hi", "English": "en", "Sanskrit": "sa", "Tamil": "ta", "Telugu": "te", "Bengali": "bn" };
+    const languageCode = langMap[primaryLanguage] || "hi";
+
     return new Response(JSON.stringify({
       systemPrompt,
       firstMessage,
       expertName,
       expertVoiceId,
+      languageCode,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
