@@ -20,6 +20,7 @@ import AdminPanel from "./pages/AdminPanel";
 import ProviderRegister from "./pages/ProviderRegister";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import AstrologerPage from "./pages/Astrologer";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/explore" element={<Explore />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/provider-register" element={<ProviderRegister />} />
+            <Route path="/astrologer" element={<AstrologerPage />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
