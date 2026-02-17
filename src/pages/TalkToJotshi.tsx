@@ -299,27 +299,45 @@ const TalkToJotshi = () => {
                           <span className="text-lg font-bold text-primary">₹{expert.rate}</span>
                           <span className="text-xs text-muted-foreground">/min</span>
                         </div>
-                        <div className="flex gap-2">
-                          <SpiritualButton 
-                            variant="outline" 
-                            size="sm"
-                            className="gap-1.5 text-xs h-9 px-3"
-                            disabled={expert.status !== 'online'}
-                            onClick={() => openConsultation(expert, 'call')}
-                          >
-                            <Phone className="w-3.5 h-3.5" />
-                            Call
-                          </SpiritualButton>
-                          <SpiritualButton 
-                            variant="primary" 
-                            size="sm"
-                            className="gap-1.5 text-xs h-9 px-3"
-                            onClick={() => openConsultation(expert, 'chat')}
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            Chat
-                          </SpiritualButton>
-                        </div>
+                        {expert.ai_personality ? (
+                          <div className="flex gap-2">
+                            <SpiritualButton 
+                              variant="outline" 
+                              size="sm"
+                              className="gap-1.5 text-xs h-9 px-3"
+                              disabled={expert.status !== 'online'}
+                              onClick={() => openConsultation(expert, 'call')}
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              Call
+                            </SpiritualButton>
+                            <SpiritualButton 
+                              variant="primary" 
+                              size="sm"
+                              className="gap-1.5 text-xs h-9 px-3"
+                              onClick={() => openConsultation(expert, 'chat')}
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              Chat
+                            </SpiritualButton>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] px-2 py-1 bg-secondary/10 text-secondary rounded-full font-medium">
+                              Human Expert
+                            </span>
+                            <SpiritualButton 
+                              variant="primary" 
+                              size="sm"
+                              className="gap-1.5 text-xs h-9 px-3"
+                              disabled={expert.status !== 'online'}
+                              onClick={() => openConsultation(expert, 'chat')}
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              Book
+                            </SpiritualButton>
+                          </div>
+                        )}
                       </div>
                     </SpiritualCardContent>
                   </SpiritualCard>
