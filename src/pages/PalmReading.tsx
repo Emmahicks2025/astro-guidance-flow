@@ -62,9 +62,20 @@ const getRatingColor = (rating: string) => {
   }
 };
 
+const analyzingMessages = [
+  "🔮 Scanning your palm lines...",
+  "✋ Detecting Life Line, Heart Line, Head Line...",
+  "🌟 Analyzing mounts and special markings...",
+  "🧠 Reading your personality through palm patterns...",
+  "💫 Calculating your destiny indicators...",
+  "📿 Preparing your personalized remedies...",
+  "⭐ Almost done — finalizing your reading...",
+];
+
 const PalmReading = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [analyzingMsgIndex, setAnalyzingMsgIndex] = useState(0);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<PalmAnalysis | null>(null);
@@ -134,6 +145,10 @@ const PalmReading = () => {
       return;
     }
     setIsAnalyzing(true);
+    setAnalyzingMsgIndex(0);
+    const msgInterval = setInterval(() => {
+      setAnalyzingMsgIndex(prev => (prev + 1) % analyzingMessages.length);
+    }, 3000);
     try {
       // Extract base64 from data URL
       const base64 = uploadedImage.split(',')[1];
@@ -176,6 +191,7 @@ const PalmReading = () => {
       console.error("Palm analysis error:", err);
       toast.error(err.message || "Failed to analyze palm. Please try again.");
     } finally {
+      clearInterval(msgInterval);
       setIsAnalyzing(false);
     }
   };
@@ -246,6 +262,26 @@ const PalmReading = () => {
                           ) : "Get Reading"}
                         </SpiritualButton>
                       </div>
+                      {isAnalyzing && (
+                        <motion.div
+                          key={analyzingMsgIndex}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="mt-4 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center"
+                        >
+                          <p className="text-sm font-medium text-primary">{analyzingMessages[analyzingMsgIndex]}</p>
+                          <p className="text-xs text-muted-foreground mt-2">This may take 15-30 seconds. Please wait...</p>
+                          <div className="mt-3 w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                            <motion.div
+                              className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+                              initial={{ width: "5%" }}
+                              animate={{ width: "90%" }}
+                              transition={{ duration: 25, ease: "linear" }}
+                            />
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-center py-8">
@@ -359,6 +395,26 @@ const PalmReading = () => {
                 </SpiritualCard>
               )}
 
+              {/* Mid-section Expert CTA */}
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}>
+                <SpiritualCard variant="spiritual" className="p-4 border-2 border-primary/30">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 animate-pulse">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm">🚨 Your palm reveals important patterns</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        An expert palmist can decode hidden signs AI can't fully interpret — timing of events, specific remedies, and future strategy. <span className="font-semibold text-primary">Don't delay, consult now.</span>
+                      </p>
+                      <SpiritualButton variant="primary" size="sm" className="mt-2" onClick={() => navigate('/talk')}>
+                        <Phone className="w-3.5 h-3.5" /> Talk to Expert Now
+                      </SpiritualButton>
+                    </div>
+                  </div>
+                </SpiritualCard>
+              </motion.div>
+
               {/* Personality Traits */}
               {analysis.personality_traits?.length > 0 && (
                 <div>
@@ -455,11 +511,12 @@ const PalmReading = () => {
               )}
 
               {/* Expert Recommendations */}
-              <SpiritualCard variant="mystic" className="p-5">
+              <SpiritualCard variant="mystic" className="p-5 border-2 border-accent/40">
                 <div className="text-center space-y-3 mb-4">
-                  <h3 className="font-display font-bold text-lg">Want Deeper Insights?</h3>
+                  <Badge className="bg-destructive/90 text-destructive-foreground animate-pulse">⚡ Limited Slots Available</Badge>
+                  <h3 className="font-display font-bold text-lg">Your Reading Needs Expert Attention</h3>
                   <p className="text-sm text-muted-foreground">
-                    Talk to our verified experts for personalized guidance on your palm reading, future strategy, and remedies.
+                    AI analysis gives you the overview — but only a <span className="font-semibold text-foreground">certified palmist</span> can reveal timing of events, hidden challenges, and your <span className="font-semibold text-foreground">personalized future strategy</span>. Act now before slots fill up.
                   </p>
                 </div>
 
