@@ -264,8 +264,16 @@ export function ExpertConsultationDialog({
     callTranscriptRef.current = [];
 
     try {
-      // Request mic permission
-      await navigator.mediaDevices.getUserMedia({ audio: true }).then(s => s.getTracks().forEach(t => t.stop()));
+      // Request mic permission (non-blocking — WebRTC can still connect without mic)
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(t => t.stop());
+      } catch (micErr: any) {
+        if (micErr?.name === 'NotAllowedError') {
+          throw micErr; // User explicitly denied — do hard fail
+        }
+        console.warn("Mic not available, proceeding anyway:", micErr?.message);
+      }
 
       // Fetch call context (profile + memories + expert personality) and token in parallel
       const session = await supabase.auth.getSession();
