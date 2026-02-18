@@ -135,17 +135,15 @@ const PricingPage = () => {
         <div className="flex gap-2 bg-muted rounded-xl p-1">
           <button
             onClick={() => setActiveTab("plans")}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === "plans" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
-            }`}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "plans" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+              }`}
           >
             Subscription Plans
           </button>
           <button
             onClick={() => setActiveTab("topup")}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-              activeTab === "topup" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
-            }`}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${activeTab === "topup" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+              }`}
           >
             Top-Up Credits
           </button>
@@ -178,12 +176,10 @@ const PricingPage = () => {
 
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          plan.id === "premium" ? "bg-secondary/10" : plan.id === "pro" ? "bg-accent/10" : "bg-muted"
-                        }`}>
-                          <Icon className={`w-5 h-5 ${
-                            plan.id === "premium" ? "text-secondary" : plan.id === "pro" ? "text-accent" : "text-muted-foreground"
-                          }`} />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${plan.id === "premium" ? "bg-secondary/10" : plan.id === "pro" ? "bg-accent/10" : "bg-muted"
+                          }`}>
+                          <Icon className={`w-5 h-5 ${plan.id === "premium" ? "text-secondary" : plan.id === "pro" ? "text-accent" : "text-muted-foreground"
+                            }`} />
                         </div>
                         <div>
                           <h3 className="font-bold text-lg">{plan.name}</h3>
@@ -266,7 +262,7 @@ const PricingPage = () => {
 
         {/* Footer Note */}
         <p className="text-xs text-center text-muted-foreground px-4">
-          Subscriptions are managed through the App Store. Cancel anytime in your device settings. 
+          Subscriptions are managed through the App Store. Cancel anytime in your device settings.
           All AI features (Kundli, Palm Reading, Horoscope, Guna Milan) are always free.
         </p>
       </main>

@@ -1,116 +1,109 @@
 import Foundation
-import Capacitor
 import StoreKit
+import Capacitor
 
 @objc(IAPPlugin)
-public class IAPPlugin: CAPPlugin, CAPBridgedPlugin, SKPaymentTransactionObserver, SKProductsRequestDelegate {
+public class IAPPlugin: CAPPlugin, SKPaymentTransactionObserver, SKProductsRequestDelegate {
+    
+    var productsRequest: SKProductsRequest?
+    var products = [SKProduct]()
+    var purchaseCommand: CAPPluginCall?
 
-    public let identifier = "IAPPlugin"
-    public let jsName = "IAPPlugin"
-    public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "restorePurchases", returnType: CAPPluginReturnPromise)
-    ]
-
-    private var productsRequest: SKProductsRequest?
-    private var pendingCall: CAPPluginCall?
-    private var fetchedProducts: [String: SKProduct] = [:]
-
-    override public func load() {
+    public override func load() {
         SKPaymentQueue.default().add(self)
     }
 
-    deinit {
-        SKPaymentQueue.default().remove(self)
-    }
-
-    // MARK: – JS-callable methods
-
     @objc func purchase(_ call: CAPPluginCall) {
         guard let productId = call.getString("productId") else {
-            call.reject("Missing productId")
+            call.reject("Product ID is required")
             return
         }
-
-        pendingCall = call
-
-        // Fetch the product first, then buy it
-        let request = SKProductsRequest(productIdentifiers: [productId])
+        
+        self.purchaseCommand = call
+        
+        let request = SKProductsRequest(productIdentifiers: Set([productId]))
         request.delegate = self
-        productsRequest = request
         request.start()
     }
-
+    
     @objc func restorePurchases(_ call: CAPPluginCall) {
-        pendingCall = call
+        self.purchaseCommand = call
         SKPaymentQueue.default().restoreCompletedTransactions()
     }
-
-    // MARK: – SKProductsRequestDelegate
-
+    
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
-        guard let product = response.products.first else {
-            pendingCall?.reject("Product not found in App Store Connect. Check your product IDs.")
-            pendingCall = nil
-            return
+        if let product = response.products.first {
+            let payment = SKPayment(product: product)
+            SKPaymentQueue.default().add(payment)
+        } else {
+            purchaseCommand?.reject("Product not found: \(response.invalidProductIdentifiers)")
         }
-
-        fetchedProducts[product.productIdentifier] = product
-        let payment = SKPayment(product: product)
-        SKPaymentQueue.default().add(payment)
     }
-
-    public func request(_ request: SKRequest, didFailWithError error: Error) {
-        pendingCall?.reject("Failed to fetch product: \(error.localizedDescription)")
-        pendingCall = nil
-    }
-
-    // MARK: – SKPaymentTransactionObserver
-
+    
     public func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
-        for tx in transactions {
-            switch tx.transactionState {
+        for transaction in transactions {
+            switch transaction.transactionState {
             case .purchased:
-                let data: [String: Any] = [
-                    "productId": tx.payment.productIdentifier,
-                    "transactionId": tx.transactionIdentifier ?? "",
-                    "receipt": receiptBase64() ?? ""
-                ]
-                pendingCall?.resolve(data)
-                pendingCall = nil
-                queue.finishTransaction(tx)
-
+                handlePurchased(transaction)
             case .restored:
-                let data: [String: Any] = [
-                    "productId": tx.payment.productIdentifier,
-                    "transactionId": tx.original?.transactionIdentifier ?? tx.transactionIdentifier ?? "",
-                    "receipt": receiptBase64() ?? ""
-                ]
-                pendingCall?.resolve(data)
-                pendingCall = nil
-                queue.finishTransaction(tx)
-
+                handleRestored(transaction)
             case .failed:
-                let errMsg = tx.error?.localizedDescription ?? "Purchase failed"
-                pendingCall?.reject(errMsg)
-                pendingCall = nil
-                queue.finishTransaction(tx)
-
+                handleFailed(transaction)
             case .deferred, .purchasing:
                 break
-
             @unknown default:
                 break
             }
         }
     }
-
-    // MARK: – Helpers
-
-    private func receiptBase64() -> String? {
-        guard let url = Bundle.main.appStoreReceiptURL,
-              FileManager.default.fileExists(atPath: url.path),
-              let data = try? Data(contentsOf: url) else { return nil }
-        return data.base64EncodedString()
+    
+    func handlePurchased(_ transaction: SKPaymentTransaction) {
+        guard let call = purchaseCommand else { return }
+        
+        if let appStoreReceiptURL = Bundle.main.appStoreReceiptURL,
+           let receiptData = try? Data(contentsOf: appStoreReceiptURL) {
+            let receiptString = receiptData.base64EncodedString(options: [])
+            
+            call.resolve([
+                "transactionId": transaction.transactionIdentifier ?? "",
+                "productId": transaction.payment.productIdentifier,
+                "receipt": receiptString
+            ])
+        } else {
+            call.reject("Receipt not found")
+        }
+        
+        SKPaymentQueue.default().finishTransaction(transaction)
+    }
+    
+    func handleRestored(_ transaction: SKPaymentTransaction) {
+        // Simple restore logic - just return success for now
+        // In a real app, you might want to return a list of restored products
+        guard let call = purchaseCommand else { return }
+        
+        if let appStoreReceiptURL = Bundle.main.appStoreReceiptURL,
+           let receiptData = try? Data(contentsOf: appStoreReceiptURL) {
+            let receiptString = receiptData.base64EncodedString(options: [])
+            
+            call.resolve([
+                "transactionId": transaction.transactionIdentifier ?? "",
+                "productId": transaction.payment.productIdentifier,
+                "receipt": receiptString
+            ])
+        }
+        
+        SKPaymentQueue.default().finishTransaction(transaction)
+    }
+    
+    func handleFailed(_ transaction: SKPaymentTransaction) {
+        guard let call = purchaseCommand else { return }
+        
+        if let error = transaction.error {
+            call.reject(error.localizedDescription)
+        } else {
+            call.reject("Transaction failed")
+        }
+        
+        SKPaymentQueue.default().finishTransaction(transaction)
     }
 }
