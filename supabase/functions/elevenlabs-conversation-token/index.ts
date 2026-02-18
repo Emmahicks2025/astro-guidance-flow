@@ -12,21 +12,20 @@ serve(async (req) => {
   }
 
   try {
-    const { agentId } = await req.json();
-    
-    console.log("Requesting ElevenLabs conversation token for agent:", agentId);
-
     const ELEVENLABS_API_KEY = await getApiKey("ELEVENLABS_API_KEY");
     if (!ELEVENLABS_API_KEY) {
       throw new Error("ELEVENLABS_API_KEY is not configured");
     }
 
-    if (!agentId) {
-      throw new Error("Agent ID is required");
+    const AGENT_ID = Deno.env.get("ELEVENLABS_AGENT_ID");
+    if (!AGENT_ID) {
+      throw new Error("ELEVENLABS_AGENT_ID is not configured");
     }
 
+    console.log("Getting conversation token for agent:", AGENT_ID);
+
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${agentId}`,
+      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${AGENT_ID}`,
       {
         headers: {
           "xi-api-key": ELEVENLABS_API_KEY,
@@ -43,7 +42,7 @@ serve(async (req) => {
     const data = await response.json();
     console.log("ElevenLabs token obtained successfully");
 
-    return new Response(JSON.stringify({ token: data.token }), {
+    return new Response(JSON.stringify({ token: data.token, agentId: AGENT_ID }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

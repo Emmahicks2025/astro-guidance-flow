@@ -1,15 +1,18 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   User, Heart, Briefcase, Sparkles, AlertTriangle, 
   Star, Gem, BookOpen, Phone, MessageCircle, 
   Sun, Moon, Flame, Wind, Droplets, Shield,
-  ChevronRight, Clock
+  ChevronRight, Clock, Loader2
 } from "lucide-react";
 import { SpiritualCard, SpiritualCardContent, SpiritualCardHeader, SpiritualCardTitle } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { ExpertConsultationDialog } from "@/components/consultation/ExpertConsultationDialog";
 
 interface KundliAnalysis {
   chartStyle: string;
@@ -108,8 +111,72 @@ const getSeverityColor = (severity?: string) => {
   }
 };
 
+interface Expert {
+  id: string;
+  name: string;
+  specialty: string;
+  experience: string;
+  rating: number;
+  rate: number;
+  status: 'online' | 'busy' | 'offline';
+  avatar: string;
+  category: string;
+  languages: string[];
+  sessions: number;
+  ai_personality?: string;
+  voice_id?: string;
+  user_id?: string;
+}
+
 const KundliAnalysisDashboard = ({ analysis, onBack }: KundliAnalysisDashboardProps) => {
   const navigate = useNavigate();
+  const [experts, setExperts] = useState<Expert[]>([]);
+  const [loadingExperts, setLoadingExperts] = useState(true);
+  const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
+  const [consultationOpen, setConsultationOpen] = useState(false);
+  const [consultationTab, setConsultationTab] = useState<'chat' | 'call'>('chat');
+
+  useEffect(() => {
+    const fetchExperts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('jotshi_profiles')
+          .select('*')
+          .eq('approval_status', 'approved')
+          .in('category', ['astrologer', 'jotshi'])
+          .order('rating', { ascending: false })
+          .limit(6);
+        if (error) throw error;
+        setExperts((data || []).map((p) => ({
+          id: p.id,
+          name: p.display_name || 'Expert',
+          specialty: p.specialty || 'Vedic Astrology',
+          experience: p.experience_years ? `${p.experience_years}+ yrs` : 'Experienced',
+          rating: Number(p.rating) || 0,
+          rate: p.hourly_rate || 20,
+          status: p.is_online ? 'online' : 'offline' as 'online' | 'busy' | 'offline',
+          avatar: p.avatar_url || '/placeholder.svg',
+          category: p.category || 'astrologer',
+          languages: p.languages || ['Hindi', 'English'],
+          sessions: p.total_sessions || 0,
+          ai_personality: p.ai_personality || undefined,
+          voice_id: p.voice_id || undefined,
+          user_id: p.user_id || undefined,
+        })));
+      } catch (err) {
+        console.error("Error fetching experts:", err);
+      } finally {
+        setLoadingExperts(false);
+      }
+    };
+    fetchExperts();
+  }, []);
+
+  const openExpertConsultation = (expert: Expert, tab: 'chat' | 'call') => {
+    setSelectedExpert(expert);
+    setConsultationTab(tab);
+    setConsultationOpen(true);
+  };
 
   const categoryCards = [
     {
@@ -393,31 +460,67 @@ const KundliAnalysisDashboard = ({ analysis, onBack }: KundliAnalysisDashboardPr
         </SpiritualCardContent>
       </SpiritualCard>
 
-      {/* Talk to Real Jotshi CTA */}
+      {/* Expert Recommendations */}
       <SpiritualCard variant="mystic" className="p-5">
-        <div className="text-center space-y-3">
-          <h3 className="font-display font-bold text-lg">Need Deeper Clarity?</h3>
+        <div className="text-center space-y-3 mb-4">
+          <h3 className="font-display font-bold text-lg">Get Expert Guidance</h3>
           <p className="text-sm text-muted-foreground">
-            Our verified Jotshis have reviewed your AI analysis and are ready to provide personalized guidance.
+            Your AI analysis is ready. Talk to our verified astrologers for deeper clarity, future strategy, and personalized remedies.
           </p>
-          <div className="flex gap-3 justify-center">
-            <SpiritualButton
-              variant="outline"
-              onClick={() => navigate("/talk")}
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Chat with Jotshi
-            </SpiritualButton>
-            <SpiritualButton
-              variant="primary"
-              onClick={() => navigate("/talk")}
-            >
-              <Phone className="w-4 h-4 mr-2" />
-              Call a Jotshi
+        </div>
+
+        {loadingExperts ? (
+          <div className="flex justify-center py-4"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+        ) : experts.length > 0 ? (
+          <div className="space-y-3">
+            {experts.map((expert) => (
+              <SpiritualCard key={expert.id} variant="elevated" className="p-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <img src={expert.avatar} alt={expert.name} className="w-12 h-12 rounded-full object-cover" />
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-background ${expert.status === 'online' ? 'bg-green-500' : 'bg-muted'}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{expert.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{expert.specialty}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs flex items-center gap-0.5"><Star className="w-3 h-3 text-accent fill-accent" /> {expert.rating.toFixed(1)}</span>
+                      <span className="text-xs text-muted-foreground">₹{expert.rate}/min</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <SpiritualButton variant="outline" size="sm" className="h-8 px-2" onClick={() => openExpertConsultation(expert, 'chat')}>
+                      <MessageCircle className="w-3.5 h-3.5" />
+                    </SpiritualButton>
+                    <SpiritualButton variant="primary" size="sm" className="h-8 px-2" onClick={() => openExpertConsultation(expert, 'call')}>
+                      <Phone className="w-3.5 h-3.5" />
+                    </SpiritualButton>
+                  </div>
+                </div>
+              </SpiritualCard>
+            ))}
+            <SpiritualButton variant="ghost" className="w-full" onClick={() => navigate('/talk')}>
+              View All Experts <ChevronRight className="w-4 h-4 ml-1" />
             </SpiritualButton>
           </div>
-        </div>
+        ) : (
+          <div className="flex gap-3 justify-center">
+            <SpiritualButton variant="outline" onClick={() => navigate("/talk")}>
+              <MessageCircle className="w-4 h-4 mr-2" /> Chat with Jotshi
+            </SpiritualButton>
+            <SpiritualButton variant="primary" onClick={() => navigate("/talk")}>
+              <Phone className="w-4 h-4 mr-2" /> Call a Jotshi
+            </SpiritualButton>
+          </div>
+        )}
       </SpiritualCard>
+
+      <ExpertConsultationDialog
+        expert={selectedExpert}
+        open={consultationOpen}
+        onOpenChange={setConsultationOpen}
+        initialTab={consultationTab}
+      />
 
       {/* Back button */}
       <SpiritualButton

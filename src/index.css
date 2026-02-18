@@ -2,126 +2,125 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AstroGuru Design System - Vedic Astrology Spiritual Theme
-   Colors inspired by Indian spirituality: Saffron, Purple, Gold */
+/* AstroGuru Design System — Modern iOS-inspired Spiritual Theme
+   Navy Blue + Vermillion: premium, clean, high contrast */
 
 @layer base {
   :root {
-    /* Base backgrounds - warm cream tones */
-    --background: 40 30% 98%;
-    --foreground: 270 40% 15%;
+    /* iOS-style: pure white base, true near-black text for max readability */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 10%;
 
-    /* Card surfaces */
-    --card: 40 25% 96%;
-    --card-foreground: 270 40% 15%;
+    --card: 220 20% 98%;
+    --card-foreground: 220 20% 10%;
 
-    /* Popover */
-    --popover: 40 30% 98%;
-    --popover-foreground: 270 40% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
 
-    /* Primary - Deep Saffron Orange */
-    --primary: 30 95% 50%;
+    /* Primary — Deep Cosmic Navy */
+    --primary: 222 72% 38%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Mystical Purple */
-    --secondary: 270 45% 45%;
+    /* Secondary — Warm Vermillion */
+    --secondary: 8 78% 50%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Muted - Soft warm tones */
-    --muted: 35 20% 92%;
-    --muted-foreground: 270 20% 40%;
+    /* Muted — readable medium gray, not too light */
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 14% 38%;
 
-    /* Accent - Rich Gold */
-    --accent: 45 90% 55%;
-    --accent-foreground: 270 40% 15%;
+    /* Accent — Vermillion */
+    --accent: 8 78% 50%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Destructive */
-    --destructive: 0 84% 60%;
+    --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders and inputs */
-    --border: 35 25% 88%;
-    --input: 35 25% 88%;
-    --ring: 30 95% 50%;
+    /* Borders — iOS hairline style */
+    --border: 220 14% 88%;
+    --input: 220 14% 90%;
+    --ring: 222 72% 38%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    /* Extended palette */
-    --saffron: 30 95% 50%;
-    --saffron-light: 35 90% 70%;
-    --saffron-dark: 25 85% 40%;
-    
-    --purple: 270 45% 45%;
-    --purple-light: 270 40% 65%;
-    --purple-dark: 270 50% 30%;
-    
-    --gold: 45 90% 55%;
-    --gold-light: 48 85% 70%;
-    --gold-dark: 42 80% 45%;
-    
-    --cream: 40 30% 98%;
-    --cream-dark: 35 20% 92%;
+    /* Palette tokens */
+    --saffron: 8 78% 52%;
+    --saffron-light: 14 72% 66%;
+    --saffron-dark: 4 72% 40%;
 
-    /* Gradients */
-    --gradient-spiritual: linear-gradient(135deg, hsl(30 95% 50%) 0%, hsl(270 45% 45%) 100%);
-    --gradient-sunset: linear-gradient(180deg, hsl(30 95% 50%) 0%, hsl(45 90% 55%) 50%, hsl(35 90% 70%) 100%);
-    --gradient-mystic: linear-gradient(135deg, hsl(270 50% 30%) 0%, hsl(270 45% 45%) 50%, hsl(270 40% 65%) 100%);
-    --gradient-golden: linear-gradient(135deg, hsl(42 80% 45%) 0%, hsl(45 90% 55%) 50%, hsl(48 85% 70%) 100%);
+    --purple: 222 72% 40%;
+    --purple-light: 222 60% 58%;
+    --purple-dark: 222 80% 26%;
 
-    /* Shadows */
-    --shadow-spiritual: 0 4px 20px -4px hsl(30 95% 50% / 0.25);
-    --shadow-mystic: 0 4px 20px -4px hsl(270 45% 45% / 0.25);
-    --shadow-golden: 0 4px 20px -4px hsl(45 90% 55% / 0.3);
-    --shadow-soft: 0 2px 12px -2px hsl(270 40% 15% / 0.08);
+    --gold: 8 78% 52%;
+    --gold-light: 14 72% 66%;
+    --gold-dark: 4 72% 40%;
+
+    --cream: 0 0% 100%;
+    --cream-dark: 220 14% 95%;
+
+    /* Gradients — rich navy depth, iOS-like */
+    --gradient-spiritual: linear-gradient(145deg, hsl(222 72% 40%) 0%, hsl(240 68% 32%) 100%);
+    --gradient-sunset: linear-gradient(145deg, hsl(8 78% 52%) 0%, hsl(2 70% 42%) 100%);
+    --gradient-mystic: linear-gradient(145deg, hsl(240 68% 26%) 0%, hsl(222 72% 40%) 100%);
+    --gradient-golden: linear-gradient(145deg, hsl(4 70% 38%) 0%, hsl(8 78% 52%) 60%, hsl(14 72% 62%) 100%);
+
+    /* Shadows — iOS-style layered elevation */
+    --shadow-spiritual: 0 4px 20px -2px hsl(222 72% 40% / 0.22), 0 1px 4px -1px hsl(222 72% 40% / 0.12);
+    --shadow-mystic: 0 4px 20px -2px hsl(240 68% 34% / 0.20);
+    --shadow-golden: 0 4px 20px -2px hsl(8 78% 52% / 0.22);
+    --shadow-soft: 0 1px 8px -1px hsl(220 25% 8% / 0.06), 0 4px 16px -4px hsl(220 25% 8% / 0.05);
 
     /* Sidebar */
-    --sidebar-background: 40 25% 96%;
-    --sidebar-foreground: 270 40% 15%;
-    --sidebar-primary: 30 95% 50%;
+    --sidebar-background: 222 72% 40%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 8 78% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 35 20% 92%;
-    --sidebar-accent-foreground: 270 40% 15%;
-    --sidebar-border: 35 25% 88%;
-    --sidebar-ring: 30 95% 50%;
+    --sidebar-accent: 222 60% 48%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 60% 46%;
+    --sidebar-ring: 8 78% 60%;
   }
 
   .dark {
-    --background: 270 40% 8%;
-    --foreground: 40 30% 95%;
+    /* OLED dark — true near-black + navy card surfaces */
+    --background: 220 30% 5%;
+    --foreground: 0 0% 96%;
 
-    --card: 270 35% 12%;
-    --card-foreground: 40 30% 95%;
+    --card: 222 28% 10%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 270 35% 12%;
-    --popover-foreground: 40 30% 95%;
+    --popover: 222 28% 10%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 30 95% 55%;
-    --primary-foreground: 270 40% 10%;
+    --primary: 222 85% 65%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 35% 25%;
-    --secondary-foreground: 40 30% 95%;
+    --secondary: 8 80% 60%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 270 30% 18%;
-    --muted-foreground: 35 20% 65%;
+    /* Muted text clearly visible on dark */
+    --muted: 222 22% 14%;
+    --muted-foreground: 220 14% 65%;
 
-    --accent: 45 85% 50%;
-    --accent-foreground: 270 40% 10%;
+    --accent: 8 80% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 70% 45%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 30% 20%;
-    --input: 270 30% 20%;
-    --ring: 30 95% 55%;
+    --border: 222 22% 18%;
+    --input: 222 22% 18%;
+    --ring: 222 85% 65%;
 
-    --sidebar-background: 270 35% 10%;
-    --sidebar-foreground: 40 30% 95%;
-    --sidebar-primary: 30 95% 55%;
-    --sidebar-primary-foreground: 270 40% 10%;
-    --sidebar-accent: 270 30% 18%;
-    --sidebar-accent-foreground: 40 30% 95%;
-    --sidebar-border: 270 30% 20%;
-    --sidebar-ring: 30 95% 55%;
+    --sidebar-background: 220 30% 3%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 8 80% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 22% 14%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 222 22% 14%;
+    --sidebar-ring: 8 80% 60%;
   }
 }
 
@@ -136,33 +135,40 @@
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
 }
 
 @layer utilities {
   /* Safe area support for iPhone Dynamic Island / notch */
   .safe-area-top {
-    padding-top: env(safe-area-inset-top);
+    padding-top: max(3rem, env(safe-area-inset-top, 0px));
   }
-}
-}
+  .safe-area-bottom {
+    padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
+  }
 
-@layer utilities {
   /* Spiritual gradients */
   .bg-gradient-spiritual {
     background: var(--gradient-spiritual);
+    /* Override muted text to be readable on dark gradient */
+    --muted-foreground: 0 0% 100%;
   }
 
   .bg-gradient-sunset {
     background: var(--gradient-sunset);
+    --muted-foreground: 0 0% 100%;
   }
 
   .bg-gradient-mystic {
     background: var(--gradient-mystic);
+    --muted-foreground: 0 0% 100%;
   }
 
   .bg-gradient-golden {
     background: var(--gradient-golden);
+    --muted-foreground: 0 0% 100%;
   }
+
 
   /* Glow effects */
   .glow-spiritual {
@@ -192,7 +198,7 @@
     background-clip: text;
   }
 
-  /* Mystical animation */
+  /* Animations */
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }

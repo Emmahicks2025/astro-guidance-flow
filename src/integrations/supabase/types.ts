@@ -83,6 +83,66 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_memories: {
+        Row: {
+          created_at: string
+          expert_id: string
+          id: string
+          key_points: Json
+          last_call_at: string | null
+          summary: string | null
+          total_calls: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expert_id: string
+          id?: string
+          key_points?: Json
+          last_call_at?: string | null
+          summary?: string | null
+          total_calls?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expert_id?: string
+          id?: string
+          key_points?: Json
+          last_call_at?: string | null
+          summary?: string | null
+          total_calls?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_balances: {
+        Row: {
+          balance: number
+          id: string
+          lifetime_earned: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          id?: string
+          lifetime_earned?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          id?: string
+          lifetime_earned?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       jotshi_profiles: {
         Row: {
           ai_personality: string | null
@@ -94,6 +154,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           experience_years: number | null
+          first_message: string | null
           hourly_rate: number | null
           id: string
           is_online: boolean | null
@@ -117,6 +178,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           experience_years?: number | null
+          first_message?: string | null
           hourly_rate?: number | null
           id?: string
           is_online?: boolean | null
@@ -140,6 +202,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           experience_years?: number | null
+          first_message?: string | null
           hourly_rate?: number | null
           id?: string
           is_online?: boolean | null
@@ -199,7 +262,9 @@ export type Database = {
           full_name: string | null
           gender: string | null
           id: string
+          kundli_analysis_text: string | null
           major_concern: string | null
+          palm_analysis_text: string | null
           partner_dob: string | null
           partner_name: string | null
           partner_place_of_birth: string | null
@@ -219,7 +284,9 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          kundli_analysis_text?: string | null
           major_concern?: string | null
+          palm_analysis_text?: string | null
           partner_dob?: string | null
           partner_name?: string | null
           partner_place_of_birth?: string | null
@@ -239,7 +306,9 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          kundli_analysis_text?: string | null
           major_concern?: string | null
+          palm_analysis_text?: string | null
           partner_dob?: string | null
           partner_name?: string | null
           partner_place_of_birth?: string | null
@@ -250,6 +319,75 @@ export type Database = {
           time_of_birth?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          apple_product_id: string
+          call_credit_per_min: number
+          chat_credit_per_1k_tokens: number
+          created_at: string
+          features: Json
+          id: string
+          is_active: boolean
+          monthly_credits: number
+          name: string
+          price_usd: number
+        }
+        Insert: {
+          apple_product_id: string
+          call_credit_per_min?: number
+          chat_credit_per_1k_tokens?: number
+          created_at?: string
+          features?: Json
+          id: string
+          is_active?: boolean
+          monthly_credits?: number
+          name: string
+          price_usd?: number
+        }
+        Update: {
+          apple_product_id?: string
+          call_credit_per_min?: number
+          chat_credit_per_1k_tokens?: number
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          monthly_credits?: number
+          name?: string
+          price_usd?: number
+        }
+        Relationships: []
+      }
+      topup_packs: {
+        Row: {
+          apple_product_id: string
+          bonus_credits: number
+          created_at: string
+          credits: number
+          id: string
+          is_active: boolean
+          price_usd: number
+        }
+        Insert: {
+          apple_product_id: string
+          bonus_credits?: number
+          created_at?: string
+          credits: number
+          id: string
+          is_active?: boolean
+          price_usd: number
+        }
+        Update: {
+          apple_product_id?: string
+          bonus_credits?: number
+          created_at?: string
+          credits?: number
+          id?: string
+          is_active?: boolean
+          price_usd?: number
         }
         Relationships: []
       }
@@ -274,9 +412,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          apple_original_transaction_id: string | null
+          apple_transaction_id: string | null
+          cancelled_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          plan_id: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          apple_original_transaction_id?: string | null
+          apple_transaction_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          apple_original_transaction_id?: string | null
+          apple_transaction_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plan_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallet_transactions: {
         Row: {
           amount: number
+          apple_transaction_id: string | null
           consultation_id: string | null
           created_at: string
           description: string | null
@@ -286,6 +475,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          apple_transaction_id?: string | null
           consultation_id?: string | null
           created_at?: string
           description?: string | null
@@ -295,6 +485,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          apple_transaction_id?: string | null
           consultation_id?: string | null
           created_at?: string
           description?: string | null

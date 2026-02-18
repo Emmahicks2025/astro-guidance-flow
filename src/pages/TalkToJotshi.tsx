@@ -25,6 +25,8 @@ interface Expert {
   sessions: number;
   ai_personality?: string;
   voice_id?: string;
+  user_id?: string;
+  first_message?: string;
 }
 
 const categoryConfig: { id: Category; label: string; icon: React.ReactNode }[] = [
@@ -74,6 +76,8 @@ const TalkToJotshi = () => {
           sessions: p.total_sessions || 0,
           ai_personality: p.ai_personality || undefined,
           voice_id: p.voice_id || undefined,
+          user_id: p.user_id || undefined,
+          first_message: p.first_message || undefined,
         }));
 
         setExperts(mappedExperts);
@@ -274,7 +278,7 @@ const TalkToJotshi = () => {
                               <Clock className="w-3 h-3" /> {expert.experience}
                             </span>
                             <span className="flex items-center gap-1 text-xs">
-                              <Star className="w-3 h-3 text-gold fill-gold" /> 
+                              <Star className="w-3 h-3 text-secondary fill-secondary" /> 
                               <span className="text-foreground font-medium">{expert.rating}</span>
                             </span>
                             <span className="text-xs text-muted-foreground">

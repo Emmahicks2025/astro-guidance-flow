@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Sparkles, Star, Users, Hand, Heart, Upload, CheckCircle } from "lucide-react";
+import { ArrowLeft, Sparkles, Star, Users, Hand, Heart, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
@@ -19,27 +19,19 @@ const categories = [
   { value: "relationship", label: "Relationship Expert", icon: Heart, description: "Marriage counseling, Love guidance" }
 ];
 
-const specialties = [
-  "Vedic Astrology",
-  "Nadi Astrology",
-  "KP Astrology",
-  "Lal Kitab",
-  "Palmistry",
-  "Numerology",
-  "Tarot Reading",
-  "Vastu Shastra",
-  "Marriage Counseling",
-  "Relationship Expert",
-  "Kundli Matching",
-  "Dasha Analysis",
-  "Remedial Astrology"
-];
+const specialtiesByCategory: Record<string, string[]> = {
+  astrologer: ["Vedic Astrology", "Nadi Astrology", "KP Astrology", "Lal Kitab", "Numerology", "Tarot Reading", "Vastu Shastra", "Remedial Astrology"],
+  jotshi: ["Kundli Matching", "Dasha Analysis", "Vedic Astrology", "Lal Kitab", "Numerology"],
+  palmist: ["Palmistry", "Numerology", "Hasta Shastra"],
+  relationship: ["Marriage Counseling", "Relationship Expert", "Love Guidance", "Compatibility Analysis"]
+};
 
 const ProviderRegister = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     display_name: "",
@@ -50,6 +42,17 @@ const ProviderRegister = () => {
     bio: "",
     languages: ["Hindi", "English"]
   });
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +71,27 @@ const ProviderRegister = () => {
     setLoading(true);
 
     try {
+      let avatarUrl: string | null = null;
+
+      // Upload avatar if selected
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('provider-avatars')
+          .upload(filePath, avatarFile);
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          toast.error("Failed to upload photo");
+        } else {
+          const { data: urlData } = supabase.storage
+            .from('provider-avatars')
+            .getPublicUrl(filePath);
+          avatarUrl = urlData.publicUrl;
+        }
+      }
+
       const { error } = await supabase
         .from("jotshi_profiles")
         .insert({
@@ -81,7 +105,8 @@ const ProviderRegister = () => {
           languages: formData.languages,
           approval_status: "pending",
           is_online: false,
-          verified: false
+          verified: false,
+          avatar_url: avatarUrl
         });
 
       if (error) {
@@ -91,8 +116,8 @@ const ProviderRegister = () => {
           throw error;
         }
       } else {
-        setSubmitted(true);
         toast.success("Application submitted successfully!");
+        navigate('/astrologer');
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -115,56 +140,7 @@ const ProviderRegister = () => {
     );
   }
 
-  if (submitted) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 p-4"
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", delay: 0.2 }}
-          className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center"
-        >
-          <CheckCircle className="w-10 h-10 text-green-500" />
-        </motion.div>
-        
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold text-foreground">Application Submitted!</h2>
-          <p className="text-muted-foreground max-w-md">
-            Thank you for registering as a service provider. Our admin team will review your application 
-            and you'll receive an email notification once approved.
-          </p>
-        </div>
-
-        <SpiritualCard variant="elevated" className="max-w-md w-full">
-          <SpiritualCardContent className="p-6 text-center">
-            <h3 className="font-semibold text-foreground mb-2">What's Next?</h3>
-            <ul className="text-sm text-muted-foreground space-y-2 text-left">
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">1.</span>
-                Our team will review your profile within 24-48 hours
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">2.</span>
-                You'll receive an email when your application is approved
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary font-bold">3.</span>
-                Once approved, you can start accepting consultations
-              </li>
-            </ul>
-          </SpiritualCardContent>
-        </SpiritualCard>
-
-        <SpiritualButton variant="outline" onClick={() => navigate('/')}>
-          Return Home
-        </SpiritualButton>
-      </motion.div>
-    );
-  }
+  // Removed old submitted state - now navigates to /astrologer
 
   return (
     <motion.div
@@ -205,7 +181,7 @@ const ProviderRegister = () => {
                     type="button"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setFormData({ ...formData, category: cat.value })}
+                    onClick={() => setFormData({ ...formData, category: cat.value, specialty: "" })}
                     className={`p-4 rounded-xl border-2 transition-all text-left ${
                       isSelected
                         ? 'border-primary bg-primary/10'
@@ -225,6 +201,36 @@ const ProviderRegister = () => {
           <SpiritualCard variant="elevated">
             <SpiritualCardContent className="p-5 space-y-4">
               <h3 className="font-semibold text-foreground">Personal Details</h3>
+
+              {/* Avatar Upload */}
+              <div className="space-y-2">
+                <Label>Profile Photo</Label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover rounded-2xl" />
+                    ) : (
+                      <Upload className="w-6 h-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <label htmlFor="avatar-upload">
+                      <SpiritualButton type="button" variant="outline" size="sm" onClick={() => document.getElementById('avatar-upload')?.click()}>
+                        <Upload className="w-4 h-4 mr-2" />
+                        {avatarPreview ? "Change Photo" : "Upload Photo"}
+                      </SpiritualButton>
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG or WebP. Max 5MB.</p>
+                  </div>
+                </div>
+              </div>
               
               <div className="space-y-2">
                 <Label>Display Name *</Label>
@@ -241,12 +247,13 @@ const ProviderRegister = () => {
                 <Select 
                   value={formData.specialty} 
                   onValueChange={(v) => setFormData({ ...formData, specialty: v })}
+                  disabled={!formData.category}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select your specialty" />
+                    <SelectValue placeholder={formData.category ? "Select your specialty" : "Select a category first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {specialties.map(s => (
+                    {(specialtiesByCategory[formData.category] || []).map(s => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
                   </SelectContent>

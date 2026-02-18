@@ -16,7 +16,7 @@ const WelcomeStep = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center"
+      className="flex flex-col items-center justify-center min-h-screen px-6 py-8 text-center"
     >
       {/* Decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

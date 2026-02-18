@@ -41,7 +41,7 @@ const BirthTimeExactnessStep = () => {
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -50 }}
-      className="flex flex-col min-h-[80vh] px-6 py-8"
+      className="flex flex-col min-h-screen px-6 py-8"
     >
       <OnboardingProgress currentStep={5} totalSteps={8} />
 
@@ -121,7 +121,7 @@ const BirthTimeExactnessStep = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="flex gap-4 max-w-md mx-auto w-full"
+        className="flex gap-4 max-w-md mx-auto w-full safe-area-bottom"
       >
         <SpiritualButton
           variant="ghost"

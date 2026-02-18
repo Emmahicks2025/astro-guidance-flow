@@ -1,37 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Wallet, ArrowLeft, Plus, CreditCard, History, Gift, ChevronRight } from "lucide-react";
+import { Wallet, ArrowLeft, Plus, CreditCard, History, Gift, ChevronRight, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { toast } from "sonner";
-
-const rechargeOptions = [
-  { amount: 100, bonus: 0 },
-  { amount: 200, bonus: 10 },
-  { amount: 500, bonus: 50, popular: true },
-  { amount: 1000, bonus: 150 },
-];
-
-const transactionHistory = [
-  { id: 1, type: 'recharge', amount: 500, date: '2024-01-15', description: 'Wallet Recharge' },
-  { id: 2, type: 'spent', amount: -125, date: '2024-01-14', description: 'Chat with Pandit Ramesh' },
-  { id: 3, type: 'spent', amount: -80, date: '2024-01-12', description: 'Palm Reading' },
-  { id: 4, type: 'recharge', amount: 200, date: '2024-01-10', description: 'Wallet Recharge' },
-];
+import { useTranslation } from "@/stores/languageStore";
+import { useCredits } from "@/hooks/useCredits";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const WalletPage = () => {
   const navigate = useNavigate();
-  const [balance] = useState(495);
-  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { balance, subscription, loading } = useCredits();
+  const [transactions, setTransactions] = useState<any[]>([]);
 
-  const handleRecharge = () => {
-    if (!selectedAmount) {
-      toast.error("Please select an amount");
-      return;
-    }
-    toast.success(`Recharge of ₹${selectedAmount} initiated!`);
-  };
+  useEffect(() => {
+    if (!user) return;
+    const fetchTx = async () => {
+      const { data } = await supabase
+        .from("wallet_transactions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (data) setTransactions(data);
+    };
+    fetchTx();
+  }, [user]);
 
   return (
     <motion.div
@@ -49,99 +47,80 @@ const WalletPage = () => {
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent-dark flex items-center justify-center">
               <Wallet className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-display font-bold text-xl">My Wallet</span>
+            <span className="font-display font-bold text-xl">{t.myWallet}</span>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
+      <main className="container mx-auto px-4 py-6 space-y-6 max-w-lg">
         {/* Balance Card */}
         <SpiritualCard variant="golden" className="p-6 text-center">
-          <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
-          <p className="text-4xl font-bold text-accent">₹{balance}</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            ≈ {Math.floor(balance / 25)} minutes with top astrologers
-          </p>
+          <p className="text-sm opacity-70 mb-1">{t.availableBalance}</p>
+          <p className="text-4xl font-bold">{loading ? "..." : balance} credits</p>
+          <div className="flex items-center justify-center gap-2 mt-3">
+            <Crown className="w-4 h-4 opacity-80" />
+            <span className="text-sm font-medium">{subscription.plan_name} Plan</span>
+          </div>
         </SpiritualCard>
 
-        {/* Recharge Options */}
-        <section className="space-y-3">
-          <h3 className="text-lg font-bold font-display flex items-center gap-2">
-            <Plus className="w-5 h-5 text-primary" />
-            Recharge Wallet
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            {rechargeOptions.map((option) => (
-              <SpiritualCard
-                key={option.amount}
-                variant={selectedAmount === option.amount ? "spiritual" : "elevated"}
-                interactive
-                className={`p-4 text-center relative ${option.popular ? 'ring-2 ring-accent' : ''}`}
-                onClick={() => setSelectedAmount(option.amount)}
-              >
-                {option.popular && (
-                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs px-2 py-0.5 rounded-full">
-                    Popular
-                  </span>
-                )}
-                <p className="text-2xl font-bold">₹{option.amount}</p>
-                {option.bonus > 0 && (
-                  <p className="text-sm text-green-500 flex items-center justify-center gap-1 mt-1">
-                    <Gift className="w-4 h-4" />
-                    +₹{option.bonus} bonus
-                  </p>
-                )}
-              </SpiritualCard>
-            ))}
-          </div>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-3">
           <SpiritualButton
             variant="primary"
-            size="lg"
-            className="w-full"
-            onClick={handleRecharge}
-            disabled={!selectedAmount}
+            className="h-auto py-4 flex-col gap-2"
+            onClick={() => navigate('/pricing')}
           >
-            <CreditCard className="w-5 h-5" />
-            Recharge ₹{selectedAmount || 0}
+            <Crown className="w-5 h-5" />
+            <span className="text-sm">Upgrade Plan</span>
           </SpiritualButton>
-        </section>
+          <SpiritualButton
+            variant="golden"
+            className="h-auto py-4 flex-col gap-2"
+            onClick={() => navigate('/pricing')}
+          >
+            <Plus className="w-5 h-5" />
+            <span className="text-sm">Top Up Credits</span>
+          </SpiritualButton>
+        </div>
+
 
         {/* Transaction History */}
         <section className="space-y-3">
           <h3 className="text-lg font-bold font-display flex items-center gap-2">
             <History className="w-5 h-5 text-secondary" />
-            Recent Transactions
+            {t.recentTransactions}
           </h3>
           <SpiritualCard variant="elevated" className="overflow-hidden">
             <div className="divide-y divide-border">
-              {transactionHistory.map((tx) => (
+              {transactions.length === 0 && (
+                <p className="p-4 text-center text-muted-foreground text-sm">No transactions yet</p>
+              )}
+              {transactions.map((tx) => (
                 <div key={tx.id} className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      tx.type === 'recharge' ? 'bg-green-500/10' : 'bg-primary/10'
+                      tx.amount > 0 ? 'bg-green-500/10' : 'bg-primary/10'
                     }`}>
-                      {tx.type === 'recharge' ? (
-                        <Plus className={`w-5 h-5 text-green-500`} />
+                      {tx.amount > 0 ? (
+                        <Plus className="w-5 h-5 text-green-500" />
                       ) : (
-                        <Wallet className={`w-5 h-5 text-primary`} />
+                        <Wallet className="w-5 h-5 text-primary" />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{tx.description}</p>
-                      <p className="text-sm text-muted-foreground">{tx.date}</p>
+                      <p className="font-medium text-sm">{tx.description || tx.transaction_type}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(tx.created_at).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
                   <p className={`font-semibold ${tx.amount > 0 ? 'text-green-500' : 'text-foreground'}`}>
-                    {tx.amount > 0 ? '+' : ''}₹{Math.abs(tx.amount)}
+                    {tx.amount > 0 ? '+' : ''}{tx.amount}
                   </p>
                 </div>
               ))}
             </div>
           </SpiritualCard>
-          <SpiritualButton variant="ghost" className="w-full">
-            View All Transactions
-            <ChevronRight className="w-4 h-4" />
-          </SpiritualButton>
         </section>
       </main>
     </motion.div>

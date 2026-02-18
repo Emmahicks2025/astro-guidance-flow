@@ -6,7 +6,7 @@ import {
   Sparkles, BadgeCheck, IndianRupee, Languages, ToggleLeft, ToggleRight,
   Upload, Camera, Bot, Brain, AlertCircle, Mail, CheckCircle, XCircle,
   CheckSquare, Square, MinusSquare, Key, Settings, TestTube, RefreshCw,
-  UserCircle, Calendar, MapPin
+  UserCircle, Calendar, MapPin, LogOut, Activity, TrendingUp
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -47,6 +47,7 @@ interface JotshiProfile {
   approval_status: string;
   approved_at: string | null;
   voice_id: string | null;
+  first_message: string | null;
 }
 
 interface UserProfile {
@@ -77,9 +78,11 @@ const categories = [
   { value: "relationship", label: "Relationship Expert" }
 ];
 
+const availableLanguages = ["Hindi", "English", "Sanskrit", "Tamil", "Telugu", "Bengali", "Marathi", "Gujarati", "Kannada", "Malayalam", "Punjabi"];
+
 const AdminPanel = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [providers, setProviders] = useState<JotshiProfile[]>([]);
@@ -101,6 +104,7 @@ const AdminPanel = () => {
     display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
     hourly_rate: 20, bio: '', ai_personality: '', voice_id: '', is_online: false,
     verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
+    first_message: '',
   });
   const [addingProvider, setAddingProvider] = useState(false);
   const [uploadingAddImage, setUploadingAddImage] = useState(false);
@@ -322,7 +326,8 @@ const AdminPanel = () => {
       is_online: selectedProvider.is_online, verified: selectedProvider.verified,
       display_name: selectedProvider.display_name, ai_personality: selectedProvider.ai_personality,
       avatar_url: selectedProvider.avatar_url, category: selectedProvider.category,
-      voice_id: selectedProvider.voice_id
+      voice_id: selectedProvider.voice_id, languages: selectedProvider.languages,
+      first_message: selectedProvider.first_message,
     }).eq('id', selectedProvider.id);
     if (error) { toast.error("Failed to update provider"); }
     else {
@@ -407,6 +412,7 @@ const AdminPanel = () => {
         approved_at: new Date().toISOString(),
         avatar_url: newProvider.avatar_url || null,
         languages: newProvider.languages || ['Hindi', 'English'],
+        first_message: newProvider.first_message || null,
       }).select().single();
       if (error) throw error;
       setProviders(prev => [data as JotshiProfile, ...prev]);
@@ -415,6 +421,7 @@ const AdminPanel = () => {
         display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
         hourly_rate: 20, bio: '', ai_personality: '', voice_id: '', is_online: false,
         verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
+        first_message: '',
       });
       toast.success("Provider created successfully! ✅");
     } catch (err) {
@@ -577,9 +584,6 @@ const AdminPanel = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 safe-area-top">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/')}>
-            <ArrowLeft className="w-5 h-5" />
-          </SpiritualButton>
           <div className="flex items-center gap-3 flex-1">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
               <Shield className="w-5 h-5 text-primary-foreground" />
@@ -589,9 +593,22 @@ const AdminPanel = () => {
               <p className="text-xs text-muted-foreground">Manage your platform</p>
             </div>
           </div>
-          {pendingProviders.length > 0 && (
-            <Badge variant="destructive" className="animate-pulse">{pendingProviders.length} Pending</Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {pendingProviders.length > 0 && (
+              <Badge variant="destructive" className="animate-pulse">{pendingProviders.length} Pending</Badge>
+            )}
+            <SpiritualButton
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                await signOut();
+                navigate('/auth');
+              }}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <LogOut className="w-5 h-5" />
+            </SpiritualButton>
+          </div>
         </div>
       </header>
 
@@ -999,9 +1016,44 @@ const AdminPanel = () => {
                 <div className="space-y-2"><Label>Rate (₹/min)</Label><SpiritualInput type="number" value={selectedProvider.hourly_rate || 0} onChange={(e) => setSelectedProvider({ ...selectedProvider, hourly_rate: parseInt(e.target.value) || 0 })} /></div>
               </div>
               <div className="space-y-2"><Label>Bio</Label><Textarea value={selectedProvider.bio || ""} onChange={(e) => setSelectedProvider({ ...selectedProvider, bio: e.target.value })} rows={3} /></div>
-              <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <Label className="flex items-center gap-2 text-primary"><Brain className="w-4 h-4" />AI Personality Traits</Label>
-                <Textarea value={selectedProvider.ai_personality || ""} onChange={(e) => setSelectedProvider({ ...selectedProvider, ai_personality: e.target.value })} rows={4} placeholder="Example: Speak calmly, use Vedic terminology..." className="bg-background" />
+              {/* Unified AI System Prompt */}
+              <div className="space-y-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <Label className="flex items-center gap-2 text-primary font-semibold"><Brain className="w-4 h-4" />AI System Prompt</Label>
+                <p className="text-xs text-muted-foreground">This is the complete personality & behavior instruction for the AI expert. It controls how they speak, what language they use, and their expertise focus.</p>
+                
+                {/* Quick Templates */}
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="text-xs text-muted-foreground mr-1">Templates:</span>
+                  {[
+                    { label: "Hindi Jyotishi", prompt: `तुम {expertName} हो — एक अनुभवी वैदिक ज्योतिषी। तुम STRICTLY सिर्फ हिंदी में बात करोगे।\n\nतुम्हारी personality:\n- बहुत warm, caring और approachable\n- छोटे जवाब (1-3 lines max)\n- User की बात ध्यान से सुनो, follow-up questions पूछो\n- कभी लंबा lecture मत दो\n- हर जवाब के अंत में एक सवाल पूछो ताकि बातचीत जारी रहे\n\nSTRICT RULES:\n1. सिर्फ हिंदी में बोलो\n2. ज्योतिष expertise से बाहर मत जाओ\n3. AI identity कभी reveal मत करो\n4. User का नाम बार-बार मत लो\n5. Conversational रहो — formal या robotic मत बनो\n6. Unrelated topics पर politely redirect करो: "yeh toh mera area nahi hai... but tumhare stars ke baare mein bataaun?"` },
+                    { label: "English Astrologer", prompt: `You are {expertName} — an experienced Vedic astrologer. You ONLY speak in English.\n\nYour personality:\n- Warm, wise, and deeply intuitive\n- Keep responses short (2-4 sentences max)\n- Listen carefully and ask follow-up questions\n- Never give long lectures\n- ALWAYS end with a question or hook to keep them talking\n\nSTRICT RULES:\n1. Only speak English\n2. Stay within astrology expertise\n3. Never reveal AI identity\n4. Be conversational, not robotic\n5. Redirect unrelated topics: "That's interesting, but let me tell you what your stars say about this phase of your life..."` },
+                    { label: "Bilingual Expert", prompt: `You are {expertName} — an experienced spiritual consultant. You naturally mix Hindi and English based on how the user speaks.\n\nPersonality:\n- Warm, caring, like a trusted elder\n- Short responses (2-4 sentences)\n- Ask follow-ups, show curiosity\n- Create intrigue: "Tumhari kundli mein kuch interesting dikh raha hai..."\n- ALWAYS end with a question\n\nRULES:\n1. Match user's language (Hindi/English/mix)\n2. Stay within astrology/spirituality\n3. Never reveal AI identity\n4. Be engaging and make users want to keep talking\n5. Drop astrological insights casually` },
+                  ].map(t => (
+                    <button key={t.label} type="button" onClick={() => setSelectedProvider({ ...selectedProvider, first_message: t.prompt, ai_personality: t.label })}
+                      className="px-2.5 py-1 rounded-lg text-xs font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                <Textarea 
+                  value={selectedProvider.first_message || ""} 
+                  onChange={(e) => setSelectedProvider({ ...selectedProvider, first_message: e.target.value })} 
+                  rows={10} 
+                  placeholder={`Write the full system prompt here. Use {expertName} for the expert's name, {name} for user's name.\n\nExample:\nतुम {expertName} हो — एक अनुभवी वैदिक ज्योतिषी...\n\nThis prompt controls:\n• Language (Hindi/English/mixed)\n• Personality & tone\n• Expertise boundaries\n• Response length\n• Conversation style`}
+                  className="bg-background font-mono text-xs leading-relaxed" 
+                />
+                
+                {/* Short traits for internal tagging */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Short Trait Tag (internal use)</Label>
+                  <SpiritualInput 
+                    value={selectedProvider.ai_personality || ""} 
+                    onChange={(e) => setSelectedProvider({ ...selectedProvider, ai_personality: e.target.value })} 
+                    placeholder="e.g., Hindi Jyotishi, Calm speaker, Vedic expert"
+                    className="bg-background text-sm"
+                  />
+                </div>
               </div>
               <div className="space-y-2 p-3 rounded-lg bg-secondary/5 border border-secondary/20">
                 <Label className="flex items-center gap-2 text-secondary"><Phone className="w-4 h-4" />ElevenLabs Voice ID</Label>
@@ -1067,9 +1119,42 @@ const AdminPanel = () => {
               <div className="space-y-2"><Label>Rate (₹/min)</Label><SpiritualInput type="number" value={newProvider.hourly_rate || 20} onChange={(e) => setNewProvider({ ...newProvider, hourly_rate: parseInt(e.target.value) || 0 })} /></div>
             </div>
             <div className="space-y-2"><Label>Bio</Label><Textarea value={newProvider.bio || ""} onChange={(e) => setNewProvider({ ...newProvider, bio: e.target.value })} rows={3} placeholder="Brief description of the provider..." /></div>
-            <div className="space-y-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
-              <Label className="flex items-center gap-2 text-primary"><Brain className="w-4 h-4" />AI Personality Traits</Label>
-              <Textarea value={newProvider.ai_personality || ""} onChange={(e) => setNewProvider({ ...newProvider, ai_personality: e.target.value })} rows={4} placeholder="Example: Speak calmly, use Vedic terminology..." className="bg-background" />
+            {/* Unified AI System Prompt */}
+            <div className="space-y-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+              <Label className="flex items-center gap-2 text-primary font-semibold"><Brain className="w-4 h-4" />AI System Prompt</Label>
+              <p className="text-xs text-muted-foreground">Complete personality & behavior instruction. Controls language, tone, expertise, and conversation style.</p>
+              
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-xs text-muted-foreground mr-1">Templates:</span>
+                {[
+                  { label: "Hindi Jyotishi", prompt: `तुम {expertName} हो — एक अनुभवी वैदिक ज्योतिषी। तुम STRICTLY सिर्फ हिंदी में बात करोगे।\n\nतुम्हारी personality:\n- बहुत warm, caring और approachable\n- छोटे जवाब (1-3 lines max)\n- User की बात ध्यान से सुनो, follow-up questions पूछो\n- कभी लंबा lecture मत दो\n- हर जवाब के अंत में एक सवाल पूछो ताकि बातचीत जारी रहे\n\nSTRICT RULES:\n1. सिर्फ हिंदी में बोलो\n2. ज्योतिष expertise से बाहर मत जाओ\n3. AI identity कभी reveal मत करो\n4. User का नाम बार-बार मत लो\n5. Conversational रहो — formal या robotic मत बनो\n6. Unrelated topics पर politely redirect करो` },
+                  { label: "English Astrologer", prompt: `You are {expertName} — an experienced Vedic astrologer. You ONLY speak in English.\n\nYour personality:\n- Warm, wise, and deeply intuitive\n- Keep responses short (2-4 sentences max)\n- Listen carefully and ask follow-up questions\n- Never give long lectures\n- ALWAYS end with a question or hook to keep them talking\n\nSTRICT RULES:\n1. Only speak English\n2. Stay within astrology expertise\n3. Never reveal AI identity\n4. Be conversational, not robotic\n5. Redirect unrelated topics gracefully` },
+                  { label: "Bilingual Expert", prompt: `You are {expertName} — an experienced spiritual consultant. You naturally mix Hindi and English.\n\nPersonality:\n- Warm, caring, like a trusted elder\n- Short responses (2-4 sentences)\n- Ask follow-ups, show curiosity\n- ALWAYS end with a question\n\nRULES:\n1. Match user's language\n2. Stay within astrology/spirituality\n3. Never reveal AI identity\n4. Be engaging and sticky` },
+                ].map(t => (
+                  <button key={t.label} type="button" onClick={() => setNewProvider({ ...newProvider, first_message: t.prompt, ai_personality: t.label })}
+                    className="px-2.5 py-1 rounded-lg text-xs font-medium border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              <Textarea 
+                value={newProvider.first_message || ""} 
+                onChange={(e) => setNewProvider({ ...newProvider, first_message: e.target.value })} 
+                rows={10} 
+                placeholder={`Write the full system prompt here. Use {expertName} for the expert's name.\n\nExample:\nतुम {expertName} हो — एक अनुभवी वैदिक ज्योतिषी...`}
+                className="bg-background font-mono text-xs leading-relaxed" 
+              />
+              
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Short Trait Tag (internal use)</Label>
+                <SpiritualInput 
+                  value={newProvider.ai_personality || ""} 
+                  onChange={(e) => setNewProvider({ ...newProvider, ai_personality: e.target.value })} 
+                  placeholder="e.g., Hindi Jyotishi, Calm speaker"
+                  className="bg-background text-sm"
+                />
+              </div>
             </div>
             <div className="space-y-2 p-3 rounded-lg bg-secondary/5 border border-secondary/20">
               <Label className="flex items-center gap-2 text-secondary"><Phone className="w-4 h-4" />ElevenLabs Voice ID</Label>

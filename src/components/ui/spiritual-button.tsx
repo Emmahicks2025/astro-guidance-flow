@@ -9,13 +9,13 @@ const spiritualButtonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-gradient-spiritual text-primary-foreground shadow-spiritual hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
+          "bg-gradient-spiritual text-white shadow-spiritual hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-mystic hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
+          "bg-secondary text-white shadow-mystic hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
         golden:
-          "bg-gradient-golden text-foreground shadow-golden hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
+          "bg-gradient-golden text-white shadow-golden hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
         outline:
-          "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground",
+          "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-white",
         ghost:
           "text-primary hover:bg-primary/10",
         soft:

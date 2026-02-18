@@ -46,8 +46,14 @@ export const generateSampleKundli = (
   ];
 
   // Simple deterministic generation based on date
-  const day = dateOfBirth?.getDate() || 15;
-  const month = dateOfBirth?.getMonth() || 0;
+  // dateOfBirth may be a string (from persisted store) or a Date object
+  const parsedDate = dateOfBirth
+    ? dateOfBirth instanceof Date
+      ? dateOfBirth
+      : new Date(dateOfBirth)
+    : null;
+  const day = parsedDate?.getDate() ?? 15;
+  const month = parsedDate?.getMonth() ?? 0;
   
   const lagnaIndex = (day + month) % 12;
   
