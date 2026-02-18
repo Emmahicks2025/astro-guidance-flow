@@ -2,130 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AstroGuru Design System - Vedic Astrology Spiritual Theme
-   Colors inspired by Indian spirituality: Saffron, Purple, Gold */
+/* AstroGuru Design System — Modern iOS-inspired Spiritual Theme
+   Navy Blue + Vermillion: premium, clean, high contrast */
 
 @layer base {
   :root {
-    /* Base backgrounds - clean off-white */
-    --background: 220 20% 97%;
-    --foreground: 225 40% 10%;
+    /* iOS-style: pure white base, near-black text */
+    --background: 0 0% 100%;
+    --foreground: 220 25% 8%;
 
-    /* Card surfaces - pure white */
     --card: 0 0% 100%;
-    --card-foreground: 225 40% 10%;
+    --card-foreground: 220 25% 8%;
 
-    /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 225 40% 10%;
+    --popover-foreground: 220 25% 8%;
 
-    /* Primary - Deep Royal Indigo */
-    --primary: 248 72% 40%;
+    /* Primary — Deep Cosmic Navy */
+    --primary: 222 72% 40%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Rich Saffron (replaces gold) */
-    --secondary: 24 90% 48%;
+    /* Secondary — Warm Vermillion */
+    --secondary: 8 78% 52%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Muted */
-    --muted: 220 16% 92%;
-    --muted-foreground: 225 18% 46%;
+    /* Muted — iOS system gray */
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 12% 50%;
 
-    /* Accent - Warm Amber (no gold/yellow) */
-    --accent: 24 90% 48%;
+    /* Accent — Vermillion (consistent warm pop) */
+    --accent: 8 78% 52%;
     --accent-foreground: 0 0% 100%;
 
-    /* Destructive */
-    --destructive: 0 84% 58%;
+    --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders and inputs */
-    --border: 220 18% 88%;
-    --input: 220 18% 88%;
-    --ring: 248 72% 40%;
+    /* Borders — iOS hairline style */
+    --border: 220 14% 90%;
+    --input: 220 14% 92%;
+    --ring: 222 72% 40%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    /* Extended palette - no gold */
-    --saffron: 24 90% 48%;
-    --saffron-light: 28 85% 64%;
-    --saffron-dark: 20 82% 36%;
-    
-    --purple: 248 72% 40%;
-    --purple-light: 248 60% 58%;
-    --purple-dark: 248 78% 26%;
-    
-    --gold: 24 90% 48%;
-    --gold-light: 28 85% 64%;
-    --gold-dark: 20 82% 36%;
-    
-    --cream: 220 20% 97%;
-    --cream-dark: 220 16% 92%;
+    /* Palette tokens */
+    --saffron: 8 78% 52%;
+    --saffron-light: 14 72% 66%;
+    --saffron-dark: 4 72% 40%;
 
-    /* Gradients - rich indigo to deep violet, no orange */
-    --gradient-spiritual: linear-gradient(135deg, hsl(248 72% 40%) 0%, hsl(268 65% 32%) 100%);
-    --gradient-sunset: linear-gradient(135deg, hsl(24 90% 48%) 0%, hsl(18 85% 40%) 100%);
-    --gradient-mystic: linear-gradient(135deg, hsl(248 78% 26%) 0%, hsl(248 72% 40%) 60%, hsl(268 60% 48%) 100%);
-    --gradient-golden: linear-gradient(135deg, hsl(20 82% 36%) 0%, hsl(24 90% 48%) 60%, hsl(28 85% 58%) 100%);
+    --purple: 222 72% 40%;
+    --purple-light: 222 60% 58%;
+    --purple-dark: 222 80% 26%;
 
-    /* Shadows */
-    --shadow-spiritual: 0 4px 24px -4px hsl(248 72% 40% / 0.28);
-    --shadow-mystic: 0 4px 24px -4px hsl(268 65% 32% / 0.24);
-    --shadow-golden: 0 4px 24px -4px hsl(24 90% 48% / 0.30);
-    --shadow-soft: 0 2px 16px -2px hsl(225 40% 10% / 0.09);
+    --gold: 8 78% 52%;
+    --gold-light: 14 72% 66%;
+    --gold-dark: 4 72% 40%;
 
-    /* Sidebar - deep indigo */
-    --sidebar-background: 248 50% 14%;
-    --sidebar-foreground: 220 20% 97%;
-    --sidebar-primary: 24 90% 52%;
+    --cream: 0 0% 100%;
+    --cream-dark: 220 14% 95%;
+
+    /* Gradients — rich navy depth, iOS-like */
+    --gradient-spiritual: linear-gradient(145deg, hsl(222 72% 40%) 0%, hsl(240 68% 32%) 100%);
+    --gradient-sunset: linear-gradient(145deg, hsl(8 78% 52%) 0%, hsl(2 70% 42%) 100%);
+    --gradient-mystic: linear-gradient(145deg, hsl(240 68% 26%) 0%, hsl(222 72% 40%) 100%);
+    --gradient-golden: linear-gradient(145deg, hsl(4 70% 38%) 0%, hsl(8 78% 52%) 60%, hsl(14 72% 62%) 100%);
+
+    /* Shadows — iOS-style layered elevation */
+    --shadow-spiritual: 0 4px 20px -2px hsl(222 72% 40% / 0.22), 0 1px 4px -1px hsl(222 72% 40% / 0.12);
+    --shadow-mystic: 0 4px 20px -2px hsl(240 68% 34% / 0.20);
+    --shadow-golden: 0 4px 20px -2px hsl(8 78% 52% / 0.22);
+    --shadow-soft: 0 1px 8px -1px hsl(220 25% 8% / 0.06), 0 4px 16px -4px hsl(220 25% 8% / 0.05);
+
+    /* Sidebar */
+    --sidebar-background: 222 72% 40%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 8 78% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 248 45% 20%;
-    --sidebar-accent-foreground: 220 20% 97%;
-    --sidebar-border: 248 40% 20%;
-    --sidebar-ring: 24 90% 52%;
+    --sidebar-accent: 222 60% 48%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 60% 46%;
+    --sidebar-ring: 8 78% 60%;
   }
 
   .dark {
-    /* Dark mode - deep indigo-charcoal base */
-    --background: 248 45% 6%;
-    --foreground: 220 25% 93%;
+    /* OLED dark — true near-black + navy card surfaces */
+    --background: 220 30% 5%;
+    --foreground: 220 15% 94%;
 
-    --card: 248 38% 10%;
-    --card-foreground: 220 25% 93%;
+    --card: 222 30% 9%;
+    --card-foreground: 220 15% 94%;
 
-    --popover: 248 38% 10%;
-    --popover-foreground: 220 25% 93%;
+    --popover: 222 30% 9%;
+    --popover-foreground: 220 15% 94%;
 
-    /* Bright indigo for dark mode */
-    --primary: 248 78% 62%;
+    --primary: 222 85% 62%;
     --primary-foreground: 0 0% 100%;
 
-    /* Saffron stays warm on dark */
-    --secondary: 24 88% 55%;
+    --secondary: 8 80% 58%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 248 28% 15%;
-    --muted-foreground: 220 16% 58%;
+    --muted: 222 22% 14%;
+    --muted-foreground: 220 14% 55%;
 
-    /* Accent = saffron on dark */
-    --accent: 24 88% 55%;
+    --accent: 8 80% 58%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 248 26% 18%;
-    --input: 248 26% 18%;
-    --ring: 248 78% 62%;
+    --border: 222 22% 16%;
+    --input: 222 22% 16%;
+    --ring: 222 85% 62%;
 
-    --sidebar-background: 248 45% 4%;
-    --sidebar-foreground: 220 25% 93%;
-    --sidebar-primary: 24 88% 55%;
+    --sidebar-background: 220 30% 3%;
+    --sidebar-foreground: 220 15% 94%;
+    --sidebar-primary: 8 80% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 248 35% 12%;
-    --sidebar-accent-foreground: 220 25% 93%;
-    --sidebar-border: 248 28% 14%;
-    --sidebar-ring: 24 88% 55%;
+    --sidebar-accent: 222 22% 14%;
+    --sidebar-accent-foreground: 220 15% 94%;
+    --sidebar-border: 222 22% 14%;
+    --sidebar-ring: 8 80% 58%;
   }
 }
 
@@ -140,6 +134,7 @@
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
 }
 
 @layer utilities {
@@ -150,10 +145,7 @@
   .safe-area-bottom {
     padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
   }
-}
-}
 
-@layer utilities {
   /* Spiritual gradients */
   .bg-gradient-spiritual {
     background: var(--gradient-spiritual);
@@ -199,7 +191,7 @@
     background-clip: text;
   }
 
-  /* Mystical animation */
+  /* Animations */
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
