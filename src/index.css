@@ -7,39 +7,39 @@
 
 @layer base {
   :root {
-    /* iOS-style: pure white base, near-black text */
+    /* iOS-style: pure white base, true near-black text for max readability */
     --background: 0 0% 100%;
-    --foreground: 220 25% 8%;
+    --foreground: 220 20% 10%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 8%;
+    --card: 220 20% 98%;
+    --card-foreground: 220 20% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 8%;
+    --popover-foreground: 220 20% 10%;
 
     /* Primary — Deep Cosmic Navy */
-    --primary: 222 72% 40%;
+    --primary: 222 72% 38%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary — Warm Vermillion */
-    --secondary: 8 78% 52%;
+    --secondary: 8 78% 50%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Muted — iOS system gray */
-    --muted: 220 14% 95%;
-    --muted-foreground: 220 12% 50%;
+    /* Muted — readable medium gray, not too light */
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 14% 38%;
 
-    /* Accent — Vermillion (consistent warm pop) */
-    --accent: 8 78% 52%;
+    /* Accent — Vermillion */
+    --accent: 8 78% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders — iOS hairline style */
-    --border: 220 14% 90%;
-    --input: 220 14% 92%;
-    --ring: 222 72% 40%;
+    --border: 220 14% 88%;
+    --input: 220 14% 90%;
+    --ring: 222 72% 38%;
 
     --radius: 0.875rem;
 
@@ -85,41 +85,42 @@
   .dark {
     /* OLED dark — true near-black + navy card surfaces */
     --background: 220 30% 5%;
-    --foreground: 220 15% 94%;
+    --foreground: 0 0% 96%;
 
-    --card: 222 30% 9%;
-    --card-foreground: 220 15% 94%;
+    --card: 222 28% 10%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 222 30% 9%;
-    --popover-foreground: 220 15% 94%;
+    --popover: 222 28% 10%;
+    --popover-foreground: 0 0% 96%;
 
-    --primary: 222 85% 62%;
+    --primary: 222 85% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 8 80% 58%;
+    --secondary: 8 80% 60%;
     --secondary-foreground: 0 0% 100%;
 
+    /* Muted text clearly visible on dark */
     --muted: 222 22% 14%;
-    --muted-foreground: 220 14% 55%;
+    --muted-foreground: 220 14% 65%;
 
-    --accent: 8 80% 58%;
+    --accent: 8 80% 60%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 52%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 22% 16%;
-    --input: 222 22% 16%;
-    --ring: 222 85% 62%;
+    --border: 222 22% 18%;
+    --input: 222 22% 18%;
+    --ring: 222 85% 65%;
 
     --sidebar-background: 220 30% 3%;
-    --sidebar-foreground: 220 15% 94%;
-    --sidebar-primary: 8 80% 58%;
+    --sidebar-foreground: 0 0% 96%;
+    --sidebar-primary: 8 80% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 222 22% 14%;
-    --sidebar-accent-foreground: 220 15% 94%;
+    --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 222 22% 14%;
-    --sidebar-ring: 8 80% 58%;
+    --sidebar-ring: 8 80% 60%;
   }
 }
 
