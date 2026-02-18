@@ -8,6 +8,7 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://astro-guidance-flow.lovable.app',
     cleartext: true,
+    allowNavigation: ['astro-guidance-flow.lovable.app', '*.supabase.co'],
   },
 
   plugins: {
