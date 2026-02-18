@@ -7,6 +7,14 @@ import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useCredits } from "@/hooks/useCredits";
 import { toast } from "sonner";
+import { Capacitor, registerPlugin } from "@capacitor/core";
+
+interface IAPPluginInterface {
+  purchase(options: { productId: string }): Promise<{ productId: string; transactionId: string; receipt: string }>;
+  restorePurchases(): Promise<{ productId: string; transactionId: string; receipt: string }>;
+}
+
+const IAPPlugin = registerPlugin<IAPPluginInterface>("IAPPlugin");
 
 interface Plan {
   id: string;
@@ -52,15 +60,22 @@ const PricingPage = () => {
     fetchData();
   }, []);
 
-  const handleSubscribe = (plan: Plan) => {
+  const handleSubscribe = async (plan: Plan) => {
     if (plan.id === "free") return;
-    // StoreKit purchase is triggered natively by the iOS app via Capacitor.
-    // The product ID (plan.apple_product_id) is passed to the native layer.
-    if ((window as any).webkit?.messageHandlers?.iap) {
-      (window as any).webkit.messageHandlers.iap.postMessage({
-        action: "purchase",
-        productId: plan.apple_product_id,
-      });
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await IAPPlugin.purchase({ productId: plan.apple_product_id });
+        // Validate receipt server-side
+        const { error } = await supabase.functions.invoke("validate-apple-receipt", {
+          body: { receipt: result.receipt, transactionId: result.transactionId, productId: result.productId },
+        });
+        if (error) throw error;
+        toast.success(`Subscribed to ${plan.name}!`);
+      } catch (err: any) {
+        if (err?.message?.includes("cancelled") || err?.message?.includes("Cancel")) return;
+        toast.error(err?.message || "Purchase failed. Please try again.");
+      }
     } else {
       toast.info(
         `To subscribe to ${plan.name}, open this app on your iPhone and tap Subscribe there.`,
@@ -69,12 +84,19 @@ const PricingPage = () => {
     }
   };
 
-  const handleTopup = (pack: TopupPack) => {
-    if ((window as any).webkit?.messageHandlers?.iap) {
-      (window as any).webkit.messageHandlers.iap.postMessage({
-        action: "purchase",
-        productId: pack.apple_product_id,
-      });
+  const handleTopup = async (pack: TopupPack) => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await IAPPlugin.purchase({ productId: pack.apple_product_id });
+        const { error } = await supabase.functions.invoke("validate-apple-receipt", {
+          body: { receipt: result.receipt, transactionId: result.transactionId, productId: result.productId },
+        });
+        if (error) throw error;
+        toast.success(`${pack.credits + pack.bonus_credits} credits added!`);
+      } catch (err: any) {
+        if (err?.message?.includes("cancelled") || err?.message?.includes("Cancel")) return;
+        toast.error(err?.message || "Purchase failed. Please try again.");
+      }
     } else {
       toast.info(
         `To purchase ${pack.credits + pack.bonus_credits} credits, open this app on your iPhone.`,
