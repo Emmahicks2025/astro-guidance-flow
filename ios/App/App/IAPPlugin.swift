@@ -3,7 +3,13 @@ import StoreKit
 import Capacitor
 
 @objc(IAPPlugin)
-public class IAPPlugin: CAPPlugin, SKPaymentTransactionObserver, SKProductsRequestDelegate {
+public class IAPPlugin: CAPPlugin, CAPBridgedPlugin, SKPaymentTransactionObserver, SKProductsRequestDelegate {
+    public let identifier = "IAPPlugin"
+    public let jsName = "IAPPlugin"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "restorePurchases", returnType: CAPPluginReturnPromise),
+    ]
     
     var productsRequest: SKProductsRequest?
     var products = [SKProduct]()
