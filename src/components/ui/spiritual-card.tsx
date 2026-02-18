@@ -7,12 +7,12 @@ const spiritualCardVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-card border border-border shadow-soft",
-        elevated: "bg-card border border-border shadow-lg hover:shadow-xl",
-        spiritual: "bg-gradient-spiritual text-primary-foreground shadow-spiritual",
-        mystic: "bg-gradient-mystic text-secondary-foreground shadow-mystic",
-        golden: "bg-gradient-golden text-accent-foreground shadow-golden",
-        glass: "bg-card/60 backdrop-blur-lg border border-border/50 shadow-soft",
+        default: "bg-card border border-border shadow-soft text-card-foreground",
+        elevated: "bg-card border border-border shadow-lg hover:shadow-xl text-card-foreground",
+        spiritual: "bg-gradient-spiritual text-white shadow-spiritual [&_p]:text-white/80 [&_span]:text-white [&_h3]:text-white [&_h4]:text-white",
+        mystic: "bg-gradient-mystic text-white shadow-mystic [&_p]:text-white/80 [&_span]:text-white [&_h3]:text-white [&_h4]:text-white",
+        golden: "bg-gradient-golden text-white shadow-golden [&_p]:text-white/80 [&_span]:text-white [&_h3]:text-white [&_h4]:text-white",
+        glass: "bg-card/60 backdrop-blur-lg border border-border/50 shadow-soft text-card-foreground",
       },
       interactive: {
         true: "cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
@@ -62,7 +62,7 @@ const SpiritualCardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-xl font-semibold leading-none tracking-tight text-foreground",
+      "text-xl font-semibold leading-none tracking-tight",
       className
     )}
     {...props}

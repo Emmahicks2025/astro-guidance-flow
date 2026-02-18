@@ -55,10 +55,10 @@ const WalletPage = () => {
       <main className="container mx-auto px-4 py-6 space-y-6 max-w-lg">
         {/* Balance Card */}
         <SpiritualCard variant="golden" className="p-6 text-center">
-          <p className="text-sm text-muted-foreground mb-1">{t.availableBalance}</p>
-          <p className="text-4xl font-bold text-accent">{loading ? "..." : balance} credits</p>
+          <p className="text-sm opacity-70 mb-1">{t.availableBalance}</p>
+          <p className="text-4xl font-bold">{loading ? "..." : balance} credits</p>
           <div className="flex items-center justify-center gap-2 mt-3">
-            <Crown className="w-4 h-4 text-secondary" />
+            <Crown className="w-4 h-4 opacity-80" />
             <span className="text-sm font-medium">{subscription.plan_name} Plan</span>
           </div>
         </SpiritualCard>
