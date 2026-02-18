@@ -150,19 +150,25 @@
   /* Spiritual gradients */
   .bg-gradient-spiritual {
     background: var(--gradient-spiritual);
+    /* Override muted text to be readable on dark gradient */
+    --muted-foreground: 0 0% 100%;
   }
 
   .bg-gradient-sunset {
     background: var(--gradient-sunset);
+    --muted-foreground: 0 0% 100%;
   }
 
   .bg-gradient-mystic {
     background: var(--gradient-mystic);
+    --muted-foreground: 0 0% 100%;
   }
 
   .bg-gradient-golden {
     background: var(--gradient-golden);
+    --muted-foreground: 0 0% 100%;
   }
+
 
   /* Glow effects */
   .glow-spiritual {
