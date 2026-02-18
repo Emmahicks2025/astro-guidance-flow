@@ -80,9 +80,9 @@ const PricingPage = () => {
       <main className="container mx-auto px-4 py-6 space-y-6 max-w-lg">
         {/* Current Status */}
         <SpiritualCard variant="golden" className="p-4 text-center">
-          <p className="text-sm text-muted-foreground">Current Plan</p>
-          <p className="text-xl font-bold text-accent">{subscription.plan_name}</p>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm opacity-70">Current Plan</p>
+          <p className="text-xl font-bold">{subscription.plan_name}</p>
+          <p className="text-sm opacity-70 mt-1">
             <Zap className="w-4 h-4 inline mr-1" />{balance} credits available
           </p>
         </SpiritualCard>
