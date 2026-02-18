@@ -241,7 +241,7 @@ const AppWalkthrough = ({ isOpen, onClose, onComplete }: AppWalkthroughProps) =>
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex flex-col"
+        className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       >
         {/* Header */}
         <div className="p-4 flex items-center justify-between border-b border-border">
