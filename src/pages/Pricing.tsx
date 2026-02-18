@@ -54,12 +54,33 @@ const PricingPage = () => {
 
   const handleSubscribe = (plan: Plan) => {
     if (plan.id === "free") return;
-    // In a native app, this would trigger StoreKit purchase
-    toast.info(`Subscribe to ${plan.name} via App Store. This will be handled by your device's App Store.`);
+    // StoreKit purchase is triggered natively by the iOS app via Capacitor.
+    // The product ID (plan.apple_product_id) is passed to the native layer.
+    if ((window as any).webkit?.messageHandlers?.iap) {
+      (window as any).webkit.messageHandlers.iap.postMessage({
+        action: "purchase",
+        productId: plan.apple_product_id,
+      });
+    } else {
+      toast.info(
+        `To subscribe to ${plan.name}, open this app on your iPhone and tap Subscribe there.`,
+        { duration: 5000 }
+      );
+    }
   };
 
   const handleTopup = (pack: TopupPack) => {
-    toast.info(`Purchase ${pack.credits + pack.bonus_credits} credits via App Store.`);
+    if ((window as any).webkit?.messageHandlers?.iap) {
+      (window as any).webkit.messageHandlers.iap.postMessage({
+        action: "purchase",
+        productId: pack.apple_product_id,
+      });
+    } else {
+      toast.info(
+        `To purchase ${pack.credits + pack.bonus_credits} credits, open this app on your iPhone.`,
+        { duration: 5000 }
+      );
+    }
   };
 
   return (

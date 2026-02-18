@@ -8,15 +8,24 @@ interface CreditStatus {
     plan: string;
     plan_name: string;
     expires_at?: string;
+    call_credit_per_min: number;
+    chat_credit_per_1k_tokens: number;
   };
 }
 
+const DEFAULT_STATUS: CreditStatus = {
+  balance: 0,
+  subscription: {
+    plan: 'free',
+    plan_name: 'Free',
+    call_credit_per_min: 12,
+    chat_credit_per_1k_tokens: 1,
+  },
+};
+
 export const useCredits = () => {
   const { user } = useAuth();
-  const [status, setStatus] = useState<CreditStatus>({
-    balance: 0,
-    subscription: { plan: 'free', plan_name: 'Free' },
-  });
+  const [status, setStatus] = useState<CreditStatus>(DEFAULT_STATUS);
   const [loading, setLoading] = useState(true);
 
   const fetchStatus = useCallback(async () => {
@@ -26,13 +35,42 @@ export const useCredits = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('validate-apple-receipt', {
-        body: { action: 'get_status' },
-      });
+      // Fetch balance and active subscription in parallel
+      const [balanceRes, subRes] = await Promise.all([
+        supabase
+          .from('credit_balances')
+          .select('balance')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('user_subscriptions')
+          .select('plan_id, expires_at, subscription_plans(name, call_credit_per_min, chat_credit_per_1k_tokens)')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .maybeSingle(),
+      ]);
 
-      if (!error && data) {
-        setStatus(data);
-      }
+      const balance = balanceRes.data?.balance ?? 50;
+      const sub = subRes.data;
+      const plan = sub ? (sub as any).subscription_plans : null;
+
+      setStatus({
+        balance,
+        subscription: sub
+          ? {
+              plan: sub.plan_id,
+              plan_name: plan?.name ?? 'Pro',
+              expires_at: sub.expires_at ?? undefined,
+              call_credit_per_min: plan?.call_credit_per_min ?? 10,
+              chat_credit_per_1k_tokens: plan?.chat_credit_per_1k_tokens ?? 0.8,
+            }
+          : {
+              plan: 'free',
+              plan_name: 'Free',
+              call_credit_per_min: 12,
+              chat_credit_per_1k_tokens: 1,
+            },
+      });
     } catch (e) {
       console.error('Failed to fetch credit status:', e);
     } finally {

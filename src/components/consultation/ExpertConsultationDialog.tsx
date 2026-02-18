@@ -59,7 +59,7 @@ export function ExpertConsultationDialog({
   initialTab = 'chat' 
 }: ExpertConsultationDialogProps) {
   const { user } = useAuth();
-  const { balance, deductCredits, refetch } = useCredits();
+  const { balance, deductCredits, refetch, subscription } = useCredits();
   const [activeTab, setActiveTab] = useState<'chat' | 'call'>('chat');
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -269,8 +269,9 @@ export function ExpertConsultationDialog({
       toast.error("No expert selected.");
       return;
     }
-    // Credit check: need at least 1 minute worth of call credits
-    if (balance < 8) {
+    // Credit check: need at least 1 minute worth of call credits (plan-specific rate)
+    const minCallCredits = subscription.call_credit_per_min;
+    if (balance < minCallCredits) {
       setPaywallContext("call");
       setShowPaywall(true);
       return;
@@ -782,7 +783,7 @@ export function ExpertConsultationDialog({
       open={showPaywall}
       onOpenChange={setShowPaywall}
       currentBalance={balance}
-      creditsNeeded={paywallContext === "call" ? 8 : 1}
+      creditsNeeded={paywallContext === "call" ? subscription.call_credit_per_min : 1}
       context={paywallContext}
     />
     </>

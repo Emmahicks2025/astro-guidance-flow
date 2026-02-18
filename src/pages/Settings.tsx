@@ -17,7 +17,9 @@ import {
   Info,
   Star,
   Camera,
-  Loader2
+  Loader2,
+  RotateCcw,
+  CreditCard
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -45,6 +47,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -135,11 +139,22 @@ const SettingsPage = () => {
     }
   };
 
+  const handleRestorePurchases = () => {
+    if ((window as any).webkit?.messageHandlers?.iap) {
+      (window as any).webkit.messageHandlers.iap.postMessage({ action: "restore" });
+      toast.info("Restoring purchases...");
+    } else {
+      toast.info("Restore Purchases is available when running on your iPhone.");
+    }
+  };
+
   const settingsSections = [
     {
       title: t.account,
       items: [
         { icon: User, label: t.editProfile, action: () => setShowEditProfile(true) },
+        { icon: CreditCard, label: "Plans & Credits", action: () => navigate('/pricing') },
+        { icon: RotateCcw, label: "Restore Purchases", action: handleRestorePurchases },
         { icon: Shield, label: t.privacySecurity, action: () => navigate('/privacy-policy') },
       ]
     },
