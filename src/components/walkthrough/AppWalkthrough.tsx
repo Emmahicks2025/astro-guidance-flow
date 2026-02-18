@@ -237,11 +237,16 @@ const AppWalkthrough = ({ isOpen, onClose, onComplete }: AppWalkthroughProps) =>
 
   return (
     <AnimatePresence>
-      <motion.div
+       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+        className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex flex-col"
+        style={{
+          paddingTop: 'max(env(safe-area-inset-top, 0px), 12px)',
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
+          height: '100dvh',
+        }}
       >
         {/* Header */}
         <div className="p-4 flex items-center justify-between border-b border-border">
@@ -359,7 +364,7 @@ const AppWalkthrough = ({ isOpen, onClose, onComplete }: AppWalkthroughProps) =>
         </div>
 
         {/* Navigation */}
-        <div className="p-4 border-t border-border bg-card/50">
+        <div className="p-3 border-t border-border bg-card/50">
           <div className="container mx-auto max-w-lg flex gap-3">
             <SpiritualButton
               variant="outline"
@@ -392,10 +397,10 @@ const AppWalkthrough = ({ isOpen, onClose, onComplete }: AppWalkthroughProps) =>
           </div>
 
           {/* Skip Button */}
-          <div className="text-center mt-3">
+          <div className="text-center mt-2">
             <button
               onClick={onClose}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
             >
               Skip tutorial
             </button>
