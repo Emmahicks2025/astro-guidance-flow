@@ -5,6 +5,11 @@ const config: CapacitorConfig = {
   appName: 'Astro Guidance Flow',
   webDir: 'dist',
 
+  server: {
+    url: 'https://astro-guidance-flow.lovable.app',
+    cleartext: true,
+  },
+
   plugins: {
     SplashScreen: {
       launchShowDuration: 0,
