@@ -21,10 +21,6 @@ jobs:
         run: npm install
 
       - name: Build Web Assets
-        env:
-          VITE_SUPABASE_URL: "https://mgevgokymfptjxgxeijk.supabase.co"
-          VITE_SUPABASE_PUBLISHABLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nZXZnb2t5bWZwdGp4Z3hlaWprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3Mzc1MTcsImV4cCI6MjA4NjMxMzUxN30.6P05LcmatwpCyw9Tfo4xhn2EushNlicJipvLXmulceQ"
-          VITE_SUPABASE_PROJECT_ID: "mgevgokymfptjxgxeijk"
         run: npm run build
 
       - name: Sync Capacitor

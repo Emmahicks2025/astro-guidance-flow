@@ -9,16 +9,12 @@ import { useCredits } from "@/hooks/useCredits";
 import { toast } from "sonner";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 
-import { IAPPluginWeb } from "@/IAPPluginWeb";
-
 interface IAPPluginInterface {
   purchase(options: { productId: string }): Promise<{ productId: string; transactionId: string; receipt: string }>;
   restorePurchases(): Promise<{ productId: string; transactionId: string; receipt: string }>;
 }
 
-const IAPPlugin = registerPlugin<IAPPluginInterface>("IAPPlugin", {
-  web: () => new IAPPluginWeb(),
-});
+const IAPPlugin = registerPlugin<IAPPluginInterface>("IAPPlugin");
 
 interface Plan {
   id: string;
