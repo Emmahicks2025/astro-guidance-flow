@@ -68,7 +68,7 @@ const PricingPage = () => {
         const result = await IAPPlugin.purchase({ productId: plan.apple_product_id });
         // Validate receipt server-side
         const { error } = await supabase.functions.invoke("validate-apple-receipt", {
-          body: { receipt: result.receipt, transactionId: result.transactionId, productId: result.productId },
+          body: { action: "validate_subscription", receipt_data: result.receipt, transaction_id: result.transactionId, product_id: result.productId },
         });
         if (error) throw error;
         toast.success(`Subscribed to ${plan.name}!`);
@@ -89,7 +89,7 @@ const PricingPage = () => {
       try {
         const result = await IAPPlugin.purchase({ productId: pack.apple_product_id });
         const { error } = await supabase.functions.invoke("validate-apple-receipt", {
-          body: { receipt: result.receipt, transactionId: result.transactionId, productId: result.productId },
+          body: { action: "validate_topup", receipt_data: result.receipt, transaction_id: result.transactionId, product_id: result.productId },
         });
         if (error) throw error;
         toast.success(`${pack.credits + pack.bonus_credits} credits added!`);
