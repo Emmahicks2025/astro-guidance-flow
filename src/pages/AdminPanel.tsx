@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import JotshiConsultationPanel from "@/components/jotshi/JotshiConsultationPanel";
+import AdminTicketsPanel from "@/components/admin/AdminTicketsPanel";
 
 interface JotshiProfile {
   id: string;
@@ -695,9 +696,10 @@ const AdminPanel = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="providers" className="text-xs sm:text-sm">Astrologers</TabsTrigger>
             <TabsTrigger value="seekers" className="text-xs sm:text-sm">Seekers</TabsTrigger>
+            <TabsTrigger value="tickets" className="text-xs sm:text-sm">Tickets</TabsTrigger>
             <TabsTrigger value="settings" className="text-xs sm:text-sm">API Keys</TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analytics</TabsTrigger>
           </TabsList>
@@ -850,6 +852,11 @@ const AdminPanel = () => {
           </TabsContent>
 
           {/* ===== API KEYS / SETTINGS TAB ===== */}
+          {/* ===== TICKETS TAB ===== */}
+          <TabsContent value="tickets">
+            <AdminTicketsPanel />
+          </TabsContent>
+
           <TabsContent value="settings" className="space-y-4 mt-4">
             <SpiritualCard variant="elevated">
               <SpiritualCardContent className="p-6 space-y-6">
