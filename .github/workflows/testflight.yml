@@ -35,10 +35,15 @@ jobs:
           # Fully replace app icon directory after sync (cap sync overwrites Contents.json)
           rm -rf ios/App/App/Assets.xcassets/AppIcon.appiconset
           cp -r /tmp/AppIcon.appiconset.bak ios/App/App/Assets.xcassets/AppIcon.appiconset
-          echo "✅ App icon fully restored after cap sync"
+          
+          # Strip alpha channel from icon (Apple rejects icons with transparency)
+          sips -s format png -s formatOptions 100 --deleteAlpha ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png --out ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png || true
+          
+          echo "✅ App icon restored and alpha stripped"
           echo "Contents.json:"
           cat ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json
           echo ""
+          sips -g all ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png || true
           ls -la ios/App/App/Assets.xcassets/AppIcon.appiconset/
 
       - name: Setup Xcode
