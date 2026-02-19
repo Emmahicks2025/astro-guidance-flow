@@ -21,6 +21,8 @@ import AdminPanel from "./pages/AdminPanel";
 import ProviderRegister from "./pages/ProviderRegister";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Support from "./pages/Support";
+import Copyright from "./pages/Copyright";
 import AstrologerPage from "./pages/Astrologer";
 import HelpCenter from "./pages/HelpCenter";
 import ExpertProfileEdit from "./components/jotshi/ExpertProfileEdit";
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/astrologer" element={<AstrologerPage />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/copyright" element={<Copyright />} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/expert-profile-edit" element={<ExpertProfileEdit />} />
             <Route path="/messages" element={<Messages />} />
