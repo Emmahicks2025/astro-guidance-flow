@@ -219,19 +219,17 @@ const EarningsPage = () => {
                     variant="primary"
                     size="lg"
                     className="w-full"
-                    disabled={!canWithdraw || hasOpenTicket}
+                    disabled={hasOpenTicket}
                     onClick={() => setShowTicketForm(true)}
                   >
                     <Ticket className="w-4 h-4" />
                     {hasOpenTicket
                       ? "Payout ticket already open"
-                      : canWithdraw
-                        ? "Open Payout Ticket"
-                        : "Minimum $100 required"}
+                      : "Open Payout Ticket"}
                   </SpiritualButton>
                   {!canWithdraw && !hasOpenTicket && (
                     <p className="text-xs text-center text-muted-foreground mt-2">
-                      Complete more sessions to reach the $100 minimum withdrawal threshold.
+                      Note: Minimum withdrawal is $100. You can still open a ticket — it will be processed once your balance qualifies.
                     </p>
                   )}
                 </motion.div>
