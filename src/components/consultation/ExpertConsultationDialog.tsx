@@ -283,15 +283,19 @@ export function ExpertConsultationDialog({
 
     try {
       // Request mic permission (non-blocking — WebRTC can still connect without mic)
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach(t => t.stop());
-        console.log("Mic permission granted");
-      } catch (micErr: any) {
-        if (micErr?.name === 'NotAllowedError') {
-          throw micErr;
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(t => t.stop());
+          console.log("Mic permission granted");
+        } catch (micErr: any) {
+          if (micErr?.name === 'NotAllowedError') {
+            throw micErr;
+          }
+          console.warn("Mic not available, proceeding anyway:", micErr?.message);
         }
-        console.warn("Mic not available, proceeding anyway:", micErr?.message);
+      } else {
+        console.warn("navigator.mediaDevices not available, proceeding — WebRTC will handle audio");
       }
 
       // Fetch call context and token in parallel
