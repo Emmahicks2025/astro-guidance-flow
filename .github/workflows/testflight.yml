@@ -29,22 +29,32 @@ jobs:
 
       - name: Sync Capacitor
         run: |
-          # Backup custom app icon before sync (cap sync can overwrite assets)
+          # Backup custom app icon AND project file before sync
           cp -r ios/App/App/Assets.xcassets/AppIcon.appiconset /tmp/AppIcon.appiconset.bak
+          cp ios/App/App.xcodeproj/project.pbxproj /tmp/project.pbxproj.bak
+          
           npx cap sync ios
-          # Fully replace app icon directory after sync (cap sync overwrites Contents.json)
+          
+          # Fully replace app icon directory after sync
           rm -rf ios/App/App/Assets.xcassets/AppIcon.appiconset
           cp -r /tmp/AppIcon.appiconset.bak ios/App/App/Assets.xcassets/AppIcon.appiconset
+          
+          # Restore project.pbxproj (cap sync overwrites build settings)
+          cp /tmp/project.pbxproj.bak ios/App/App.xcodeproj/project.pbxproj
           
           # Strip alpha channel from icon (Apple rejects icons with transparency)
           sips -s format png -s formatOptions 100 --deleteAlpha ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png --out ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png || true
           
-          echo "✅ App icon restored and alpha stripped"
+          echo "✅ App icon restored, pbxproj restored, alpha stripped"
           echo "Contents.json:"
           cat ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json
           echo ""
+          echo "Icon properties:"
           sips -g all ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png || true
+          echo "Icon directory:"
           ls -la ios/App/App/Assets.xcassets/AppIcon.appiconset/
+          echo "pbxproj AppIcon references:"
+          grep -i "appicon\|ASSETCATALOG" ios/App/App.xcodeproj/project.pbxproj || true
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
