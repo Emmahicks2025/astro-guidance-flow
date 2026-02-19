@@ -1,0 +1,1 @@
+ALTER TABLE public.jotshi_profiles ALTER COLUMN hourly_rate TYPE numeric USING hourly_rate::numeric;
