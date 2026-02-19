@@ -46,6 +46,9 @@ interface Consultation {
   created_at: string;
   started_at: string | null;
   user_name?: string;
+  user_gender?: string | null;
+  user_place?: string | null;
+  user_dob?: string | null;
 }
 
 interface ChatMessage {
@@ -109,15 +112,21 @@ const AstrologerDashboard = () => {
         const userIds = [...new Set(data.map(c => c.user_id))];
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('user_id, full_name')
+          .select('user_id, full_name, gender, place_of_birth, date_of_birth')
           .in('user_id', userIds);
 
-        const nameMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
         
-        setConsultations(data.map(c => ({
-          ...c,
-          user_name: nameMap.get(c.user_id) || 'User',
-        })));
+        setConsultations(data.map(c => {
+          const up = profileMap.get(c.user_id);
+          return {
+            ...c,
+            user_name: up?.full_name || 'User',
+            user_gender: up?.gender || null,
+            user_place: up?.place_of_birth || null,
+            user_dob: up?.date_of_birth || null,
+          };
+        }));
       }
     };
 
@@ -535,6 +544,14 @@ const AstrologerDashboard = () => {
                           <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </div>
                       </div>
+                      {/* User details row */}
+                      {(consultation.user_gender || consultation.user_dob || consultation.user_place) && (
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1 mb-2 ml-[52px]">
+                          {consultation.user_gender && <span className="capitalize">{consultation.user_gender}</span>}
+                          {consultation.user_dob && <span>DOB: {new Date(consultation.user_dob).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                          {consultation.user_place && <span>{consultation.user_place}</span>}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         <span>{new Date(consultation.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
