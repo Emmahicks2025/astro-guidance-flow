@@ -261,7 +261,7 @@ const SettingsPage = () => {
             toast.success("Thank you for your support! ⭐");
           }
         }},
-        { icon: Info, label: t.appVersion, value: 'v1.0.0' },
+        { icon: Info, label: t.appVersion, value: 'v1.0.11' },
       ]
     },
   ];
@@ -418,7 +418,7 @@ const SettingsPage = () => {
 
         {/* App Version */}
         <p className="text-center text-sm text-muted-foreground pb-4">
-          AstroGuru v1.0.0
+          AstroGuru v1.0.11
         </p>
       </main>
 
