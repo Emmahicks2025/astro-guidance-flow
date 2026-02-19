@@ -58,6 +58,10 @@ const UserDashboard = () => {
     if (user) {
       fetchUserProfile(user.id).then((profile) => {
         if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+        // Sync tutorial_completed from DB to local store
+        if (profile?.tutorial_completed) {
+          setWalkthroughComplete();
+        }
       });
     }
   }, [user]);
@@ -70,6 +74,20 @@ const UserDashboard = () => {
     setWalkthroughComplete 
   } = useWalkthroughStore();
   const navigate = useNavigate();
+
+  const handleWalkthroughComplete = async () => {
+    setWalkthroughComplete();
+    if (user) {
+      await supabase.from('profiles').update({ tutorial_completed: true }).eq('user_id', user.id);
+    }
+  };
+
+  const handleWalkthroughClose = async () => {
+    closeWalkthrough();
+    if (user) {
+      await supabase.from('profiles').update({ tutorial_completed: true }).eq('user_id', user.id);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -144,8 +162,8 @@ const UserDashboard = () => {
       {/* App Walkthrough */}
       <AppWalkthrough 
         isOpen={isWalkthroughOpen}
-        onClose={closeWalkthrough}
-        onComplete={setWalkthroughComplete}
+        onClose={handleWalkthroughClose}
+        onComplete={handleWalkthroughComplete}
       />
 
       <motion.div

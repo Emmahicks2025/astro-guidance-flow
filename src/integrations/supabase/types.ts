@@ -309,6 +309,7 @@ export type Database = {
           relationship_status: string | null
           role: string
           time_of_birth: string | null
+          tutorial_completed: boolean | null
           updated_at: string
           user_id: string
         }
@@ -331,6 +332,7 @@ export type Database = {
           relationship_status?: string | null
           role?: string
           time_of_birth?: string | null
+          tutorial_completed?: boolean | null
           updated_at?: string
           user_id: string
         }
@@ -353,6 +355,7 @@ export type Database = {
           relationship_status?: string | null
           role?: string
           time_of_birth?: string | null
+          tutorial_completed?: boolean | null
           updated_at?: string
           user_id?: string
         }
