@@ -24,12 +24,11 @@ serve(async (req) => {
     if (!authHeader) throw new Error("Not authenticated");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    // Validate user token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (userError || !user) throw new Error("Unauthorized");
 
     // Use LLM to extract key points from transcript

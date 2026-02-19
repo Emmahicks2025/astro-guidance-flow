@@ -135,12 +135,13 @@ export function ExpertConsultationDialog({
       handleCallEnd();
     },
     onMessage: (message: any) => {
+      console.log("ElevenLabs message:", JSON.stringify(message));
       // Collect transcript for memory extraction
       if (message.type === "user_transcript") {
-        const text = message.user_transcription_event?.user_transcript;
+        const text = message.user_transcription_event?.user_transcript || message.user_transcript;
         if (text) callTranscriptRef.current.push(`User: ${text}`);
       } else if (message.type === "agent_response") {
-        const text = message.agent_response_event?.agent_response;
+        const text = message.agent_response_event?.agent_response || message.agent_response;
         if (text) callTranscriptRef.current.push(`Expert: ${text}`);
       }
     },
@@ -240,19 +241,27 @@ export function ExpertConsultationDialog({
   // Save conversation memory after call ends
   const saveMemory = useCallback(async () => {
     const transcript = callTranscriptRef.current.join("\n");
-    if (!transcript || !expertIdRef.current || !user) return;
+    console.log("saveMemory called, transcript length:", transcript.length, "expertId:", expertIdRef.current, "user:", !!user);
+    if (!transcript || !expertIdRef.current || !user) {
+      console.warn("Skipping memory save — missing data", { transcript: !!transcript, expertId: expertIdRef.current, user: !!user });
+      return;
+    }
     
     try {
-      await fetch(SAVE_MEMORY_URL, {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      console.log("Saving memory with token:", !!token);
+      const resp = await fetch(SAVE_MEMORY_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ expertId: expertIdRef.current, transcript }),
       });
-      console.log("Conversation memory saved");
+      const result = await resp.json();
+      console.log("Conversation memory save response:", resp.status, result);
     } catch (err) {
       console.error("Failed to save memory:", err);
     }
