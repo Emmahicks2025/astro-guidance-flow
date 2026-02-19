@@ -14,28 +14,35 @@ serve(async (req) => {
   try {
     const { expertId } = await req.json();
 
-    // Get user from auth header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Not authenticated");
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) throw new Error("Unauthorized");
+    // Try to get user from auth header (optional — call still works without it)
+    let userId: string | null = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+        userId = user?.id || null;
+      } catch (e) {
+        console.warn("Could not extract user from token:", e);
+      }
+    }
 
-    // Fetch user profile, memories, and expert info in parallel
-    const [profileResult, memoriesResult, expertResult] = await Promise.all([
-      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
-      supabase.from("conversation_memories").select("*").eq("user_id", user.id).eq("expert_id", expertId).maybeSingle(),
-      supabase.from("jotshi_profiles").select("*").eq("id", expertId).maybeSingle(),
-    ]);
+    // Fetch expert info (always), and user data (only if authenticated)
+    const expertResult = await supabase.from("jotshi_profiles").select("*").eq("id", expertId).maybeSingle();
 
-    const profile = profileResult.data;
-    const memories = memoriesResult.data;
+    let profile: any = null;
+    let memories: any = null;
+    if (userId) {
+      const [profileResult, memoriesResult] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("conversation_memories").select("*").eq("user_id", userId).eq("expert_id", expertId).maybeSingle(),
+      ]);
+      profile = profileResult.data;
+      memories = memoriesResult.data;
+    }
     const expert = expertResult.data;
 
     // Build user context string
