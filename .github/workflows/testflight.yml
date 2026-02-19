@@ -42,12 +42,15 @@ jobs:
           # Restore project.pbxproj (cap sync overwrites build settings)
           cp /tmp/project.pbxproj.bak ios/App/App.xcodeproj/project.pbxproj
           
-          # Force icon to exactly 1024x1024 and strip alpha (Apple requirements)
+          # Force icon to exactly 1024x1024, strip alpha, and re-encode cleanly
           ICON_PATH=ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
           sips -z 1024 1024 "$ICON_PATH"
-          sips -s hasAlpha false "$ICON_PATH" --out "$ICON_PATH"
-          echo "Icon hasAlpha after strip:"
-          sips -g hasAlpha "$ICON_PATH"
+          # Convert to JPEG (strips alpha + metadata) then back to PNG (clean re-encode)
+          sips -s format jpeg "$ICON_PATH" --out /tmp/icon_clean.jpg
+          sips -s format png /tmp/icon_clean.jpg --out "$ICON_PATH"
+          sips -z 1024 1024 "$ICON_PATH"
+          echo "Icon properties after clean re-encode:"
+          sips -g all "$ICON_PATH"
           
           echo "✅ App icon restored, pbxproj restored, alpha stripped"
           echo "Contents.json:"
@@ -119,28 +122,28 @@ jobs:
           
           cd ios/App
           
-          # Create export options plist
-          cat > exportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store</string>
-              <key>teamID</key>
-              <string>$TEAM_ID</string>
-              <key>provisioningProfiles</key>
-              <dict>
-                  <key>com.astroguruai.app</key>
-                  <string>5174c695-432d-4b2f-af98-a29750ecddd8</string>
-              </dict>
-              <key>signingStyle</key>
-              <string>manual</string>
-              <key>signingCertificate</key>
-              <string>Apple Distribution</string>
-          </dict>
-          </plist>
-          EOF
+          # Create export options plist (NO leading whitespace - heredoc is literal)
+          cat > exportOptions.plist << 'PLISTEOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store</string>
+    <key>teamID</key>
+    <string>LZ57VL6474</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.astroguruai.app</key>
+        <string>5174c695-432d-4b2f-af98-a29750ecddd8</string>
+    </dict>
+    <key>signingStyle</key>
+    <string>manual</string>
+    <key>signingCertificate</key>
+    <string>Apple Distribution</string>
+</dict>
+</plist>
+PLISTEOF
           
           # Build and archive with manual signing
           xcodebuild -project App.xcodeproj \
