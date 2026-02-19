@@ -144,7 +144,7 @@ const JotshiDashboard = () => {
           </SpiritualCard>
           <SpiritualCard variant="golden" className="p-4 text-center">
             <Wallet className="w-6 h-6 mx-auto mb-2 text-accent" />
-            <p className="text-2xl font-bold">₹2,450</p>
+            <p className="text-2xl font-bold">$2,450</p>
             <p className="text-xs text-muted-foreground">Earnings</p>
           </SpiritualCard>
         </motion.div>

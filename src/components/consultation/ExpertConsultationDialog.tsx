@@ -315,8 +315,8 @@ export function ExpertConsultationDialog({
       toast.error("No expert selected.");
       return;
     }
-    // Credit check: need at least 1 minute worth of call credits (plan-specific rate)
-    const minCallCredits = subscription.call_credit_per_min;
+    // Credit check: need at least 1 minute worth based on expert's rate
+    const minCallCredits = expert.rate || 12;
     if (balance < minCallCredits) {
       setPaywallContext("call");
       setShowPaywall(true);
@@ -456,7 +456,7 @@ export function ExpertConsultationDialog({
   const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading || !expert) return;
 
-    // Credit check for chat
+    // Credit check for chat — need at least 1 credit (minimum charge per message)
     if (balance < 1) {
       setPaywallContext("chat");
       setShowPaywall(true);
@@ -487,6 +487,7 @@ export function ExpertConsultationDialog({
             expertName: expert.name,
             expertPersonality: expert.ai_personality,
             systemPrompt: expert.first_message,
+            expertRate: expert.rate,
           }),
         });
 
@@ -611,7 +612,7 @@ export function ExpertConsultationDialog({
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />{expert.experience}
                 </span>
-                <span className="text-primary font-medium">₹{expert.rate}/min</span>
+                <span className="text-primary font-medium">${expert.rate}/min</span>
               </div>
             </div>
           </div>

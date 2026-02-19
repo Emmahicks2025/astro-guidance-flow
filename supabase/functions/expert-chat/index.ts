@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, expertId, expertName, expertPersonality, systemPrompt: customSystemPrompt } = await req.json();
+    const { messages, expertId, expertName, expertPersonality, systemPrompt: customSystemPrompt, expertRate } = await req.json();
     
     console.log("Expert chat request:", { expertId, expertName, messageCount: messages?.length });
 
@@ -139,29 +139,23 @@ JOTSHI EXPERTISE:
               const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
               const supabase = createClient(supabaseUrl, supabaseKey);
 
-              // Get user's subscription plan to determine rate
-              const { data: sub } = await supabase
-                .from("user_subscriptions")
-                .select("plan_id")
-                .eq("user_id", userId)
-                .eq("status", "active")
-                .order("created_at", { ascending: false })
-                .limit(1);
-
-              let creditsPer1kTokens = 1; // Free tier default
-              if (sub && sub.length > 0) {
-                const { data: plan } = await supabase
-                  .from("subscription_plans")
-                  .select("chat_credit_per_1k_tokens")
-                  .eq("id", sub[0].plan_id)
+              // Use expert's hourly_rate (credits/min) to determine chat billing
+              // Fetch authoritative rate from database, never trust client
+              let creditsPerMin = 12; // fallback default
+              if (expertId) {
+                const { data: expertProfile } = await supabase
+                  .from("jotshi_profiles")
+                  .select("hourly_rate")
+                  .eq("id", expertId)
                   .limit(1);
-                if (plan && plan.length > 0) {
-                  creditsPer1kTokens = Number(plan[0].chat_credit_per_1k_tokens);
+                if (expertProfile && expertProfile.length > 0 && expertProfile[0].hourly_rate) {
+                  creditsPerMin = Number(expertProfile[0].hourly_rate);
                 }
               }
 
-              // Calculate credits: (tokens / 1000) * rate * 2.5 markup, minimum 1 credit
-              const rawCredits = (totalTokens / 1000) * creditsPer1kTokens * 2.5;
+              // Estimate chat duration equivalent: ~1 min of chat ≈ 1000 tokens
+              // Credits = (tokens / 1000) * expert_rate_per_min
+              const rawCredits = (totalTokens / 1000) * creditsPerMin;
               const creditsToDeduct = Math.max(1, Math.ceil(rawCredits));
 
               console.log(`Deducting ${creditsToDeduct} credits for ${totalTokens} tokens (user: ${userId})`);

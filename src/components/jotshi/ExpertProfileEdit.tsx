@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Camera, User, Loader2, Save,
-  Briefcase, Globe, IndianRupee, Clock, FileText
+  Briefcase, Globe, DollarSign, Clock, FileText
 } from "lucide-react";
 import { SpiritualCard } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
@@ -224,7 +224,7 @@ const ExpertProfileEdit = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="rate" className="flex items-center gap-1">
-                <IndianRupee className="w-3.5 h-3.5" /> Rate (₹/min)
+                <DollarSign className="w-3.5 h-3.5" /> Rate ($/min)
               </Label>
               <Input
                 id="rate"

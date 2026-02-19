@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Moon, Users, MessageCircle, Wallet, Star, Settings, Bell, LogOut,
   Clock, TrendingUp, Lock, CheckCircle, AlertCircle, ChevronRight,
-  Eye, IndianRupee, User, Shield, FileText,
+  Eye, DollarSign, User, Shield, FileText,
   Send, ArrowLeft, Loader2
 } from "lucide-react";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -462,7 +462,7 @@ const AstrologerDashboard = () => {
                 <div className="flex items-center gap-3 mt-1">
                   <span className="text-xs text-muted-foreground">{profile?.experience_years || 0} yrs exp</span>
                   <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground">₹{profile?.hourly_rate || 0}/min</span>
+                  <span className="text-xs text-muted-foreground">${profile?.hourly_rate || 0}/min</span>
                   <span className="text-xs text-muted-foreground">•</span>
                   <span className="text-xs text-muted-foreground">{profile?.languages?.join(', ')}</span>
                 </div>
@@ -501,8 +501,8 @@ const AstrologerDashboard = () => {
             <p className="text-xs text-muted-foreground">Sessions</p>
           </SpiritualCard>
           <SpiritualCard variant="golden" className={`p-4 text-center ${!isApproved ? 'opacity-50' : ''}`}>
-            <IndianRupee className="w-6 h-6 mx-auto mb-2 text-accent" />
-            <p className="text-2xl font-bold">{isApproved ? `₹${profile?.total_earnings || 0}` : '—'}</p>
+            <DollarSign className="w-6 h-6 mx-auto mb-2 text-accent" />
+            <p className="text-2xl font-bold">{isApproved ? `$${profile?.total_earnings || 0}` : '—'}</p>
             <p className="text-xs text-muted-foreground">Earnings</p>
           </SpiritualCard>
         </motion.div>

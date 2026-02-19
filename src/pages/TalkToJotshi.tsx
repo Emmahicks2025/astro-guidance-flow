@@ -300,7 +300,7 @@ const TalkToJotshi = () => {
                       {/* Action Row */}
                       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
                         <div className="flex items-center gap-1">
-                          <span className="text-lg font-bold text-primary">₹{expert.rate}</span>
+                          <span className="text-lg font-bold text-primary">${expert.rate}</span>
                           <span className="text-xs text-muted-foreground">/min</span>
                         </div>
                         <div className="flex gap-2">
