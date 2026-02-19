@@ -22,7 +22,7 @@ const DateOfBirthStep = () => {
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -50 }}
-      className="flex flex-col min-h-screen px-6 py-8"
+      className="flex flex-col h-dvh px-6 py-8"
     >
       <OnboardingProgress currentStep={3} totalSteps={6} />
 
