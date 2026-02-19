@@ -77,6 +77,7 @@ export function ExpertConsultationDialog({
   const [paywallContext, setPaywallContext] = useState<"chat" | "call">("chat");
   const [showReview, setShowReview] = useState(false);
   const [reviewConsultationId, setReviewConsultationId] = useState<string | null>(null);
+  const [userSentMessage, setUserSentMessage] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const prevOpenRef = useRef(false);
@@ -166,6 +167,7 @@ export function ExpertConsultationDialog({
       setIsCallActive(false);
       setCallDuration(0);
       setConsultationId(null);
+      setUserSentMessage(false);
       callTranscriptRef.current = [];
       expertIdRef.current = expert.id;
       
@@ -468,6 +470,7 @@ export function ExpertConsultationDialog({
     const userMessage: Message = { role: 'user', content: inputMessage.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
+    setUserSentMessage(true);
     setIsLoading(true);
 
     if (isAI) {
@@ -588,9 +591,9 @@ export function ExpertConsultationDialog({
     <>
     <Dialog open={open} onOpenChange={(isOpen) => {
       if (!isOpen && isCallActive) endCall();
-      if (!isOpen && consultationId && messages.length > 0) {
+      if (!isOpen && consultationId && userSentMessage) {
         supabase.from('consultations').update({ status: 'completed', ended_at: new Date().toISOString() }).eq('id', consultationId);
-        // Show review dialog after closing
+        // Show review dialog only if user actually chatted
         setReviewConsultationId(consultationId);
         setTimeout(() => setShowReview(true), 300);
       }
