@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Moon, Users, MessageCircle, Wallet, Star, Settings, Bell, LogOut,
-  Clock, TrendingUp, Lock, CheckCircle, AlertCircle, ChevronRight,
-  Eye, DollarSign, User, Shield, FileText,
+  Clock, TrendingUp, CheckCircle, AlertCircle, ChevronRight,
+  DollarSign, User, Shield,
   Send, ArrowLeft, Loader2
 } from "lucide-react";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -567,37 +567,6 @@ const AstrologerDashboard = () => {
           </motion.section>
         )}
 
-        {/* Feature Cards */}
-        <motion.div variants={itemVariants} className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Actions</h3>
-          {[
-            { icon: User, label: 'Edit Profile', desc: 'Update your name, bio, pricing & photo', locked: false, route: '/expert-profile-edit' },
-            { icon: Wallet, label: 'Earnings', desc: 'View your earnings & payouts', locked: !isApproved, route: '/earnings' },
-            { icon: FileText, label: 'Terms', desc: 'Terms & conditions', locked: false, route: '/terms' },
-            { icon: Shield, label: 'Privacy', desc: 'Privacy policy', locked: false, route: '/privacy-policy' },
-          ].map((item) => (
-            <SpiritualCard key={item.label} variant="elevated" className={`overflow-hidden ${item.locked ? 'opacity-60' : ''}`}>
-              <button 
-                className="w-full p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors disabled:cursor-not-allowed"
-                disabled={item.locked}
-                onClick={() => { if (!item.locked) navigate(item.route); }}
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.locked ? 'bg-muted' : 'bg-secondary/10'}`}>
-                  {item.locked ? <Lock className="w-5 h-5 text-muted-foreground" /> : <item.icon className="w-5 h-5 text-secondary" />}
-                </div>
-                <div className="flex-1 text-left">
-                  <span className="font-medium text-foreground">{item.label}</span>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
-                </div>
-                {item.locked ? (
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">Pending</span>
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                )}
-              </button>
-            </SpiritualCard>
-          ))}
-        </motion.div>
 
         {/* Performance */}
         {isApproved && (
