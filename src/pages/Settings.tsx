@@ -67,6 +67,7 @@ const SettingsPage = () => {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [isExpert, setIsExpert] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Load profile data (check both profiles and jotshi_profiles for experts)
@@ -81,6 +82,7 @@ const SettingsPage = () => {
         .limit(1);
       
       if (jotshiData?.[0]) {
+        setIsExpert(true);
         setProfileName(jotshiData[0].display_name || '');
         setProfileAvatar(jotshiData[0].avatar_url || null);
         return;
@@ -197,15 +199,22 @@ const SettingsPage = () => {
     }
   };
 
+  const seekerAccountItems = [
+    { icon: User, label: t.editProfile, action: () => setShowEditProfile(true) },
+    { icon: CreditCard, label: "Plans & Credits", action: () => navigate('/pricing') },
+    { icon: RotateCcw, label: "Restore Purchases", action: handleRestorePurchases },
+    { icon: Shield, label: t.privacySecurity, action: () => navigate('/privacy-policy') },
+  ];
+
+  const expertAccountItems = [
+    { icon: User, label: t.editProfile, action: () => setShowEditProfile(true) },
+    { icon: Shield, label: t.privacySecurity, action: () => navigate('/privacy-policy') },
+  ];
+
   const settingsSections = [
     {
       title: t.account,
-      items: [
-        { icon: User, label: t.editProfile, action: () => setShowEditProfile(true) },
-        { icon: CreditCard, label: "Plans & Credits", action: () => navigate('/pricing') },
-        { icon: RotateCcw, label: "Restore Purchases", action: handleRestorePurchases },
-        { icon: Shield, label: t.privacySecurity, action: () => navigate('/privacy-policy') },
-      ]
+      items: isExpert ? expertAccountItems : seekerAccountItems,
     },
     {
       title: t.preferences,
