@@ -32,9 +32,13 @@ jobs:
           # Backup custom app icon before sync (cap sync can overwrite assets)
           cp -r ios/App/App/Assets.xcassets/AppIcon.appiconset /tmp/AppIcon.appiconset.bak
           npx cap sync ios
-          # Restore custom app icon after sync
-          cp -r /tmp/AppIcon.appiconset.bak/* ios/App/App/Assets.xcassets/AppIcon.appiconset/
-          echo "✅ App icon restored after cap sync"
+          # Fully replace app icon directory after sync (cap sync overwrites Contents.json)
+          rm -rf ios/App/App/Assets.xcassets/AppIcon.appiconset
+          cp -r /tmp/AppIcon.appiconset.bak ios/App/App/Assets.xcassets/AppIcon.appiconset
+          echo "✅ App icon fully restored after cap sync"
+          echo "Contents.json:"
+          cat ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json
+          echo ""
           ls -la ios/App/App/Assets.xcassets/AppIcon.appiconset/
 
       - name: Setup Xcode
