@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import JotshiConsultationPanel from "@/components/jotshi/JotshiConsultationPanel";
 import AdminTicketsPanel from "@/components/admin/AdminTicketsPanel";
+import AdminReviewsPanel from "@/components/admin/AdminReviewsPanel";
 
 interface JotshiProfile {
   id: string;
@@ -700,6 +701,7 @@ const AdminPanel = () => {
             <TabsTrigger value="providers" className="text-xs sm:text-sm">Astrologers</TabsTrigger>
             <TabsTrigger value="seekers" className="text-xs sm:text-sm">Seekers</TabsTrigger>
             <TabsTrigger value="tickets" className="text-xs sm:text-sm">Tickets</TabsTrigger>
+            <TabsTrigger value="reviews" className="text-xs sm:text-sm">Reviews</TabsTrigger>
             <TabsTrigger value="settings" className="text-xs sm:text-sm">API Keys</TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analytics</TabsTrigger>
           </TabsList>
@@ -855,6 +857,11 @@ const AdminPanel = () => {
           {/* ===== TICKETS TAB ===== */}
           <TabsContent value="tickets">
             <AdminTicketsPanel />
+          </TabsContent>
+
+          {/* ===== REVIEWS TAB ===== */}
+          <TabsContent value="reviews">
+            <AdminReviewsPanel />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4 mt-4">

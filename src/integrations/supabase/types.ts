@@ -352,6 +352,50 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          consultation_id: string
+          created_at: string
+          expert_id: string
+          feedback: string | null
+          id: string
+          rating: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consultation_id: string
+          created_at?: string
+          expert_id: string
+          feedback?: string | null
+          id?: string
+          rating: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consultation_id?: string
+          created_at?: string
+          expert_id?: string
+          feedback?: string | null
+          id?: string
+          rating?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: true
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           apple_product_id: string

@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useConversation } from "@elevenlabs/react";
 import { sendPushToUser } from "@/lib/pushNotifications";
+import { ReviewDialog } from "@/components/consultation/ReviewDialog";
 
 interface Expert {
   id: string;
@@ -74,6 +75,8 @@ export function ExpertConsultationDialog({
   const [consultationId, setConsultationId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallContext, setPaywallContext] = useState<"chat" | "call">("chat");
+  const [showReview, setShowReview] = useState(false);
+  const [reviewConsultationId, setReviewConsultationId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const prevOpenRef = useRef(false);
@@ -583,12 +586,15 @@ export function ExpertConsultationDialog({
 
   return (
     <>
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open && isCallActive) endCall();
-      if (!open && consultationId) {
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen && isCallActive) endCall();
+      if (!isOpen && consultationId && messages.length > 0) {
         supabase.from('consultations').update({ status: 'completed', ended_at: new Date().toISOString() }).eq('id', consultationId);
+        // Show review dialog after closing
+        setReviewConsultationId(consultationId);
+        setTimeout(() => setShowReview(true), 300);
       }
-      onOpenChange(open);
+      onOpenChange(isOpen);
     }}>
       <DialogContent className="!grid-rows-none !grid-cols-none !flex max-w-lg p-0 gap-0 overflow-hidden fixed inset-x-0 bottom-0 top-auto translate-x-0 translate-y-0 left-0 sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:translate-x-[-50%] sm:translate-y-[-50%] h-[92dvh] sm:h-[85vh] sm:max-h-[85vh] rounded-t-2xl sm:rounded-lg flex-col">
         {/* Header */}
@@ -883,6 +889,17 @@ export function ExpertConsultationDialog({
       creditsNeeded={paywallContext === "call" ? subscription.call_credit_per_min : 1}
       context={paywallContext}
     />
+
+    {reviewConsultationId && expert && user && (
+      <ReviewDialog
+        open={showReview}
+        onOpenChange={setShowReview}
+        consultationId={reviewConsultationId}
+        expertId={expert.id}
+        expertName={expert.name}
+        userId={user.id}
+      />
+    )}
     </>
   );
 }

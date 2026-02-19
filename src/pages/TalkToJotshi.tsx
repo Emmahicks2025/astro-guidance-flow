@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExpertConsultationDialog } from "@/components/consultation/ExpertConsultationDialog";
+import { ExpertReviews } from "@/components/consultation/ExpertReviews";
 
 type Category = 'all' | 'astrologer' | 'jotshi' | 'palmist' | 'relationship';
 
@@ -324,7 +325,10 @@ const TalkToJotshi = () => {
                             Chat
                           </SpiritualButton>
                         </div>
-                      </div>
+                        </div>
+
+                        {/* Reviews */}
+                        <ExpertReviews expertId={expert.id} />
                     </SpiritualCardContent>
                   </SpiritualCard>
                 </motion.div>
