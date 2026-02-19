@@ -260,11 +260,22 @@ const PricingPage = () => {
           </div>
         )}
 
-        {/* Footer Note */}
-        <p className="text-xs text-center text-muted-foreground px-4">
-          Subscriptions are managed through the App Store. Cancel anytime in your device settings.
-          All AI features (Kundli, Palm Reading, Horoscope, Guna Milan) are always free.
-        </p>
+        {/* Footer Note — Apple Guideline 3.1.2 compliance */}
+        <div className="text-xs text-center text-muted-foreground px-4 space-y-2">
+          <p>
+            Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. 
+            You can manage or cancel subscriptions in your Apple ID Settings. 
+            Payment will be charged to your Apple ID account at confirmation of purchase.
+          </p>
+          <p>
+            All AI features (Kundli, Palm Reading, Horoscope, Guna Milan) are always free.
+          </p>
+          <p>
+            <button onClick={() => navigate('/terms')} className="underline text-primary">Terms of Use (EULA)</button>
+            {" · "}
+            <button onClick={() => navigate('/privacy-policy')} className="underline text-primary">Privacy Policy</button>
+          </p>
+        </div>
       </main>
     </motion.div>
   );

@@ -254,9 +254,9 @@ const Auth = () => {
           {!isLogin && (
             <p className="text-xs text-muted-foreground text-center mt-4">
               By signing up, you agree to our{" "}
-              <a href="#/terms" className="underline text-primary">Terms of Service</a>
+              <button type="button" onClick={() => navigate('/terms')} className="underline text-primary">Terms of Service</button>
               {" "}and{" "}
-              <a href="#/privacy-policy" className="underline text-primary">Privacy Policy</a>
+              <button type="button" onClick={() => navigate('/privacy-policy')} className="underline text-primary">Privacy Policy</button>
             </p>
           )}
         </SpiritualCard>
