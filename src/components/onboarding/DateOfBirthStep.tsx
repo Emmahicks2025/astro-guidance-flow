@@ -1,18 +1,70 @@
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Calendar } from "lucide-react";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import OnboardingProgress from "./OnboardingProgress";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 const DateOfBirthStep = () => {
   const { userData, updateUserData, nextStep, prevStep } = useOnboardingStore();
 
+  const existing = userData.dateOfBirth ? new Date(userData.dateOfBirth) : null;
+
+  const [month, setMonth] = useState<string>(
+    existing ? String(existing.getMonth()) : ""
+  );
+  const [day, setDay] = useState<string>(
+    existing ? String(existing.getDate()) : ""
+  );
+  const [year, setYear] = useState<string>(
+    existing ? String(existing.getFullYear()) : ""
+  );
+
+  const currentYear = new Date().getFullYear();
+  const years = useMemo(
+    () => Array.from({ length: currentYear - 1919 }, (_, i) => currentYear - i),
+    [currentYear]
+  );
+
+  const daysInMonth = useMemo(() => {
+    if (month === "" || year === "") return 31;
+    return new Date(Number(year), Number(month) + 1, 0).getDate();
+  }, [month, year]);
+
+  const days = useMemo(
+    () => Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    [daysInMonth]
+  );
+
+  // Auto-correct day if it exceeds new month's max
+  const effectiveDay = day && Number(day) > daysInMonth ? "" : day;
+
+  const isComplete = month !== "" && effectiveDay !== "" && year !== "";
+
+  const syncDate = (m: string, d: string, y: string) => {
+    if (m !== "" && d !== "" && y !== "") {
+      const date = new Date(Number(y), Number(m), Number(d));
+      if (date <= new Date()) {
+        updateUserData("dateOfBirth", date);
+      }
+    }
+  };
+
   const handleContinue = () => {
-    if (userData.dateOfBirth) {
+    if (isComplete) {
+      syncDate(month, effectiveDay, year);
       nextStep();
     }
   };
@@ -58,43 +110,78 @@ const DateOfBirthStep = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="flex justify-center"
+          className="grid grid-cols-3 gap-3"
         >
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className={cn(
-                  "w-full flex items-center justify-between h-14 px-4 rounded-xl border-2 transition-all duration-200",
-                  "border-border bg-card shadow-soft",
-                  "hover:border-primary/50 focus:border-primary focus:ring-2 focus:ring-primary/20",
-                  userData.dateOfBirth ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                <span>
-                  {userData.dateOfBirth
-                    ? format(userData.dateOfBirth, "PPP")
-                    : "Select your birth date"}
-                </span>
-                <Calendar className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-card border-border" align="center">
-              <CalendarComponent
-                mode="single"
-                selected={userData.dateOfBirth || undefined}
-                onSelect={(date) => updateUserData('dateOfBirth', date || null)}
-                disabled={(date) =>
-                  date > new Date() || date < new Date("1900-01-01")
-                }
-                initialFocus
-                captionLayout="dropdown-buttons"
-                fromYear={1920}
-                toYear={new Date().getFullYear()}
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
+          {/* Month */}
+          <Select
+            value={month}
+            onValueChange={(v) => {
+              setMonth(v);
+              syncDate(v, effectiveDay, year);
+            }}
+          >
+            <SelectTrigger className="h-14 rounded-xl border-2 border-border bg-card text-sm">
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {MONTHS.map((m, i) => (
+                <SelectItem key={i} value={String(i)}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Day */}
+          <Select
+            value={effectiveDay}
+            onValueChange={(v) => {
+              setDay(v);
+              syncDate(month, v, year);
+            }}
+          >
+            <SelectTrigger className="h-14 rounded-xl border-2 border-border bg-card text-sm">
+              <SelectValue placeholder="Day" />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {days.map((d) => (
+                <SelectItem key={d} value={String(d)}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Year */}
+          <Select
+            value={year}
+            onValueChange={(v) => {
+              setYear(v);
+              syncDate(month, effectiveDay, v);
+            }}
+          >
+            <SelectTrigger className="h-14 rounded-xl border-2 border-border bg-card text-sm">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {years.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </motion.div>
+
+        {isComplete && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center text-sm text-muted-foreground mt-4"
+          >
+            {MONTHS[Number(month)]} {effectiveDay}, {year}
+          </motion.p>
+        )}
       </div>
 
       <motion.div
@@ -116,7 +203,7 @@ const DateOfBirthStep = () => {
           size="lg"
           className="flex-1"
           onClick={handleContinue}
-          disabled={!userData.dateOfBirth}
+          disabled={!isComplete}
         >
           Continue
         </SpiritualButton>
