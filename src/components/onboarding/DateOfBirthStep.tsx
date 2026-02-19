@@ -33,9 +33,10 @@ const DateOfBirthStep = () => {
   );
 
   const currentYear = new Date().getFullYear();
+  const maxYear = currentYear - 18;
   const years = useMemo(
-    () => Array.from({ length: currentYear - 1919 }, (_, i) => currentYear - i),
-    [currentYear]
+    () => Array.from({ length: maxYear - 1919 }, (_, i) => maxYear - i),
+    [maxYear]
   );
 
   const daysInMonth = useMemo(() => {
