@@ -105,7 +105,7 @@ const AdminPanel = () => {
   const addFileInputRef = useRef<HTMLInputElement>(null);
   const [newProvider, setNewProvider] = useState<Partial<JotshiProfile>>({
     display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
-    hourly_rate: 30, bio: '', ai_personality: '', voice_id: '', is_online: false,
+    hourly_rate: 25, bio: '', ai_personality: '', voice_id: '', is_online: false,
     verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
     first_message: '', greeting_message: '',
   });
@@ -405,7 +405,7 @@ const AdminPanel = () => {
         specialty: newProvider.specialty || null,
         category: newProvider.category || 'astrologer',
         experience_years: newProvider.experience_years || 0,
-        hourly_rate: newProvider.hourly_rate || 30,
+        hourly_rate: Math.max(25, newProvider.hourly_rate || 25),
         bio: newProvider.bio || null,
         ai_personality: newProvider.ai_personality || null,
         voice_id: newProvider.voice_id || null,
@@ -423,7 +423,7 @@ const AdminPanel = () => {
       setShowAddDialog(false);
       setNewProvider({
         display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
-        hourly_rate: 30, bio: '', ai_personality: '', voice_id: '', is_online: false,
+        hourly_rate: 25, bio: '', ai_personality: '', voice_id: '', is_online: false,
         verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
         first_message: '', greeting_message: '',
       });
@@ -1143,7 +1143,7 @@ const AdminPanel = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Experience (years)</Label><SpiritualInput type="number" value={newProvider.experience_years || 0} onChange={(e) => setNewProvider({ ...newProvider, experience_years: parseInt(e.target.value) || 0 })} /></div>
-              <div className="space-y-2"><Label>Rate ($/min)</Label><SpiritualInput type="number" value={newProvider.hourly_rate || 30} onChange={(e) => setNewProvider({ ...newProvider, hourly_rate: parseInt(e.target.value) || 0 })} /></div>
+              <div className="space-y-2"><Label>Rate (credits/min)</Label><SpiritualInput type="number" min={25} value={newProvider.hourly_rate || 25} onChange={(e) => setNewProvider({ ...newProvider, hourly_rate: Math.max(25, parseInt(e.target.value) || 25) })} /></div>
             </div>
             <div className="space-y-2"><Label>Bio</Label><Textarea value={newProvider.bio || ""} onChange={(e) => setNewProvider({ ...newProvider, bio: e.target.value })} rows={3} placeholder="Brief description of the provider..." /></div>
             {/* Unified AI System Prompt */}
