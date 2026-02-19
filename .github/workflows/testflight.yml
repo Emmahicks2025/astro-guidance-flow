@@ -43,8 +43,11 @@ jobs:
           cp /tmp/project.pbxproj.bak ios/App/App.xcodeproj/project.pbxproj
           
           # Force icon to exactly 1024x1024 and strip alpha (Apple requirements)
-          sips -z 1024 1024 ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png || true
-          sips -s format png -s formatOptions 100 --deleteAlpha ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png --out ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png || true
+          ICON_PATH=ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+          sips -z 1024 1024 "$ICON_PATH"
+          sips -s hasAlpha false "$ICON_PATH" --out "$ICON_PATH"
+          echo "Icon hasAlpha after strip:"
+          sips -g hasAlpha "$ICON_PATH"
           
           echo "✅ App icon restored, pbxproj restored, alpha stripped"
           echo "Contents.json:"
