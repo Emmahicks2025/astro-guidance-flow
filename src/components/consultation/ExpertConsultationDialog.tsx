@@ -241,16 +241,18 @@ export function ExpertConsultationDialog({
   // Save conversation memory after call ends
   const saveMemory = useCallback(async () => {
     const transcript = callTranscriptRef.current.join("\n");
-    console.log("saveMemory called, transcript length:", transcript.length, "expertId:", expertIdRef.current, "user:", !!user);
-    if (!transcript || !expertIdRef.current || !user) {
-      console.warn("Skipping memory save — missing data", { transcript: !!transcript, expertId: expertIdRef.current, user: !!user });
+    const convId = conversation.getId?.() || null;
+    console.log("saveMemory called, transcript length:", transcript.length, "conversationId:", convId, "expertId:", expertIdRef.current, "user:", !!user);
+    if (!expertIdRef.current || !user) {
+      console.warn("Skipping memory save — missing data", { expertId: expertIdRef.current, user: !!user });
       return;
     }
     
+    // Even if transcript is empty, send request — server will fetch from ElevenLabs API
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
-      console.log("Saving memory with token:", !!token);
+      console.log("Saving memory with token:", !!token, "conversationId:", convId);
       const resp = await fetch(SAVE_MEMORY_URL, {
         method: "POST",
         headers: {
@@ -258,14 +260,18 @@ export function ExpertConsultationDialog({
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ expertId: expertIdRef.current, transcript }),
+        body: JSON.stringify({ 
+          expertId: expertIdRef.current, 
+          transcript: transcript || undefined,
+          conversationId: convId || undefined,
+        }),
       });
       const result = await resp.json();
       console.log("Conversation memory save response:", resp.status, result);
     } catch (err) {
       console.error("Failed to save memory:", err);
     }
-  }, [user]);
+  }, [user, conversation]);
 
   const handleCallEnd = useCallback(() => {
     setIsCallActive(false);

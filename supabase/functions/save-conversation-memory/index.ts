@@ -13,10 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const { expertId, transcript } = await req.json();
+    const { expertId, transcript, conversationId } = await req.json();
 
-    if (!transcript || !expertId) {
-      throw new Error("expertId and transcript are required");
+    if (!expertId) {
+      throw new Error("expertId is required");
     }
 
     // Get user from auth
@@ -31,9 +31,45 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
     if (userError || !user) throw new Error("Unauthorized");
 
+    // Try to get transcript from ElevenLabs API if conversationId provided and no client transcript
+    let finalTranscript = transcript || "";
+
+    if (!finalTranscript && conversationId) {
+      console.log("Fetching transcript from ElevenLabs for conversation:", conversationId);
+      const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+      if (ELEVENLABS_API_KEY) {
+        try {
+          // Wait a moment for ElevenLabs to process the conversation
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          const historyResp = await fetch(
+            `https://api.elevenlabs.io/v1/convai/conversations/${conversationId}`,
+            {
+              headers: { "xi-api-key": ELEVENLABS_API_KEY },
+            }
+          );
+          if (historyResp.ok) {
+            const historyData = await historyResp.json();
+            const turns = historyData.transcript || [];
+            finalTranscript = turns
+              .map((t: any) => `${t.role === "user" ? "User" : "Expert"}: ${t.message}`)
+              .join("\n");
+            console.log("Got transcript from ElevenLabs API, turns:", turns.length);
+          } else {
+            console.error("ElevenLabs history fetch failed:", historyResp.status);
+          }
+        } catch (e) {
+          console.error("Failed to fetch ElevenLabs history:", e);
+        }
+      }
+    }
+
+    if (!finalTranscript) {
+      console.warn("No transcript available — saving call count only");
+    }
+
     // Use LLM to extract key points from transcript
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     // Fetch existing memories
     const { data: existing } = await supabase
@@ -45,6 +81,22 @@ serve(async (req) => {
 
     const existingPoints = existing?.key_points || [];
     const existingCount = existing?.total_calls || 0;
+
+    // If no transcript, just update call count
+    if (!finalTranscript || !LOVABLE_API_KEY) {
+      await supabase.from("conversation_memories").upsert({
+        user_id: user.id,
+        expert_id: expertId,
+        key_points: existingPoints,
+        total_calls: existingCount + 1,
+        last_call_at: new Date().toISOString(),
+      }, { onConflict: "user_id,expert_id" });
+
+      return new Response(
+        JSON.stringify({ success: true, extracted: false, reason: !finalTranscript ? "no_transcript" : "no_api_key" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const extractionPrompt = `You are analyzing a voice conversation between an astrology expert and a user. Extract the most important key points about the USER (not the expert).
 
@@ -58,9 +110,9 @@ Focus on:
 
 ${
   existingPoints.length > 0
-    ? `Existing key points from previous calls:\\n${
-      existingPoints.map((p: string) => `- ${p}`).join("\\n")
-    }\\n\\nDo NOT repeat existing points. Only add NEW information.`
+    ? `Existing key points from previous calls:\n${
+      existingPoints.map((p: string) => `- ${p}`).join("\n")
+    }\n\nDo NOT repeat existing points. Only add NEW information.`
     : ""
 }
 
@@ -69,7 +121,7 @@ Return a JSON object with:
 - "summary": a 1-2 sentence overall summary of the user's situation including past context
 
 Transcript:
-${transcript}`;
+${finalTranscript}`;
 
     const llmResponse = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -105,7 +157,6 @@ ${transcript}`;
 
     if (!llmResponse.ok) {
       console.error("LLM extraction failed:", llmResponse.status);
-      // Still save a basic memory even if extraction fails
       await supabase.from("conversation_memories").upsert({
         user_id: user.id,
         expert_id: expertId,
@@ -116,9 +167,7 @@ ${transcript}`;
 
       return new Response(
         JSON.stringify({ success: true, extracted: false }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -154,10 +203,9 @@ ${transcript}`;
         success: true,
         extracted: true,
         newPoints: newPoints.length,
+        source: transcript ? "client" : "elevenlabs_api",
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     console.error("Save memory error:", error);
