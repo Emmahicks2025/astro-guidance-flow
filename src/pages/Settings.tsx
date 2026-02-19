@@ -207,7 +207,7 @@ const SettingsPage = () => {
   ];
 
   const expertAccountItems = [
-    { icon: User, label: t.editProfile, action: () => setShowEditProfile(true) },
+    { icon: User, label: t.editProfile, action: () => navigate('/expert-profile-edit') },
     { icon: Shield, label: t.privacySecurity, action: () => navigate('/privacy-policy') },
   ];
 
@@ -335,7 +335,7 @@ const SettingsPage = () => {
                 {user?.email || (userData.gender ? userData.gender.charAt(0).toUpperCase() + userData.gender.slice(1) : 'Not set')}
               </p>
             </div>
-            <SpiritualButton variant="ghost" size="icon" onClick={() => setShowEditProfile(true)}>
+            <SpiritualButton variant="ghost" size="icon" onClick={() => isExpert ? navigate('/expert-profile-edit') : setShowEditProfile(true)}>
               <Edit2 className="w-5 h-5" />
             </SpiritualButton>
           </div>
