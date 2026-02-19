@@ -125,28 +125,27 @@ jobs:
           
           cd ios/App
           
-          # Create export options plist (NO leading whitespace - heredoc is literal)
-          cat > exportOptions.plist << 'PLISTEOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store</string>
-    <key>teamID</key>
-    <string>LZ57VL6474</string>
-    <key>provisioningProfiles</key>
-    <dict>
-        <key>com.astroguruai.app</key>
-        <string>5174c695-432d-4b2f-af98-a29750ecddd8</string>
-    </dict>
-    <key>signingStyle</key>
-    <string>manual</string>
-    <key>signingCertificate</key>
-    <string>Apple Distribution</string>
-</dict>
-</plist>
-PLISTEOF
+          # Create export options plist
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+            '<plist version="1.0">' \
+            '<dict>' \
+            '    <key>method</key>' \
+            '    <string>app-store</string>' \
+            '    <key>teamID</key>' \
+            '    <string>LZ57VL6474</string>' \
+            '    <key>provisioningProfiles</key>' \
+            '    <dict>' \
+            '        <key>com.astroguruai.app</key>' \
+            '        <string>5174c695-432d-4b2f-af98-a29750ecddd8</string>' \
+            '    </dict>' \
+            '    <key>signingStyle</key>' \
+            '    <string>manual</string>' \
+            '    <key>signingCertificate</key>' \
+            '    <string>Apple Distribution</string>' \
+            '</dict>' \
+            '</plist>' > exportOptions.plist
           
           # Build and archive with manual signing
           xcodebuild -project App.xcodeproj \
