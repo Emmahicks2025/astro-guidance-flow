@@ -253,7 +253,13 @@ const SettingsPage = () => {
       items: [
         { icon: HelpCircle, label: t.helpFaq, action: () => navigate('/help') },
         { icon: Star, label: t.rateUs, action: () => {
-          toast.success("Thank you for your support! ⭐");
+          // Deep link to App Store review page
+          const appStoreUrl = "https://apps.apple.com/app/id<YOUR_APP_ID>?action=write-review";
+          if ((window as any).Capacitor?.isNativePlatform?.()) {
+            window.open(appStoreUrl, "_blank");
+          } else {
+            toast.success("Thank you for your support! ⭐");
+          }
         }},
         { icon: Info, label: t.appVersion, value: 'v1.0.0' },
       ]

@@ -38,11 +38,42 @@ Deno.serve(async (req) => {
     // Use service role to delete user data and account
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Delete user's profile data
-    await adminClient.from("profiles").delete().eq("user_id", user.id);
+    // Delete all user data from every table (order matters for foreign keys)
+    // First delete messages (references consultations)
+    const { data: userConsultations } = await adminClient
+      .from("consultations")
+      .select("id")
+      .or(`user_id.eq.${user.id},jotshi_id.eq.${user.id}`);
+    
+    if (userConsultations && userConsultations.length > 0) {
+      const consultationIds = userConsultations.map((c: any) => c.id);
+      await adminClient.from("messages").delete().in("consultation_id", consultationIds);
+      await adminClient.from("reviews").delete().in("consultation_id", consultationIds);
+    }
+
+    // Delete from all user-linked tables
     await adminClient.from("wallet_transactions").delete().eq("user_id", user.id);
     await adminClient.from("consultations").delete().eq("user_id", user.id);
+    await adminClient.from("consultations").delete().eq("jotshi_id", user.id);
+    await adminClient.from("credit_balances").delete().eq("user_id", user.id);
+    await adminClient.from("device_tokens").delete().eq("user_id", user.id);
+    await adminClient.from("conversation_memories").delete().eq("user_id", user.id);
+    await adminClient.from("user_subscriptions").delete().eq("user_id", user.id);
+    await adminClient.from("support_tickets").delete().eq("user_id", user.id);
+    await adminClient.from("reviews").delete().eq("user_id", user.id);
+    await adminClient.from("jotshi_profiles").delete().eq("user_id", user.id);
     await adminClient.from("user_roles").delete().eq("user_id", user.id);
+    await adminClient.from("profiles").delete().eq("user_id", user.id);
+
+    // Delete avatar files from storage
+    const buckets = ["user-avatars", "provider-avatars"];
+    for (const bucket of buckets) {
+      const { data: files } = await adminClient.storage.from(bucket).list(user.id);
+      if (files && files.length > 0) {
+        const filePaths = files.map((f: any) => `${user.id}/${f.name}`);
+        await adminClient.storage.from(bucket).remove(filePaths);
+      }
+    }
 
     // Delete the auth user
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
