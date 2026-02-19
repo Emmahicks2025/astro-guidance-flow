@@ -1,69 +1,50 @@
 
 
-## What's Wrong
+## Fix: App Icon Missing in TestFlight
 
-There are multiple issues preventing the voice call from working:
+### Root Cause
+The `npx cap sync ios` command overwrites the asset catalog and project file. While the workflow restores them, there's a timing issue: the `sips` image processing commands run before Xcode is set up on the runner, which can cause silent failures in icon processing.
 
-1. **ElevenLabs Agent Creation Fails (400 error)**: The edge function tries to auto-create an ElevenLabs Conversational AI agent via API, but the request body format is incorrect (likely the `asr`, `tts`, and `overrides` structure doesn't match the current ElevenLabs API). This blocks everything.
+Additionally, the Release build configuration in `project.pbxproj` has `CODE_SIGN_STYLE = Automatic` but the `xcodebuild` command overrides it with `Manual`. This mismatch can confuse the asset catalog compiler.
 
-2. **Auth Bug in Token Request**: The frontend sends `Authorization: Bearer ${VITE_SUPABASE_PUBLISHABLE_KEY}` instead of the user's actual access token when fetching the conversation token - so the edge function can't identify the user.
+### Changes
 
-3. **UI Layout Issue**: The green call button is likely pushed off-screen because the dialog uses `h-[85vh]` and the content uses `justify-between` with too much spacing, causing the button to be hidden below the fold on smaller viewports.
+**1. Fix `project.pbxproj` — Release config (lines 325-338)**
+- Change `CODE_SIGN_STYLE` from `Automatic` to `Manual` in the Release build configuration
+- Add `DEVELOPMENT_TEAM = LZ57VL6474` and `PROVISIONING_PROFILE_SPECIFIER` to Release config
+- Add `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES` to both Debug and Release target configs
+- This ensures the build settings match what the xcodebuild command expects
 
-## The Fix
+**2. Fix `testflight.yml` — Move Xcode setup before Capacitor sync**
+- Move the "Setup Xcode" step (currently after cap sync) to **before** the "Sync Capacitor" step
+- This ensures `sips` and other image tools use the correct Xcode toolchain when processing the icon
+- The current order runs `sips` with whatever default tools are on the runner, which may not handle the icon correctly
 
-### 1. Fix the ElevenLabs Agent Creation (Edge Function)
+**3. Fix `testflight.yml` — Add icon verification with failure**
+- After icon restoration, add a check that verifies the icon file is a valid 1024x1024 PNG with no alpha
+- If verification fails, the build should stop early with a clear error instead of producing an IPA with no icon
 
-The `elevenlabs-conversation-token` function will be simplified. Instead of auto-creating agents via the API (which is fragile and format-dependent), we'll:
-- Remove the `getOrCreateAgent` function entirely
-- Accept an `agentId` as an environment variable/secret (`ELEVENLABS_AGENT_ID`) that you create once in the ElevenLabs dashboard with overrides enabled
-- The function only fetches a conversation token for that pre-configured agent
+### Technical Details
 
-This is the recommended approach from ElevenLabs docs -- create the agent in their dashboard where you can enable overrides, then just use the API for token generation.
-
-You will need to:
-- Go to [ElevenLabs dashboard](https://elevenlabs.io) and create a Conversational AI agent
-- Enable overrides for: prompt, first message, language, and voice
-- Copy the Agent ID
-- I'll ask you to enter it as a secret
-
-### 2. Fix the Auth Token in Frontend
-
-Change line 289 from:
+Workflow step reordering:
+```text
+Current order:                    Fixed order:
+1. Checkout                       1. Checkout
+2. Install Node/Bun               2. Install Node/Bun
+3. Install deps                   3. Install deps
+4. Build web                      4. Build web
+5. Cap sync (uses sips)           5. Setup Xcode  <-- moved up
+6. Setup Xcode  <-- too late      6. Cap sync (now sips works correctly)
+7. Install certs                  7. Install certs
+8. Build + Upload                 8. Build + Upload
 ```
-Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+
+Release config additions in `project.pbxproj`:
+```text
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+CODE_SIGN_STYLE = Manual;
+DEVELOPMENT_TEAM = LZ57VL6474;
+PROVISIONING_PROFILE_SPECIFIER = "5174c695-432d-4b2f-af98-a29750ecddd8";
 ```
-to:
-```
-Authorization: `Bearer ${accessToken}`
-```
-
-### 3. Fix the Call UI Layout
-
-- Reduce padding and spacing in the call tab so the green call button is always visible
-- Make the avatar section and button area properly fit within the dialog
-- Center the call button visually so it's impossible to miss
-
-### 4. Ringtone Fix for Mobile
-
-The current ringtone creates an AudioContext outside a direct user gesture on some browsers. We'll ensure the AudioContext is created inside the button click handler to satisfy browser autoplay policies.
-
----
-
-## Technical Details
-
-### Files to Modify
-
-**`supabase/functions/elevenlabs-conversation-token/index.ts`**
-- Remove `getOrCreateAgent()` function
-- Read `ELEVENLABS_AGENT_ID` from secrets (via `getApiKey`)
-- Simplify to just fetch a token for that agent ID
-
-**`src/components/consultation/ExpertConsultationDialog.tsx`**
-- Fix Authorization header on token fetch (line 289): use `accessToken` not publishable key
-- Adjust call tab layout: reduce `py-8` to `py-4`, compact avatar size, ensure button is always in view
-- Move AudioContext creation into the `startCall` click handler scope for mobile compatibility
-
-### New Secret Required
-- `ELEVENLABS_AGENT_ID` -- the agent ID from ElevenLabs dashboard (you'll be prompted to enter it)
 
