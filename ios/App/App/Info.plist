@@ -51,5 +51,7 @@
 	<string>This app needs microphone access for voice consultations with experts.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access for palm reading and other features.</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 </dict>
 </plist>
