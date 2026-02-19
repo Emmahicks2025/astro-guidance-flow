@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
+import { Smile } from "lucide-react";
 import { SpiritualInput } from "@/components/ui/spiritual-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -61,6 +62,7 @@ export function ExpertConsultationDialog({
   const { user } = useAuth();
   const { balance, deductCredits, refetch, subscription } = useCredits();
   const [activeTab, setActiveTab] = useState<'chat' | 'call'>('chat');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -539,7 +541,7 @@ export function ExpertConsultationDialog({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="max-w-lg h-[85vh] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="!grid-rows-none !grid-cols-none !flex max-w-lg p-0 gap-0 overflow-hidden fixed inset-x-0 bottom-0 top-auto translate-x-0 translate-y-0 left-0 sm:left-[50%] sm:top-[50%] sm:bottom-auto sm:translate-x-[-50%] sm:translate-y-[-50%] h-[92dvh] sm:h-[85vh] sm:max-h-[85vh] rounded-t-2xl sm:rounded-lg flex-col">
         {/* Header */}
         <div className="p-4 border-b border-border bg-gradient-to-r from-primary/5 to-secondary/5">
           <div className="flex items-center gap-4">
@@ -568,7 +570,7 @@ export function ExpertConsultationDialog({
         </div>
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'chat' | 'call')} className="flex-1 flex flex-col min-h-0">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'chat' | 'call')} className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ display: 'flex' }}>
           <TabsList className="grid grid-cols-2 mx-4 mt-3">
             <TabsTrigger value="chat" className="gap-2">
               <MessageCircle className="w-4 h-4" /> Chat
@@ -579,7 +581,7 @@ export function ExpertConsultationDialog({
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 m-0 p-0 overflow-hidden">
+          <TabsContent value="chat" className="flex-1 flex-col min-h-0 m-0 p-0 overflow-hidden" style={{ display: activeTab === 'chat' ? 'flex' : 'none' }}>
             <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
               <div className="py-4 space-y-4">
                 {messages.length === 0 && (
@@ -636,21 +638,16 @@ export function ExpertConsultationDialog({
               </div>
             </ScrollArea>
 
-            {/* Emoji Quick Picks + Input */}
-            <div className="border-t border-border bg-background">
-              <div className="flex gap-1 px-4 pt-2 pb-1 overflow-x-auto scrollbar-hide">
-                {['🙏', '🕉️', '✨', '💫', '🌟', '❤️', '👍', '🔮', '🪷', '😊'].map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setInputMessage(prev => prev + emoji)}
-                    className="flex-shrink-0 w-8 h-8 rounded-lg hover:bg-muted active:scale-90 transition-all text-base flex items-center justify-center"
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-              <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-2 px-4 pb-3">
+            {/* WhatsApp-style Input + Emoji */}
+            <div className="border-t border-border bg-background mt-auto">
+              <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-end gap-1.5 px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="flex-shrink-0 w-9 h-9 rounded-full hover:bg-muted active:scale-90 transition-all flex items-center justify-center text-muted-foreground"
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
                 <SpiritualInput
                   placeholder={`Message ${expert.name}...`}
                   value={inputMessage}
@@ -662,16 +659,51 @@ export function ExpertConsultationDialog({
                   type="submit"
                   variant="primary"
                   size="icon"
+                  className="flex-shrink-0 rounded-full w-9 h-9"
                   disabled={!inputMessage.trim() || isLoading || (!isAI && !consultationId)}
                 >
                   <Send className="w-4 h-4" />
                 </SpiritualButton>
               </form>
+
+              {/* WhatsApp-style Emoji Grid */}
+              <AnimatePresence>
+                {showEmojiPicker && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden border-t border-border"
+                  >
+                    <div className="grid grid-cols-8 gap-0.5 p-2 max-h-[180px] overflow-y-auto">
+                      {[
+                        '😊', '😍', '🥰', '😇', '🙏', '💫', '✨', '🌟',
+                        '❤️', '🧡', '💛', '💚', '💙', '💜', '🤍', '💖',
+                        '🕉️', '🔮', '🪷', '🌸', '🌺', '🌙', '⭐', '🌅',
+                        '👍', '👏', '🤝', '💪', '🙌', '😌', '😄', '🤗',
+                        '🎯', '💡', '🌈', '🦋', '🕊️', '🌿', '🍀', '💎',
+                      ].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            setInputMessage(prev => prev + emoji);
+                          }}
+                          className="w-full aspect-square rounded-lg hover:bg-muted active:scale-90 transition-all text-xl flex items-center justify-center"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </TabsContent>
 
           {/* Call Tab — Phone-style full layout */}
-          <TabsContent value="call" className="flex-1 flex flex-col m-0 p-0 overflow-hidden">
+          <TabsContent value="call" className="flex-1 flex-col m-0 p-0 overflow-hidden" style={{ display: activeTab === 'call' ? 'flex' : 'none' }}>
             <div className="flex-1 flex flex-col items-center justify-between bg-gradient-to-b from-background to-muted/20 px-6 py-6">
               {/* Avatar & Info */}
               <div className="flex flex-col items-center gap-2 pt-2">
