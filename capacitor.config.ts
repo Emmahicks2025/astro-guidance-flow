@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.astroguruai.app',
-  appName: 'Astro Guidance Flow',
+  appName: 'AstroGuru',
   webDir: 'dist'
 };
 

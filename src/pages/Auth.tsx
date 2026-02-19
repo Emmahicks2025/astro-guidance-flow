@@ -253,7 +253,10 @@ const Auth = () => {
 
           {!isLogin && (
             <p className="text-xs text-muted-foreground text-center mt-4">
-              By signing up, you agree to our Terms of Service and Privacy Policy
+              By signing up, you agree to our{" "}
+              <a href="#/terms" className="underline text-primary">Terms of Service</a>
+              {" "}and{" "}
+              <a href="#/privacy-policy" className="underline text-primary">Privacy Policy</a>
             </p>
           )}
         </SpiritualCard>
