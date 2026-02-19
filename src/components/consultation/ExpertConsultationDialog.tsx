@@ -539,7 +539,7 @@ export function ExpertConsultationDialog({
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="max-w-lg h-[85vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-lg h-[85vh] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-border bg-gradient-to-r from-primary/5 to-secondary/5">
           <div className="flex items-center gap-4">
@@ -579,7 +579,7 @@ export function ExpertConsultationDialog({
           </TabsList>
 
           {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 m-0 p-0">
+          <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 m-0 p-0 overflow-hidden">
             <ScrollArea className="flex-1 px-4" ref={scrollAreaRef}>
               <div className="py-4 space-y-4">
                 {messages.length === 0 && (
@@ -636,9 +636,21 @@ export function ExpertConsultationDialog({
               </div>
             </ScrollArea>
 
-            {/* Input */}
-            <div className="p-4 border-t border-border bg-background">
-              <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-2">
+            {/* Emoji Quick Picks + Input */}
+            <div className="border-t border-border bg-background">
+              <div className="flex gap-1 px-4 pt-2 pb-1 overflow-x-auto scrollbar-hide">
+                {['🙏', '🕉️', '✨', '💫', '🌟', '❤️', '👍', '🔮', '🪷', '😊'].map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setInputMessage(prev => prev + emoji)}
+                    className="flex-shrink-0 w-8 h-8 rounded-lg hover:bg-muted active:scale-90 transition-all text-base flex items-center justify-center"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+              <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-2 px-4 pb-3">
                 <SpiritualInput
                   placeholder={`Message ${expert.name}...`}
                   value={inputMessage}
