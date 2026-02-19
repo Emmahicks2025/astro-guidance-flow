@@ -202,6 +202,34 @@ export function ExpertConsultationDialog({
       const { data: profileData } = await supabase
         .from('jotshi_profiles').select('user_id').eq('id', expert.id).maybeSingle();
       if (!profileData?.user_id) { toast.error("Unable to connect with this expert"); return; }
+
+      // Reuse existing active/waiting consultation with same expert
+      const { data: existing } = await supabase
+        .from('consultations')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('jotshi_id', profileData.user_id)
+        .in('status', ['waiting', 'active'])
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (existing?.[0]) {
+        setConsultationId(existing[0].id);
+        // Load existing messages
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('consultation_id', existing[0].id)
+          .order('created_at', { ascending: true });
+        if (msgs && msgs.length > 0) {
+          setMessages(msgs.map((m: any) => ({
+            role: m.sender_id === user.id ? 'user' as const : 'assistant' as const,
+            content: m.content,
+          })));
+        }
+        return;
+      }
+
       const { data, error } = await supabase
         .from('consultations')
         .insert({ user_id: user.id, jotshi_id: profileData.user_id, status: 'waiting', concern: 'Chat consultation' })
