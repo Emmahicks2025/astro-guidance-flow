@@ -48,6 +48,8 @@ export type Database = {
           feedback: string | null
           id: string
           jotshi_id: string
+          last_read_at_expert: string | null
+          last_read_at_user: string | null
           rating: number | null
           started_at: string | null
           status: string
@@ -62,6 +64,8 @@ export type Database = {
           feedback?: string | null
           id?: string
           jotshi_id: string
+          last_read_at_expert?: string | null
+          last_read_at_user?: string | null
           rating?: number | null
           started_at?: string | null
           status?: string
@@ -76,6 +80,8 @@ export type Database = {
           feedback?: string | null
           id?: string
           jotshi_id?: string
+          last_read_at_expert?: string | null
+          last_read_at_user?: string | null
           rating?: number | null
           started_at?: string | null
           status?: string

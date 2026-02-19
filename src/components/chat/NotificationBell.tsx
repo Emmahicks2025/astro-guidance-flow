@@ -10,7 +10,7 @@ interface NotificationBellProps {
 }
 
 const NotificationBell = ({ onOpenChat }: NotificationBellProps) => {
-  const { conversations, totalUnread } = useSeekerConversations();
+  const { conversations, totalUnread, markAsRead } = useSeekerConversations();
   const [isOpen, setIsOpen] = useState(false);
 
   const unreadConversations = conversations.filter(c => c.unreadCount > 0);
@@ -56,6 +56,7 @@ const NotificationBell = ({ onOpenChat }: NotificationBellProps) => {
                       className="w-full p-3 flex items-center gap-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0 text-left"
                       onClick={() => {
                         setIsOpen(false);
+                        markAsRead(convo.consultationId);
                         onOpenChat(convo);
                       }}
                     >

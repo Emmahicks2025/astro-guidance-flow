@@ -21,14 +21,24 @@ export const useSeekerConversations = () => {
   const [totalUnread, setTotalUnread] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const markAsRead = useCallback(async (consultationId: string) => {
+    if (!user) return;
+    await supabase
+      .from('consultations')
+      .update({ last_read_at_user: new Date().toISOString() } as any)
+      .eq('id', consultationId)
+      .eq('user_id', user.id);
+    // Refetch to update counts
+    fetchConversations();
+  }, [user]);
+
   const fetchConversations = useCallback(async () => {
     if (!user) { setLoading(false); return; }
 
     try {
-      // Get all active/waiting consultations for this user
       const { data: consultations, error: cErr } = await supabase
         .from('consultations')
-        .select('id, jotshi_id, status, created_at')
+        .select('id, jotshi_id, status, created_at, last_read_at_user')
         .eq('user_id', user.id)
         .in('status', ['waiting', 'active'])
         .order('created_at', { ascending: false });
@@ -40,7 +50,6 @@ export const useSeekerConversations = () => {
         return;
       }
 
-      // Get expert profiles for all jotshi_ids
       const jotshiIds = [...new Set(consultations.map(c => c.jotshi_id))];
       const { data: experts } = await supabase
         .from('jotshi_profiles')
@@ -51,7 +60,6 @@ export const useSeekerConversations = () => {
         (experts || []).map(e => [e.user_id, e])
       );
 
-      // Get last message for each consultation + unread count
       const convos: SeekerConversation[] = [];
 
       for (const c of consultations) {
@@ -67,27 +75,19 @@ export const useSeekerConversations = () => {
 
         const lastMsg = lastMsgs?.[0];
 
-        // Count unread (messages from expert that are newer than any user message)
-        // Simple approach: count messages from expert after user's last message
-        const { data: userLastMsg } = await supabase
-          .from('messages')
-          .select('created_at')
-          .eq('consultation_id', c.id)
-          .eq('sender_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
+        // Count unread: expert messages after last_read_at_user
         let unreadCount = 0;
-        if (userLastMsg?.[0]) {
+        const lastReadAt = (c as any).last_read_at_user;
+        if (lastReadAt) {
           const { count } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
             .eq('consultation_id', c.id)
             .neq('sender_id', user.id)
-            .gt('created_at', userLastMsg[0].created_at);
+            .gt('created_at', lastReadAt);
           unreadCount = count || 0;
         } else {
-          // User hasn't sent any message — all expert messages are "unread"
+          // Never read — all expert messages are unread
           const { count } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
@@ -133,8 +133,7 @@ export const useSeekerConversations = () => {
         event: 'INSERT',
         schema: 'public',
         table: 'messages',
-      }, (payload) => {
-        // Refetch to update unread counts and last messages
+      }, () => {
         fetchConversations();
       })
       .subscribe();
@@ -142,5 +141,5 @@ export const useSeekerConversations = () => {
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchConversations]);
 
-  return { conversations, totalUnread, loading, refetch: fetchConversations };
+  return { conversations, totalUnread, loading, refetch: fetchConversations, markAsRead };
 };
