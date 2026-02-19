@@ -46,8 +46,8 @@ const ProviderRegister = () => {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be under 5MB");
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Image must be under 50MB");
       return;
     }
     setAvatarFile(file);
@@ -227,7 +227,7 @@ const ProviderRegister = () => {
                       className="hidden"
                       onChange={handleAvatarChange}
                     />
-                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG or WebP. Max 5MB.</p>
+                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG or WebP. Max 50MB.</p>
                   </div>
                 </div>
               </div>
