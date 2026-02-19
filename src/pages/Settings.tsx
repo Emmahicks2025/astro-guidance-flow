@@ -69,16 +69,35 @@ const SettingsPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // Load profile data
+  // Load profile data (check both profiles and jotshi_profiles for experts)
   useEffect(() => {
-    if (user) {
-      supabase.from('profiles').select('full_name, avatar_url').eq('user_id', user.id).single().then(({ data }) => {
-        if (data) {
-          setProfileName(data.full_name || userData.fullName || '');
-          setProfileAvatar(data.avatar_url || null);
-        }
-      });
-    }
+    if (!user) return;
+    const loadProfileData = async () => {
+      // First check if user is a jotshi/expert
+      const { data: jotshiData } = await supabase
+        .from('jotshi_profiles')
+        .select('display_name, avatar_url')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      if (jotshiData?.[0]) {
+        setProfileName(jotshiData[0].display_name || '');
+        setProfileAvatar(jotshiData[0].avatar_url || null);
+        return;
+      }
+
+      // Fallback to regular profiles
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', user.id)
+        .single();
+      if (data) {
+        setProfileName(data.full_name || userData.fullName || '');
+        setProfileAvatar(data.avatar_url || null);
+      }
+    };
+    loadProfileData();
   }, [user]);
 
   useEffect(() => {
@@ -113,22 +132,52 @@ const SettingsPage = () => {
     }
     setIsSavingProfile(true);
     try {
-      const updates: Record<string, string | null> = { full_name: profileName };
+      let avatarUrl: string | null = null;
       
       if (avatarFile) {
         const fileExt = avatarFile.name.split('.').pop();
         const filePath = `${user.id}/avatar.${fileExt}`;
+        
+        // Check if user is expert — upload to provider-avatars bucket
+        const { data: jotshiData } = await supabase
+          .from('jotshi_profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
+        
+        const isExpert = !!jotshiData?.[0];
+        const bucket = isExpert ? 'provider-avatars' : 'user-avatars';
+        
         const { error: uploadError } = await supabase.storage
-          .from('user-avatars')
+          .from(bucket)
           .upload(filePath, avatarFile, { upsert: true });
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from('user-avatars').getPublicUrl(filePath);
-        updates.avatar_url = urlData.publicUrl;
+        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(filePath);
+        avatarUrl = urlData.publicUrl;
         setAvatarFile(null);
       }
       
-      const { error } = await supabase.from('profiles').update(updates).eq('user_id', user.id);
-      if (error) throw error;
+      // Check if user is expert
+      const { data: jotshiCheck } = await supabase
+        .from('jotshi_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+      
+      if (jotshiCheck?.[0]) {
+        // Update jotshi profile
+        const updates: Record<string, string | null> = { display_name: profileName };
+        if (avatarUrl) updates.avatar_url = avatarUrl;
+        const { error } = await supabase.from('jotshi_profiles').update(updates).eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        // Update regular profile
+        const updates: Record<string, string | null> = { full_name: profileName };
+        if (avatarUrl) updates.avatar_url = avatarUrl;
+        const { error } = await supabase.from('profiles').update(updates).eq('user_id', user.id);
+        if (error) throw error;
+      }
+      
       toast.success("Profile updated successfully!");
       setShowEditProfile(false);
     } catch (err: any) {
