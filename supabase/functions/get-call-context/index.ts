@@ -120,10 +120,13 @@ CRITICAL RULES FOR ALL RESPONSES:
         ? `${antiLeakPrefix}${expertPersonality}\n\nYou are ${expertName}. Respond as this expert would, maintaining their unique personality and expertise.${conversationalRules}${userContext}${memoriesContext}`
         : `${antiLeakPrefix}You are ${expertName}, a wise and compassionate expert in Vedic astrology and spiritual guidance. You're warm, approachable, and talk like a real person.${conversationalRules}${userContext}${memoriesContext}`;
 
-    // Always generate a natural short greeting — never use first_message as spoken text
-    const firstMessage = memories && memories.total_calls > 0
+    // Use greeting_message if admin configured one, otherwise auto-generate
+    const defaultGreeting = memories && memories.total_calls > 0
       ? `Namaste ${firstName}! Good to hear from you again. How have things been since we last spoke?`
       : `Namaste ${firstName}! I'm ${expertName}. Tell me, what's on your mind today?`;
+    const firstMessage = expert?.greeting_message
+      ? expert.greeting_message.replace("{name}", firstName).replace("{expertName}", expertName)
+      : defaultGreeting;
 
     // Map language to ElevenLabs language code
     const langMap: Record<string, string> = { "Hindi": "hi", "English": "en", "Sanskrit": "sa", "Tamil": "ta", "Telugu": "te", "Bengali": "bn" };
