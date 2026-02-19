@@ -17,6 +17,7 @@ import { CreditPaywall } from "@/components/billing/CreditPaywall";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { useConversation } from "@elevenlabs/react";
+import { sendPushToUser } from "@/lib/pushNotifications";
 
 interface Expert {
   id: string;
@@ -560,6 +561,10 @@ export function ExpertConsultationDialog({
         await supabase.from('consultations')
           .update({ status: 'active', started_at: new Date().toISOString() })
           .eq('id', consultationId).eq('status', 'waiting');
+        // Send push notification to the expert
+        if (expert.user_id) {
+          sendPushToUser(expert.user_id, `Message from Seeker`, userMessage.content);
+        }
       } catch (error) {
         console.error("Message send error:", error);
         toast.error("Failed to send message.");

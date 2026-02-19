@@ -24,12 +24,14 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AstrologerPage from "./pages/Astrologer";
 import HelpCenter from "./pages/HelpCenter";
 import ExpertProfileEdit from "./components/jotshi/ExpertProfileEdit";
+import { PushNotificationInit } from "./components/PushNotificationInit";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <PushNotificationInit />
       <TooltipProvider>
         <Toaster />
         <Sonner />
