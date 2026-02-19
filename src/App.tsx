@@ -25,6 +25,7 @@ import AstrologerPage from "./pages/Astrologer";
 import HelpCenter from "./pages/HelpCenter";
 import ExpertProfileEdit from "./components/jotshi/ExpertProfileEdit";
 import Messages from "./pages/Messages";
+import Earnings from "./pages/Earnings";
 import { PushNotificationInit } from "./components/PushNotificationInit";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/expert-profile-edit" element={<ExpertProfileEdit />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/earnings" element={<Earnings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

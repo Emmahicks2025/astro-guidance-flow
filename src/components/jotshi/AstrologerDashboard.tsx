@@ -572,7 +572,7 @@ const AstrologerDashboard = () => {
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Actions</h3>
           {[
             { icon: User, label: 'Edit Profile', desc: 'Update your name, bio, pricing & photo', locked: false, route: '/expert-profile-edit' },
-            { icon: Wallet, label: 'Earnings', desc: 'View your earnings & payouts', locked: !isApproved, route: '#' },
+            { icon: Wallet, label: 'Earnings', desc: 'View your earnings & payouts', locked: !isApproved, route: '/earnings' },
             { icon: FileText, label: 'Terms', desc: 'Terms & conditions', locked: false, route: '/terms' },
             { icon: Shield, label: 'Privacy', desc: 'Privacy policy', locked: false, route: '/privacy-policy' },
           ].map((item) => (
