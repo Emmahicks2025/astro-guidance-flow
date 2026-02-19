@@ -38,7 +38,7 @@ const ProviderRegister = () => {
     category: "",
     specialty: "",
     experience_years: "",
-    hourly_rate: "30",
+    hourly_rate: "25",
     bio: "",
     languages: ["Hindi", "English"]
   });
@@ -100,7 +100,7 @@ const ProviderRegister = () => {
           category: formData.category,
           specialty: formData.specialty,
           experience_years: parseInt(formData.experience_years) || 0,
-          hourly_rate: parseFloat(formData.hourly_rate) || 30,
+          hourly_rate: Math.max(25, parseFloat(formData.hourly_rate) || 25),
           bio: formData.bio,
           languages: formData.languages,
           approval_status: "pending",

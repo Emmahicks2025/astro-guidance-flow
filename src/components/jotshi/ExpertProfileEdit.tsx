@@ -32,7 +32,7 @@ const ExpertProfileEdit = () => {
   const [bio, setBio] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [category, setCategory] = useState("Astrologer");
-  const [hourlyRate, setHourlyRate] = useState(20);
+  const [hourlyRate, setHourlyRate] = useState(25);
   const [experienceYears, setExperienceYears] = useState(0);
   const [languages, setLanguages] = useState<string[]>(["Hindi", "English"]);
 
@@ -51,7 +51,7 @@ const ExpertProfileEdit = () => {
         setBio(p.bio || "");
         setSpecialty(p.specialty || "");
         setCategory(p.category || "Astrologer");
-        setHourlyRate(p.hourly_rate || 20);
+        setHourlyRate(p.hourly_rate || 25);
         setExperienceYears(p.experience_years || 0);
         setLanguages(p.languages || ["Hindi", "English"]);
         setAvatarPreview(p.avatar_url || null);
@@ -229,12 +229,12 @@ const ExpertProfileEdit = () => {
               <Input
                 id="rate"
                 type="number"
-                min={0.1}
-                step={0.1}
+                min={25}
+                step={1}
                 value={hourlyRate}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
-                  setHourlyRate(isNaN(val) ? 0.1 : Math.max(0.1, Math.round(val * 100) / 100));
+                  setHourlyRate(isNaN(val) ? 25 : Math.max(25, Math.round(val * 100) / 100));
                 }}
               />
             </div>
