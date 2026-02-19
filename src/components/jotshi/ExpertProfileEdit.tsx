@@ -229,9 +229,13 @@ const ExpertProfileEdit = () => {
               <Input
                 id="rate"
                 type="number"
-                min={1}
+                min={0.1}
+                step={0.1}
                 value={hourlyRate}
-                onChange={(e) => setHourlyRate(parseInt(e.target.value) || 1)}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setHourlyRate(isNaN(val) ? 0.1 : Math.max(0.1, Math.round(val * 100) / 100));
+                }}
               />
             </div>
           </div>
