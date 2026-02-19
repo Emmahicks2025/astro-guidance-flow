@@ -24,6 +24,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AstrologerPage from "./pages/Astrologer";
 import HelpCenter from "./pages/HelpCenter";
 import ExpertProfileEdit from "./components/jotshi/ExpertProfileEdit";
+import Messages from "./pages/Messages";
 import { PushNotificationInit } from "./components/PushNotificationInit";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/help" element={<HelpCenter />} />
             <Route path="/expert-profile-edit" element={<ExpertProfileEdit />} />
+            <Route path="/messages" element={<Messages />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

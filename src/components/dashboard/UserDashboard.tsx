@@ -13,11 +13,46 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import jotshiWoman from "@/assets/jotshi-woman.jpg";
 import AppWalkthrough from "@/components/walkthrough/AppWalkthrough";
+import FloatingChatBadge from "@/components/chat/FloatingChatBadge";
+import NotificationBell from "@/components/chat/NotificationBell";
+import { ExpertConsultationDialog } from "@/components/consultation/ExpertConsultationDialog";
+import { SeekerConversation } from "@/hooks/useSeekerConversations";
+import { supabase } from "@/integrations/supabase/client";
 
 const UserDashboard = () => {
   const { userData, resetOnboarding } = useOnboardingStore();
   const { user } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [selectedExpert, setSelectedExpert] = useState<any>(null);
+  const [chatDialogOpen, setChatDialogOpen] = useState(false);
+
+  const openConversationFromBadge = async (convo: SeekerConversation) => {
+    const { data: jotshiProfile } = await supabase
+      .from('jotshi_profiles')
+      .select('*')
+      .eq('user_id', convo.expertId)
+      .maybeSingle();
+    if (jotshiProfile) {
+      setSelectedExpert({
+        id: jotshiProfile.id,
+        name: jotshiProfile.display_name || 'Expert',
+        specialty: jotshiProfile.specialty || 'Astrology',
+        experience: `${jotshiProfile.experience_years || 0}+ years`,
+        rating: Number(jotshiProfile.rating) || 0,
+        rate: jotshiProfile.hourly_rate || 20,
+        status: jotshiProfile.is_online ? 'online' as const : 'offline' as const,
+        avatar: jotshiProfile.avatar_url || '',
+        category: jotshiProfile.category || 'astrologer',
+        languages: jotshiProfile.languages || ['Hindi', 'English'],
+        sessions: jotshiProfile.total_sessions || 0,
+        ai_personality: jotshiProfile.ai_personality || undefined,
+        voice_id: jotshiProfile.voice_id || undefined,
+        user_id: jotshiProfile.user_id || undefined,
+        first_message: jotshiProfile.first_message || undefined,
+      });
+      setChatDialogOpen(true);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -122,7 +157,16 @@ const UserDashboard = () => {
               </div>
               <span className="font-display font-bold text-xl text-gradient-spiritual">AstroGuru</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <NotificationBell onOpenChat={openConversationFromBadge} />
+              <SpiritualButton 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate('/messages')}
+                title="Messages"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </SpiritualButton>
               <SpiritualButton 
                 variant="ghost" 
                 size="icon" 
@@ -310,6 +354,17 @@ const UserDashboard = () => {
           </motion.div>
         </main>
       </motion.div>
+
+      {/* Floating Chat Badge */}
+      <FloatingChatBadge onOpenChat={openConversationFromBadge} />
+
+      {/* Chat Dialog triggered from badges/notifications */}
+      <ExpertConsultationDialog
+        expert={selectedExpert}
+        open={chatDialogOpen}
+        onOpenChange={setChatDialogOpen}
+        initialTab="chat"
+      />
     </>
   );
 };
