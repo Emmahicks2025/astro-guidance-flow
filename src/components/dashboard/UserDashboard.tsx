@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { MessageCircle, Hand, Heart, Sun, Star, Wallet, User, Settings, Book, Calendar, HelpCircle } from "lucide-react";
+import { MessageCircle, Hand, Heart, Sun, Star, Wallet, User, Settings, Book, Calendar, HelpCircle, LogOut } from "lucide-react";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -21,7 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const UserDashboard = () => {
   const { userData, resetOnboarding } = useOnboardingStore();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [selectedExpert, setSelectedExpert] = useState<any>(null);
   const [chatDialogOpen, setChatDialogOpen] = useState(false);
@@ -70,6 +70,12 @@ const UserDashboard = () => {
     setWalkthroughComplete 
   } = useWalkthroughStore();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    resetOnboarding();
+    navigate('/auth');
+  };
 
   const serviceCards = [
     {
@@ -180,6 +186,9 @@ const UserDashboard = () => {
               </SpiritualButton>
               <SpiritualButton variant="ghost" size="icon" onClick={() => navigate('/settings')}>
                 <Settings className="w-5 h-5" />
+              </SpiritualButton>
+              <SpiritualButton variant="ghost" size="icon" onClick={handleLogout} title="Log out">
+                <LogOut className="w-5 h-5" />
               </SpiritualButton>
             </div>
           </div>
