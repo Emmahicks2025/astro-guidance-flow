@@ -6,7 +6,7 @@ import {
   Sparkles, BadgeCheck, DollarSign, Languages, ToggleLeft, ToggleRight,
   Upload, Camera, Bot, Brain, AlertCircle, Mail, CheckCircle, XCircle,
   CheckSquare, Square, MinusSquare, Key, Settings, TestTube, RefreshCw,
-  UserCircle, Calendar, MapPin, LogOut, Activity, TrendingUp
+  UserCircle, Calendar, MapPin, LogOut, Activity, TrendingUp, Gift
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -124,6 +124,13 @@ const AdminPanel = () => {
   const [geminiKeyInput, setGeminiKeyInput] = useState("");
   const [elevenLabsKeyInput, setElevenLabsKeyInput] = useState("");
 
+  // Platform settings state
+  const [freeCreditLimit, setFreeCreditLimit] = useState<number>(5);
+  const [minRateFloor, setMinRateFloor] = useState<number>(25);
+  const [minRateInput, setMinRateInput] = useState<number>(25);
+  const [savingPlatformSettings, setSavingPlatformSettings] = useState(false);
+  const [platformSettingsLoaded, setPlatformSettingsLoaded] = useState(false);
+
   // Check if current user is admin
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -179,9 +186,45 @@ const AdminPanel = () => {
     }
   };
 
+  // Fetch platform settings
+  const fetchPlatformSettings = async () => {
+    try {
+      const { data } = await supabase
+        .from('api_keys')
+        .select('key_name, key_value')
+        .in('key_name', ['FREE_CREDIT_LIMIT', 'MIN_RATE_PER_MINUTE']);
+      if (data) {
+        data.forEach((row: any) => {
+          if (row.key_name === 'FREE_CREDIT_LIMIT') setFreeCreditLimit(parseInt(row.key_value) || 5);
+          if (row.key_name === 'MIN_RATE_PER_MINUTE') { const v = parseInt(row.key_value) || 25; setMinRateFloor(v); setMinRateInput(v); }
+        });
+        setPlatformSettingsLoaded(true);
+      }
+    } catch (err) {
+      console.error("Failed to fetch platform settings:", err);
+    }
+  };
+
+  const handleSavePlatformSetting = async (keyName: string, value: number) => {
+    setSavingPlatformSettings(true);
+    try {
+      const { error } = await supabase
+        .from('api_keys')
+        .update({ key_value: String(value), updated_at: new Date().toISOString() })
+        .eq('key_name', keyName);
+      if (error) throw error;
+      toast.success(`${keyName === 'FREE_CREDIT_LIMIT' ? 'Free credit limit' : 'Minimum rate'} updated to ${value}`);
+    } catch (err) {
+      toast.error("Failed to save setting");
+    } finally {
+      setSavingPlatformSettings(false);
+    }
+  };
+
   useEffect(() => {
     if (isAdmin && activeTab === 'settings') {
       fetchApiKeyStatus();
+      fetchPlatformSettings();
     }
   }, [isAdmin, activeTab]);
 
@@ -702,7 +745,7 @@ const AdminPanel = () => {
             <TabsTrigger value="seekers" className="text-xs sm:text-sm">Seekers</TabsTrigger>
             <TabsTrigger value="tickets" className="text-xs sm:text-sm">Tickets</TabsTrigger>
             <TabsTrigger value="reviews" className="text-xs sm:text-sm">Reviews</TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs sm:text-sm">API Keys</TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm">Settings</TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analytics</TabsTrigger>
           </TabsList>
 
@@ -968,6 +1011,103 @@ const AdminPanel = () => {
                     </div>
                   </div>
                 </SpiritualCard>
+              </SpiritualCardContent>
+            </SpiritualCard>
+
+            {/* Platform Settings */}
+            <SpiritualCard variant="elevated">
+              <SpiritualCardContent className="p-6 space-y-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Platform Settings</h3>
+                    <p className="text-sm text-muted-foreground">Configure credit limits and rate minimums</p>
+                  </div>
+                </div>
+
+                {/* Free Credit Limit */}
+                <div className="p-4 rounded-xl bg-accent/5 border border-accent/20 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-accent" />
+                    <div>
+                      <h4 className="font-medium">Free Account Credits</h4>
+                      <p className="text-xs text-muted-foreground">Credits given to new users on signup</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <SpiritualInput
+                      type="number"
+                      min={0}
+                      value={freeCreditLimit}
+                      onChange={(e) => setFreeCreditLimit(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-32 h-10 text-sm"
+                    />
+                    <span className="text-sm text-muted-foreground">credits</span>
+                    <SpiritualButton
+                      variant="primary"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={() => handleSavePlatformSetting('FREE_CREDIT_LIMIT', freeCreditLimit)}
+                      disabled={savingPlatformSettings}
+                    >
+                      {savingPlatformSettings ? <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" /> : <Check className="w-4 h-4 mr-1" />}
+                      Save
+                    </SpiritualButton>
+                  </div>
+                </div>
+
+                {/* Min Rate Per Minute */}
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                    <div>
+                      <h4 className="font-medium">Minimum Rate Per Minute</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Lowest credit rate experts can charge. Current floor: <strong>{minRateFloor} credits/min</strong>. You can only increase this.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <SpiritualInput
+                      type="number"
+                      min={minRateFloor}
+                      value={minRateInput}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || minRateFloor;
+                        setMinRateInput(val);
+                      }}
+                      className="w-32 h-10 text-sm"
+                    />
+                    <span className="text-sm text-muted-foreground">credits/min</span>
+                    <SpiritualButton
+                      variant="primary"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={() => {
+                        const finalVal = Math.max(minRateFloor, minRateInput);
+                        setMinRateInput(finalVal);
+                        setMinRateFloor(finalVal);
+                        handleSavePlatformSetting('MIN_RATE_PER_MINUTE', finalVal);
+                      }}
+                      disabled={savingPlatformSettings || minRateInput < minRateFloor}
+                    >
+                      {savingPlatformSettings ? <div className="animate-spin w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full" /> : <Check className="w-4 h-4 mr-1" />}
+                      Save
+                    </SpiritualButton>
+                  </div>
+                  {minRateInput < minRateFloor && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Cannot set below current minimum of {minRateFloor} credits/min
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    This value can only be increased to protect profitability. It cannot be reduced.
+                  </p>
+                </div>
               </SpiritualCardContent>
             </SpiritualCard>
           </TabsContent>
