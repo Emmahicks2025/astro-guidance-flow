@@ -6,7 +6,7 @@ import { fetchUserProfile } from "@/lib/profileService";
 import { supabase } from "@/integrations/supabase/client";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import UserDashboard from "@/components/dashboard/UserDashboard";
-import JotshiDashboard from "@/components/jotshi/JotshiDashboard";
+import AstrologerDashboard from "@/components/jotshi/AstrologerDashboard";
 
 const Index = () => {
   const { isComplete, userData, updateUserData, completeOnboarding } = useOnboardingStore();
@@ -128,7 +128,7 @@ const Index = () => {
   }
 
   if (userData.role === 'jotshi') {
-    return <JotshiDashboard />;
+    return <AstrologerDashboard />;
   }
 
   return <UserDashboard />;
