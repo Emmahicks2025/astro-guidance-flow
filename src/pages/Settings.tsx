@@ -19,7 +19,8 @@ import {
   Camera,
   Loader2,
   RotateCcw,
-  CreditCard
+  CreditCard,
+  Wallet
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -208,6 +209,7 @@ const SettingsPage = () => {
 
   const expertAccountItems = [
     { icon: User, label: t.editProfile, action: () => navigate('/expert-profile-edit') },
+    { icon: Wallet, label: "Earnings & Payouts", action: () => navigate('/earnings') },
     { icon: Shield, label: t.privacySecurity, action: () => navigate('/privacy-policy') },
   ];
 
