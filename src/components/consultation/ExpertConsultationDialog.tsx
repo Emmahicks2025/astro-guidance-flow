@@ -640,33 +640,7 @@ export function ExpertConsultationDialog({
 
             {/* WhatsApp-style Input + Emoji */}
             <div className="border-t border-border bg-background mt-auto">
-              <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-end gap-1.5 px-3 py-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="flex-shrink-0 w-9 h-9 rounded-full hover:bg-muted active:scale-90 transition-all flex items-center justify-center text-muted-foreground"
-                >
-                  <Smile className="w-5 h-5" />
-                </button>
-                <SpiritualInput
-                  placeholder={`Message ${expert.name}...`}
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  className="flex-1"
-                  disabled={!isAI && !consultationId}
-                />
-                <SpiritualButton
-                  type="submit"
-                  variant="primary"
-                  size="icon"
-                  className="flex-shrink-0 rounded-full w-9 h-9"
-                  disabled={!inputMessage.trim() || isLoading || (!isAI && !consultationId)}
-                >
-                  <Send className="w-4 h-4" />
-                </SpiritualButton>
-              </form>
-
-              {/* WhatsApp-style Emoji Grid */}
+              {/* Emoji Grid — opens ABOVE input */}
               <AnimatePresence>
                 {showEmojiPicker && (
                   <motion.div
@@ -674,7 +648,7 @@ export function ExpertConsultationDialog({
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="overflow-hidden border-t border-border"
+                    className="overflow-hidden border-b border-border"
                   >
                     <div className="grid grid-cols-8 gap-0.5 p-2 max-h-[180px] overflow-y-auto">
                       {[
@@ -699,6 +673,32 @@ export function ExpertConsultationDialog({
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-end gap-1.5 px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className={`flex-shrink-0 w-9 h-9 rounded-full hover:bg-muted active:scale-90 transition-all flex items-center justify-center ${showEmojiPicker ? 'text-primary' : 'text-muted-foreground'}`}
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
+                <SpiritualInput
+                  placeholder={`Message ${expert.name}...`}
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  className="flex-1"
+                  disabled={!isAI && !consultationId}
+                />
+                <SpiritualButton
+                  type="submit"
+                  variant="primary"
+                  size="icon"
+                  className="flex-shrink-0 rounded-full w-9 h-9"
+                  disabled={!inputMessage.trim() || isLoading || (!isAI && !consultationId)}
+                >
+                  <Send className="w-4 h-4" />
+                </SpiritualButton>
+              </form>
             </div>
           </TabsContent>
 
