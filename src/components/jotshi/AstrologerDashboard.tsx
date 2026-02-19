@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Moon, Users, MessageCircle, Wallet, Star, Settings, Bell, LogOut,
   Clock, TrendingUp, Lock, CheckCircle, AlertCircle, ChevronRight,
-  Eye, Calendar, IndianRupee, BarChart3, User, Shield, FileText,
+  Eye, IndianRupee, User, Shield, FileText,
   Send, ArrowLeft, Loader2
 } from "lucide-react";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
@@ -246,6 +246,23 @@ const AstrologerDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-12 h-12 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // No jotshi profile — redirect to registration
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-6 text-center">
+        <Moon className="w-16 h-16 text-secondary" />
+        <h2 className="text-xl font-bold font-display">Complete Your Registration</h2>
+        <p className="text-muted-foreground">You need to register as a provider to access the Jotshi Portal.</p>
+        <SpiritualButton variant="primary" size="lg" onClick={() => navigate('/provider-register')}>
+          Register Now
+        </SpiritualButton>
+        <SpiritualButton variant="ghost" onClick={handleSignOut}>
+          <LogOut className="w-4 h-4 mr-2" /> Sign Out
+        </SpiritualButton>
       </div>
     );
   }
@@ -532,18 +549,18 @@ const AstrologerDashboard = () => {
 
         {/* Feature Cards */}
         <motion.div variants={itemVariants} className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Features</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Actions</h3>
           {[
-            { icon: Calendar, label: 'Schedule', desc: 'Manage your availability', locked: !isApproved },
-            { icon: BarChart3, label: 'Analytics', desc: 'View your performance metrics', locked: !isApproved },
-            { icon: Wallet, label: 'Earnings', desc: 'Track income & withdrawals', locked: !isApproved },
-            { icon: Eye, label: 'Profile Preview', desc: 'See how seekers view your profile', locked: false },
+            { icon: Wallet, label: 'Wallet', desc: 'View balance & transactions', locked: !isApproved, route: '/wallet' },
+            { icon: Eye, label: 'Profile Preview', desc: 'See how seekers view your profile', locked: false, route: '/settings' },
+            { icon: FileText, label: 'Terms', desc: 'Terms & conditions', locked: false, route: '/terms' },
+            { icon: Shield, label: 'Privacy', desc: 'Privacy policy', locked: false, route: '/privacy-policy' },
           ].map((item) => (
             <SpiritualCard key={item.label} variant="elevated" className={`overflow-hidden ${item.locked ? 'opacity-60' : ''}`}>
               <button 
                 className="w-full p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors disabled:cursor-not-allowed"
                 disabled={item.locked}
-                onClick={() => { if (!item.locked) toast.info(`${item.label} coming soon!`); }}
+                onClick={() => { if (!item.locked) navigate(item.route); }}
               >
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${item.locked ? 'bg-muted' : 'bg-secondary/10'}`}>
                   {item.locked ? <Lock className="w-5 h-5 text-muted-foreground" /> : <item.icon className="w-5 h-5 text-secondary" />}
@@ -586,20 +603,6 @@ const AstrologerDashboard = () => {
           </motion.section>
         )}
 
-        {/* Quick Links */}
-        <motion.div variants={itemVariants} className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Links</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <SpiritualButton variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/terms')}>
-              <FileText className="w-5 h-5" />
-              <span className="text-xs">Terms</span>
-            </SpiritualButton>
-            <SpiritualButton variant="outline" className="h-auto py-3 flex-col gap-1" onClick={() => navigate('/privacy-policy')}>
-              <Shield className="w-5 h-5" />
-              <span className="text-xs">Privacy</span>
-            </SpiritualButton>
-          </div>
-        </motion.div>
 
         {/* Sign Out */}
         <motion.div variants={itemVariants}>
