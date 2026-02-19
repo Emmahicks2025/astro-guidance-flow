@@ -28,7 +28,14 @@ jobs:
         run: npm run build
 
       - name: Sync Capacitor
-        run: npx cap sync ios
+        run: |
+          # Backup custom app icon before sync (cap sync can overwrite assets)
+          cp -r ios/App/App/Assets.xcassets/AppIcon.appiconset /tmp/AppIcon.appiconset.bak
+          npx cap sync ios
+          # Restore custom app icon after sync
+          cp -r /tmp/AppIcon.appiconset.bak/* ios/App/App/Assets.xcassets/AppIcon.appiconset/
+          echo "✅ App icon restored after cap sync"
+          ls -la ios/App/App/Assets.xcassets/AppIcon.appiconset/
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
