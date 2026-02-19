@@ -254,7 +254,7 @@ const SettingsPage = () => {
         { icon: HelpCircle, label: t.helpFaq, action: () => navigate('/help') },
         { icon: Star, label: t.rateUs, action: () => {
           // Deep link to App Store review page
-          const appStoreUrl = "https://apps.apple.com/app/id<YOUR_APP_ID>?action=write-review";
+          const appStoreUrl = "https://apps.apple.com/app/id6759008114?action=write-review";
           if ((window as any).Capacitor?.isNativePlatform?.()) {
             window.open(appStoreUrl, "_blank");
           } else {
