@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { sendPushToUser } from "@/lib/pushNotifications";
 
 interface JotshiProfile {
   id: string;
@@ -222,6 +223,8 @@ const AstrologerDashboard = () => {
       });
       if (error) throw error;
       setInputMessage("");
+      // Send push notification to the seeker
+      sendPushToUser(activeChat.user_id, `Message from ${profile?.display_name || 'Expert'}`, inputMessage.trim());
     } catch (err) {
       toast.error("Failed to send message");
     } finally {
