@@ -12,7 +12,7 @@ interface FloatingChatBadgeProps {
 }
 
 const FloatingChatBadge = ({ onOpenChat }: FloatingChatBadgeProps) => {
-  const { conversations, totalUnread } = useSeekerConversations();
+  const { conversations, totalUnread, markAsRead } = useSeekerConversations();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -65,6 +65,7 @@ const FloatingChatBadge = ({ onOpenChat }: FloatingChatBadgeProps) => {
                   className="w-full p-3 flex items-center gap-3 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0 text-left"
                   onClick={() => {
                     setIsOpen(false);
+                    markAsRead(convo.consultationId);
                     onOpenChat(convo);
                   }}
                 >

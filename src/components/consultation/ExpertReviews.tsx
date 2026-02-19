@@ -22,7 +22,7 @@ export function ExpertReviews({ expertId }: ExpertReviewsProps) {
     const fetchReviews = async () => {
       try {
         const { data, error } = await supabase
-          .from("reviews" as any)
+          .from("reviews")
           .select("*")
           .eq("expert_id", expertId)
           .eq("status", "approved")
