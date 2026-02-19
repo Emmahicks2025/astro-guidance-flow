@@ -155,6 +155,7 @@ export type Database = {
           display_name: string | null
           experience_years: number | null
           first_message: string | null
+          greeting_message: string | null
           hourly_rate: number | null
           id: string
           is_online: boolean | null
@@ -179,6 +180,7 @@ export type Database = {
           display_name?: string | null
           experience_years?: number | null
           first_message?: string | null
+          greeting_message?: string | null
           hourly_rate?: number | null
           id?: string
           is_online?: boolean | null
@@ -203,6 +205,7 @@ export type Database = {
           display_name?: string | null
           experience_years?: number | null
           first_message?: string | null
+          greeting_message?: string | null
           hourly_rate?: number | null
           id?: string
           is_online?: boolean | null

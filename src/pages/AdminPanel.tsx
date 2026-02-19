@@ -48,6 +48,7 @@ interface JotshiProfile {
   approved_at: string | null;
   voice_id: string | null;
   first_message: string | null;
+  greeting_message: string | null;
 }
 
 interface UserProfile {
@@ -104,7 +105,7 @@ const AdminPanel = () => {
     display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
     hourly_rate: 20, bio: '', ai_personality: '', voice_id: '', is_online: false,
     verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
-    first_message: '',
+    first_message: '', greeting_message: '',
   });
   const [addingProvider, setAddingProvider] = useState(false);
   const [uploadingAddImage, setUploadingAddImage] = useState(false);
@@ -327,7 +328,7 @@ const AdminPanel = () => {
       display_name: selectedProvider.display_name, ai_personality: selectedProvider.ai_personality,
       avatar_url: selectedProvider.avatar_url, category: selectedProvider.category,
       voice_id: selectedProvider.voice_id, languages: selectedProvider.languages,
-      first_message: selectedProvider.first_message,
+      first_message: selectedProvider.first_message, greeting_message: selectedProvider.greeting_message,
     }).eq('id', selectedProvider.id);
     if (error) { toast.error("Failed to update provider"); }
     else {
@@ -413,6 +414,7 @@ const AdminPanel = () => {
         avatar_url: newProvider.avatar_url || null,
         languages: newProvider.languages || ['Hindi', 'English'],
         first_message: newProvider.first_message || null,
+        greeting_message: newProvider.greeting_message || null,
       }).select().single();
       if (error) throw error;
       setProviders(prev => [data as JotshiProfile, ...prev]);
@@ -421,7 +423,7 @@ const AdminPanel = () => {
         display_name: '', specialty: '', category: 'astrologer', experience_years: 0,
         hourly_rate: 20, bio: '', ai_personality: '', voice_id: '', is_online: false,
         verified: true, approval_status: 'approved', languages: ['Hindi', 'English'],
-        first_message: '',
+        first_message: '', greeting_message: '',
       });
       toast.success("Provider created successfully! ✅");
     } catch (err) {
@@ -1053,7 +1055,18 @@ const AdminPanel = () => {
                     placeholder="e.g., Hindi Jyotishi, Calm speaker, Vedic expert"
                     className="bg-background text-sm"
                   />
-                </div>
+              </div>
+              {/* Greeting Message - separate from system prompt */}
+              <div className="space-y-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                <Label className="flex items-center gap-2 text-accent-foreground font-semibold">🎙️ Voice Call Greeting</Label>
+                <p className="text-xs text-muted-foreground">This is the first thing the AI says when a voice call connects. Keep it short and natural (1-2 sentences). Supports {'{name}'} and {'{expertName}'} placeholders.</p>
+                <SpiritualInput 
+                  value={selectedProvider.greeting_message || ""} 
+                  onChange={(e) => setSelectedProvider({ ...selectedProvider, greeting_message: e.target.value })} 
+                  placeholder="e.g., Namaste {name}! Main {expertName} hoon, batao kya chal raha hai?"
+                  className="bg-background text-sm"
+                />
+              </div>
               </div>
               <div className="space-y-2 p-3 rounded-lg bg-secondary/5 border border-secondary/20">
                 <Label className="flex items-center gap-2 text-secondary"><Phone className="w-4 h-4" />ElevenLabs Voice ID</Label>
@@ -1164,7 +1177,18 @@ const AdminPanel = () => {
               <div className="flex items-center gap-2"><Switch checked={newProvider.is_online || false} onCheckedChange={(c) => setNewProvider({ ...newProvider, is_online: c })} /><Label>Online</Label></div>
               <div className="flex items-center gap-2"><Switch checked={newProvider.verified !== false} onCheckedChange={(c) => setNewProvider({ ...newProvider, verified: c })} /><Label>Verified</Label></div>
             </div>
-          </div>
+            </div>
+            {/* Greeting Message for new provider */}
+            <div className="space-y-2 p-3 rounded-lg bg-accent/10 border border-accent/20">
+              <Label className="flex items-center gap-2 text-accent-foreground font-semibold">🎙️ Voice Call Greeting</Label>
+              <p className="text-xs text-muted-foreground">First thing the AI says on call. Keep it short. Supports {'{name}'} and {'{expertName}'}.</p>
+              <SpiritualInput 
+                value={newProvider.greeting_message || ""} 
+                onChange={(e) => setNewProvider({ ...newProvider, greeting_message: e.target.value })} 
+                placeholder="e.g., Namaste {name}! Main {expertName} hoon, batao kya chal raha hai?"
+                className="bg-background text-sm"
+              />
+            </div>
           <DialogFooter>
             <SpiritualButton variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</SpiritualButton>
             <SpiritualButton variant="primary" onClick={handleAddProvider} disabled={addingProvider}>

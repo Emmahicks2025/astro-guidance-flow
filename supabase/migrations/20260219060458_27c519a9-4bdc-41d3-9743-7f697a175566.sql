@@ -1,0 +1,1 @@
+ALTER TABLE public.jotshi_profiles ADD COLUMN greeting_message text;
