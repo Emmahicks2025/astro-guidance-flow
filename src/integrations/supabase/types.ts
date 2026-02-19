@@ -391,6 +391,51 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          admin_notes: string | null
+          amount_requested: number | null
+          created_at: string
+          description: string | null
+          id: string
+          payment_details: string | null
+          payment_method: string | null
+          status: string
+          subject: string
+          ticket_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_requested?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          payment_details?: string | null
+          payment_method?: string | null
+          status?: string
+          subject: string
+          ticket_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_requested?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          payment_details?: string | null
+          payment_method?: string | null
+          status?: string
+          subject?: string
+          ticket_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       topup_packs: {
         Row: {
           apple_product_id: string
