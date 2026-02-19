@@ -1,11 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { MessageCircle, Hand, Heart, Sun, Star, Wallet, User, Settings, Book, Calendar, HelpCircle } from "lucide-react";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useWalkthroughStore } from "@/stores/walkthroughStore";
 import { useTranslation } from "@/stores/languageStore";
+import { useAuth } from "@/hooks/useAuth";
+import { fetchUserProfile } from "@/lib/profileService";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import jotshiWoman from "@/assets/jotshi-woman.jpg";
@@ -13,6 +16,16 @@ import AppWalkthrough from "@/components/walkthrough/AppWalkthrough";
 
 const UserDashboard = () => {
   const { userData, resetOnboarding } = useOnboardingStore();
+  const { user } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile(user.id).then((profile) => {
+        if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+      });
+    }
+  }, [user]);
   const { t } = useTranslation();
   const { 
     hasCompletedWalkthrough, 
@@ -137,9 +150,12 @@ const UserDashboard = () => {
                   <Sun className="w-full h-full text-primary animate-spin-slow" />
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-gradient-spiritual flex items-center justify-center shadow-spiritual">
-                    <User className="w-8 h-8 text-primary-foreground" />
-                  </div>
+                  <Avatar className="w-16 h-16 shadow-spiritual">
+                    <AvatarImage src={avatarUrl || undefined} alt={userData.fullName || 'User'} />
+                    <AvatarFallback className="bg-gradient-spiritual text-primary-foreground text-xl">
+                      {userData.fullName ? userData.fullName.charAt(0).toUpperCase() : <User className="w-8 h-8" />}
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <h2 className="text-xl font-bold font-display">
                       {t.namaste}, {userData.fullName || 'Seeker'} 🙏
