@@ -542,7 +542,7 @@ const PalmReading = () => {
                             <p className="text-xs text-muted-foreground truncate">{expert.specialty}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-xs flex items-center gap-0.5"><Star className="w-3 h-3 text-accent fill-accent" /> {expert.rating.toFixed(1)}</span>
-                              <span className="text-xs text-muted-foreground">₹{expert.rate}/min</span>
+                              <span className="text-xs text-muted-foreground">${expert.rate}/min</span>
                             </div>
                           </div>
                           <div className="flex gap-1.5">

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowLeft, Shield, Users, UserCheck, UserX, Plus, Pencil, Trash2, 
   Search, Filter, Star, Clock, Phone, MessageCircle, Eye, Check, X,
-  Sparkles, BadgeCheck, IndianRupee, Languages, ToggleLeft, ToggleRight,
+  Sparkles, BadgeCheck, DollarSign, Languages, ToggleLeft, ToggleRight,
   Upload, Camera, Bot, Brain, AlertCircle, Mail, CheckCircle, XCircle,
   CheckSquare, Square, MinusSquare, Key, Settings, TestTube, RefreshCw,
   UserCircle, Calendar, MapPin, LogOut, Activity, TrendingUp
@@ -647,8 +647,8 @@ const AdminPanel = () => {
           </SpiritualCard>
           <SpiritualCard variant="elevated">
             <SpiritualCardContent className="p-4 text-center">
-              <IndianRupee className="w-6 h-6 mx-auto mb-2 text-accent" />
-              <p className="text-2xl font-bold">₹{providers.reduce((s, p) => s + (p.total_earnings || 0), 0).toLocaleString()}</p>
+              <DollarSign className="w-6 h-6 mx-auto mb-2 text-accent" />
+              <p className="text-2xl font-bold">${providers.reduce((s, p) => s + (p.total_earnings || 0), 0).toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Earnings</p>
             </SpiritualCardContent>
           </SpiritualCard>
@@ -773,7 +773,7 @@ const AdminPanel = () => {
                                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{provider.experience_years || 0}y</span>
                                 <span className="flex items-center gap-1"><Star className="w-3 h-3 text-accent fill-accent" />{provider.rating || 0}</span>
                                 <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{provider.total_sessions || 0}</span>
-                                <span className="flex items-center gap-1"><IndianRupee className="w-3 h-3" />{provider.hourly_rate || 0}/min</span>
+                                <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{provider.hourly_rate || 0}/min</span>
                               </div>
                             </div>
                           </div>
@@ -1015,7 +1015,7 @@ const AdminPanel = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Experience (years)</Label><SpiritualInput type="number" value={selectedProvider.experience_years || 0} onChange={(e) => setSelectedProvider({ ...selectedProvider, experience_years: parseInt(e.target.value) || 0 })} /></div>
-                <div className="space-y-2"><Label>Rate (₹/min)</Label><SpiritualInput type="number" value={selectedProvider.hourly_rate || 0} onChange={(e) => setSelectedProvider({ ...selectedProvider, hourly_rate: parseInt(e.target.value) || 0 })} /></div>
+                <div className="space-y-2"><Label>Rate ($/min)</Label><SpiritualInput type="number" value={selectedProvider.hourly_rate || 0} onChange={(e) => setSelectedProvider({ ...selectedProvider, hourly_rate: parseInt(e.target.value) || 0 })} /></div>
               </div>
               <div className="space-y-2"><Label>Bio</Label><Textarea value={selectedProvider.bio || ""} onChange={(e) => setSelectedProvider({ ...selectedProvider, bio: e.target.value })} rows={3} /></div>
               {/* Unified AI System Prompt */}
@@ -1129,7 +1129,7 @@ const AdminPanel = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Experience (years)</Label><SpiritualInput type="number" value={newProvider.experience_years || 0} onChange={(e) => setNewProvider({ ...newProvider, experience_years: parseInt(e.target.value) || 0 })} /></div>
-              <div className="space-y-2"><Label>Rate (₹/min)</Label><SpiritualInput type="number" value={newProvider.hourly_rate || 20} onChange={(e) => setNewProvider({ ...newProvider, hourly_rate: parseInt(e.target.value) || 0 })} /></div>
+              <div className="space-y-2"><Label>Rate ($/min)</Label><SpiritualInput type="number" value={newProvider.hourly_rate || 20} onChange={(e) => setNewProvider({ ...newProvider, hourly_rate: parseInt(e.target.value) || 0 })} /></div>
             </div>
             <div className="space-y-2"><Label>Bio</Label><Textarea value={newProvider.bio || ""} onChange={(e) => setNewProvider({ ...newProvider, bio: e.target.value })} rows={3} placeholder="Brief description of the provider..." /></div>
             {/* Unified AI System Prompt */}

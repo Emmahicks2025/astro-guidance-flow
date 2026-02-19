@@ -272,7 +272,7 @@ const ProviderRegister = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Rate (₹/min)</Label>
+                  <Label>Rate ($/min)</Label>
                   <SpiritualInput
                     type="number"
                     value={formData.hourly_rate}
