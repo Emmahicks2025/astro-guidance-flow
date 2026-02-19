@@ -18,7 +18,7 @@ const DEFAULT_STATUS: CreditStatus = {
   subscription: {
     plan: 'free',
     plan_name: 'Free',
-    call_credit_per_min: 12,
+    call_credit_per_min: 30,
     chat_credit_per_1k_tokens: 1,
   },
 };
@@ -67,7 +67,7 @@ export const useCredits = () => {
           : {
               plan: 'free',
               plan_name: 'Free',
-              call_credit_per_min: 12,
+              call_credit_per_min: 30,
               chat_credit_per_1k_tokens: 1,
             },
       });

@@ -141,7 +141,7 @@ JOTSHI EXPERTISE:
 
               // Use expert's hourly_rate (credits/min) to determine chat billing
               // Fetch authoritative rate from database, never trust client
-              let creditsPerMin = 12; // fallback default
+              let creditsPerMin = 30; // fallback default
               if (expertId) {
                 const { data: expertProfile } = await supabase
                   .from("jotshi_profiles")
