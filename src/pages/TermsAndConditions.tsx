@@ -63,21 +63,37 @@ const TermsAndConditions = () => {
             The App offers subscription plans and credit top-up packs, all processed exclusively through the Apple App Store. Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current billing period. You can manage or cancel subscriptions in your device's App Store settings.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            <strong>Subscription Tiers:</strong> Free (100 credits/month), Pro ($9.99/month, 1,500 credits), and Premium ($24.99/month, 5,000 credits). Pricing and credit allocations are subject to change with notice.
+            <strong>Subscription Tiers:</strong> Free (starter credits for new users), Pro ($9.99/month, 1,500 credits), and Premium ($24.99/month, 5,000 credits). Pricing and credit allocations are subject to change with notice.
           </p>
         </section>
 
         <section className="space-y-3">
           <h2 className="text-lg font-bold">6. Credits, Billing & Usage Rates</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Credits are the in-app currency used for expert consultations. Free AI-powered features (Kundli Analysis, Daily Horoscope, Palm Reading, Guna Milan) do not consume credits.
+            Credits are the in-app currency used exclusively for expert consultations. Free AI-powered features (Kundli Analysis, Daily Horoscope, Palm Reading, Guna Milan) do not consume credits and are always available at no cost.
           </p>
-          <p className="text-muted-foreground leading-relaxed">
-            <strong>Chat Consultations:</strong> Chat sessions with experts are billed based on the volume of conversation (measured in tokens — units of text processed). The credit cost is calculated at 250% of the underlying AI processing cost. Rates vary by subscription tier: Free plan (1 credit per 1,000 tokens), Pro plan (0.8 credits per 1,000 tokens), Premium plan (0.6 credits per 1,000 tokens). A typical chat message consumes approximately 200–500 tokens.
-          </p>
-          <p className="text-muted-foreground leading-relaxed">
-            <strong>Call Consultations:</strong> Voice call sessions are billed per minute of active call time. Rates vary by subscription tier: Free plan (12 credits/minute), Pro plan (10 credits/minute), Premium plan (8 credits/minute). Partial minutes are rounded up to the next full minute.
-          </p>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-3 border border-border">
+            <h3 className="font-semibold text-sm text-foreground">💬 Chat Consultations</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Chat sessions with experts are billed based on token usage — tokens are units of text processed by the AI. Each expert sets their own rate (displayed as <strong>credits/min</strong> on their profile). The minimum expert rate is <strong>25 credits/min</strong>. A typical chat message consumes approximately 200–500 tokens, and billing is calculated proportionally based on actual usage.
+            </p>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-3 border border-border">
+            <h3 className="font-semibold text-sm text-foreground">📞 Voice Call Consultations</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Voice calls are billed per minute of active call time at the expert's posted rate (shown as <strong>credits/min</strong>). The minimum rate is <strong>25 credits/min</strong>. Partial minutes are rounded up to the next full minute. Your credit balance must cover at least 1 minute of the expert's rate before a call can begin.
+            </p>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl p-4 space-y-3 border border-border">
+            <h3 className="font-semibold text-sm text-foreground">📊 Credit Calculation Example</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              If an expert charges <strong>30 credits/min</strong> and you have a 5-minute voice call, the total cost is <strong>150 credits</strong> (30 × 5). For chat, if you exchange messages totaling approximately 3,000 tokens with the same expert, the cost would be approximately <strong>90 credits</strong> (proportional to ~3 minutes of conversation).
+            </p>
+          </div>
+
           <p className="text-muted-foreground leading-relaxed">
             <strong>Credit Top-Ups:</strong> Additional credits can be purchased as one-time in-app purchases. Top-up packs may include bonus credits as indicated at the time of purchase. Credits do not expire but are non-refundable and non-transferable.
           </p>

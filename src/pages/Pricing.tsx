@@ -260,15 +260,40 @@ const PricingPage = () => {
           </div>
         )}
 
+        {/* Credit Usage Info */}
+        <SpiritualCard variant="elevated" className="p-4 space-y-3">
+          <h4 className="font-semibold text-sm flex items-center gap-2">
+            <Zap className="w-4 h-4 text-accent" /> How Credits Work
+          </h4>
+          <div className="space-y-2 text-xs text-muted-foreground">
+            <div className="flex justify-between items-center py-1.5 border-b border-border/50">
+              <span>Expert Chat</span>
+              <span className="font-medium text-foreground">Expert's rate (credits/min)</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-border/50">
+              <span>Voice Call</span>
+              <span className="font-medium text-foreground">Expert's rate (credits/min)</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-border/50">
+              <span>Min. Expert Rate</span>
+              <span className="font-medium text-foreground">25 credits/min</span>
+            </div>
+            <div className="flex justify-between items-center py-1.5">
+              <span>AI Reports (Kundli, Palm, Horoscope)</span>
+              <span className="font-medium text-green-500">Always Free</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Each expert sets their own rate (25–45+ credits/min). Check the expert's profile for their exact rate before starting a session.
+          </p>
+        </SpiritualCard>
+
         {/* Footer Note — Apple Guideline 3.1.2 compliance */}
         <div className="text-xs text-center text-muted-foreground px-4 space-y-2">
           <p>
             Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. 
             You can manage or cancel subscriptions in your Apple ID Settings. 
             Payment will be charged to your Apple ID account at confirmation of purchase.
-          </p>
-          <p>
-            All AI features (Kundli, Palm Reading, Horoscope, Guna Milan) are always free.
           </p>
           <p>
             <button onClick={() => navigate('/terms')} className="underline text-primary">Terms of Use (EULA)</button>
