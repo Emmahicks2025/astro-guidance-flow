@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
+import stellarLogo from "@/assets/stellar-logo.png";
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -52,8 +52,8 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         className="flex flex-col items-center gap-6"
       >
         {/* Logo */}
-        <div className="w-20 h-20 rounded-full bg-gradient-spiritual flex items-center justify-center shadow-spiritual">
-          <Star className="w-10 h-10 text-primary-foreground" aria-hidden="true" />
+        <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-spiritual">
+          <img src={stellarLogo} alt="Stellar" className="w-full h-full object-cover" />
         </div>
 
         <div className="text-center">

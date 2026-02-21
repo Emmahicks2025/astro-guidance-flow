@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Mail, Lock, Eye, EyeOff, Sun, Moon } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sun, Moon } from "lucide-react";
+import stellarLogo from "@/assets/stellar-logo.png";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
@@ -158,8 +159,8 @@ const Auth = () => {
           transition={{ type: "spring", duration: 0.8 }}
           className="flex flex-col items-center mb-8"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-spiritual flex items-center justify-center shadow-spiritual mb-4">
-            <Sparkles className="w-10 h-10 text-primary-foreground" />
+          <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-spiritual mb-4">
+            <img src={stellarLogo} alt="Stellar" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-bold text-gradient-spiritual font-display">Stellar</h1>
           <p className="text-muted-foreground mt-2">
