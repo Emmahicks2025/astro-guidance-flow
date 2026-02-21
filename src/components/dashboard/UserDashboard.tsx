@@ -18,6 +18,7 @@ import NotificationBell from "@/components/chat/NotificationBell";
 import { ExpertConsultationDialog } from "@/components/consultation/ExpertConsultationDialog";
 import { SeekerConversation } from "@/hooks/useSeekerConversations";
 import { supabase } from "@/integrations/supabase/client";
+import PullToRefresh from "@/components/dashboard/PullToRefresh";
 
 const UserDashboard = () => {
   const { userData, resetOnboarding } = useOnboardingStore();
@@ -173,8 +174,8 @@ const UserDashboard = () => {
         className="min-h-screen bg-background"
       >
         {/* Header */}
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top" role="banner">
+          <nav className="container mx-auto px-4 py-4 flex items-center justify-between" aria-label="Main navigation">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-spiritual flex items-center justify-center">
                 <Star className="w-5 h-5 text-primary-foreground" />
@@ -209,9 +210,15 @@ const UserDashboard = () => {
                 <LogOut className="w-5 h-5" />
               </SpiritualButton>
             </div>
-          </div>
+          </nav>
         </header>
 
+        <PullToRefresh onRefresh={async () => {
+          if (user) {
+            const profile = await fetchUserProfile(user.id);
+            if (profile?.avatar_url) setAvatarUrl(profile.avatar_url);
+          }
+        }}>
         <main className="container mx-auto px-4 py-6 space-y-8">
           {/* Welcome Section */}
           <motion.section variants={itemVariants}>
@@ -380,6 +387,7 @@ const UserDashboard = () => {
             </button>
           </motion.div>
         </main>
+        </PullToRefresh>
       </motion.div>
 
       {/* Floating Chat Badge */}
