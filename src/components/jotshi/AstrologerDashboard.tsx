@@ -604,7 +604,7 @@ const AstrologerDashboard = () => {
           </SpiritualButton>
         </motion.div>
 
-        <p className="text-center text-sm text-muted-foreground pb-4">AstroGuru v1.0.0</p>
+        <p className="text-center text-xs text-muted-foreground pb-4 font-mono">Stellar-Core v2.1 | Neural Framework Active</p>
       </main>
     </motion.div>
   );

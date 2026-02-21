@@ -58,9 +58,9 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
 
         <div className="text-center">
           <h1 className="font-display font-bold text-2xl text-gradient-spiritual">
-            AstroGuru
+            Stellar
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Vedic Astrology & Guidance</p>
+          <p className="text-sm text-muted-foreground mt-1">AI Life Analysis</p>
         </div>
 
         {/* Progress bar */}

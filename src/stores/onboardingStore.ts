@@ -70,7 +70,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
         }),
     }),
     {
-      name: 'astroguru-onboarding',
+      name: 'stellar-onboarding',
     }
   )
 );

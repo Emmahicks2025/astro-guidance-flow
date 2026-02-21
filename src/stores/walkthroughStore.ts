@@ -21,7 +21,7 @@ export const useWalkthroughStore = create<WalkthroughState>()(
       resetWalkthrough: () => set({ hasCompletedWalkthrough: false, isWalkthroughOpen: false }),
     }),
     {
-      name: 'astroguru-walkthrough',
+      name: 'stellar-walkthrough',
     }
   )
 );

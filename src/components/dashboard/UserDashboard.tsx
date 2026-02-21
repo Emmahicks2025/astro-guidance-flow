@@ -180,7 +180,7 @@ const UserDashboard = () => {
               <div className="w-10 h-10 rounded-full bg-gradient-spiritual flex items-center justify-center">
                 <Star className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-display font-bold text-xl text-gradient-spiritual">AstroGuru</span>
+              <span className="font-display font-bold text-xl text-gradient-spiritual">Stellar</span>
             </div>
             <div className="flex items-center gap-1">
               <NotificationBell onOpenChat={openConversationFromBadge} />

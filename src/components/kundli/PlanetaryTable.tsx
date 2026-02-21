@@ -64,7 +64,7 @@ const PlanetaryTable = ({ data, compact = false }: PlanetaryTableProps) => {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm font-mono">
               <span className="text-muted-foreground">{planet.sign}</span>
               <ArrowRight className="w-3 h-3 text-muted-foreground" />
               <span className="font-medium text-primary">H{planet.house}</span>

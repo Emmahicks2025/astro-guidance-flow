@@ -24,7 +24,7 @@ const SystemStatus = () => {
     },
     { 
       icon: Cpu, 
-      label: "Neural Engine v2.1", 
+      label: "Stellar-Core v2.1", 
       value: "Operational", 
       color: "text-green-500",
       dotColor: "bg-green-500" 

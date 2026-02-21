@@ -102,7 +102,7 @@ const PrivacyPolicy = () => {
         <section className="space-y-3">
           <h2 className="text-lg font-bold">11. Contact Us</h2>
           <p className="text-muted-foreground leading-relaxed">
-            For privacy-related inquiries, contact us at privacy@astroguru.app.
+            For privacy-related inquiries, contact us at privacy@stellarapp.co.
           </p>
         </section>
 

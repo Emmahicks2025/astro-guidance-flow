@@ -67,7 +67,7 @@ const WelcomeStep = () => {
         transition={{ delay: 0.2 }}
         className="text-4xl md:text-5xl font-bold mb-4 text-gradient-spiritual font-display"
       >
-        AstroGuru
+        Stellar
       </motion.h1>
 
       <motion.p

@@ -32,14 +32,14 @@ const TermsAndConditions = () => {
         <section className="space-y-3">
           <h2 className="text-lg font-bold">1. Acceptance of Terms</h2>
           <p className="text-muted-foreground leading-relaxed">
-            By downloading, installing, or using the AstroGuru application ("App"), you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree, do not use the App.
+            By downloading, installing, or using the Stellar application ("App"), you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree, do not use the App.
           </p>
         </section>
 
         <section className="space-y-3">
           <h2 className="text-lg font-bold">2. Description of Service</h2>
           <p className="text-muted-foreground leading-relaxed">
-            AstroGuru provides Vedic astrology consultations, kundli generation, horoscope readings, compatibility analysis, palm reading, panchang information, and related spiritual services. The App connects users with astrology experts ("Jotshis") for personalized consultations.
+            Stellar provides Vedic astrology consultations, kundli generation, horoscope readings, compatibility analysis, palm reading, panchang information, and related spiritual services. The App connects users with astrology experts ("Jotshis") for personalized consultations.
           </p>
         </section>
 
@@ -53,7 +53,7 @@ const TermsAndConditions = () => {
         <section className="space-y-3">
           <h2 className="text-lg font-bold">4. Disclaimer of Accuracy</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Astrological readings, predictions, and advice provided through the App are for entertainment and informational purposes only. AstroGuru does not guarantee the accuracy, reliability, or completeness of any astrological information. Readings should not be used as a substitute for professional medical, legal, financial, or psychological advice.
+            Astrological readings, predictions, and advice provided through the App are for entertainment and informational purposes only. Stellar does not guarantee the accuracy, reliability, or completeness of any astrological information. Readings should not be used as a substitute for professional medical, legal, financial, or psychological advice.
           </p>
         </section>
 
@@ -96,7 +96,7 @@ const TermsAndConditions = () => {
         <section className="space-y-3">
           <h2 className="text-lg font-bold">8. Intellectual Property</h2>
           <p className="text-muted-foreground leading-relaxed">
-            All content, trademarks, logos, and intellectual property within the App are owned by AstroGuru or its licensors. You may not reproduce, distribute, or create derivative works without prior written consent.
+            All content, trademarks, logos, and intellectual property within the App are owned by Stellar or its licensors. You may not reproduce, distribute, or create derivative works without prior written consent.
           </p>
         </section>
 
@@ -110,7 +110,7 @@ const TermsAndConditions = () => {
         <section className="space-y-3">
           <h2 className="text-lg font-bold">10. Limitation of Liability</h2>
           <p className="text-muted-foreground leading-relaxed">
-            To the maximum extent permitted by law, AstroGuru shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the App or any decisions made based on astrological readings.
+            To the maximum extent permitted by law, Stellar shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the App or any decisions made based on astrological readings.
           </p>
         </section>
 
@@ -131,7 +131,7 @@ const TermsAndConditions = () => {
         <section className="space-y-3">
           <h2 className="text-lg font-bold">13. Contact Us</h2>
           <p className="text-muted-foreground leading-relaxed">
-            If you have questions about these Terms, please contact us at support@astroguru.app.
+            If you have questions about these Terms, please contact us at support@stellarapp.co.
           </p>
         </section>
 

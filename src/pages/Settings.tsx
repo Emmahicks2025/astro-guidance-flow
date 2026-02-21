@@ -262,7 +262,7 @@ const SettingsPage = () => {
             toast.success("Thank you for your support! ⭐");
           }
         }},
-        { icon: Info, label: t.appVersion, value: 'v1.0.11' },
+        { icon: Info, label: t.appVersion, value: 'v2.1.0' },
       ]
     },
   ];
@@ -426,8 +426,8 @@ const SettingsPage = () => {
         </section>
 
         {/* App Version */}
-        <p className="text-center text-sm text-muted-foreground pb-4">
-          AstroGuru v1.0.11
+        <p className="text-center text-xs text-muted-foreground pb-4 font-mono">
+          Stellar-Core v2.1 &nbsp;|&nbsp; Neural Framework Active
         </p>
       </main>
 
