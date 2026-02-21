@@ -21,17 +21,17 @@
     --primary: 170 62% 30%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary — Warm Coral */
-    --secondary: 12 72% 58%;
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary — Warm Amber Gold */
+    --secondary: 38 82% 52%;
+    --secondary-foreground: 0 0% 10%;
 
     /* Muted — readable medium gray, not too light */
     --muted: 170 10% 94%;
     --muted-foreground: 170 10% 38%;
 
-    /* Accent — Coral */
-    --accent: 12 72% 58%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent — Amber Gold */
+    --accent: 38 82% 52%;
+    --accent-foreground: 0 0% 10%;
 
     --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -44,42 +44,42 @@
     --radius: 0.875rem;
 
     /* Palette tokens */
-    --saffron: 12 72% 58%;
-    --saffron-light: 16 68% 70%;
-    --saffron-dark: 8 68% 45%;
+    --saffron: 38 82% 52%;
+    --saffron-light: 42 78% 66%;
+    --saffron-dark: 34 78% 40%;
 
     --purple: 170 62% 32%;
     --purple-light: 170 50% 50%;
     --purple-dark: 172 70% 20%;
 
-    --gold: 12 72% 58%;
-    --gold-light: 16 68% 70%;
-    --gold-dark: 8 68% 45%;
+    --gold: 38 82% 52%;
+    --gold-light: 42 78% 66%;
+    --gold-dark: 34 78% 40%;
 
     --cream: 0 0% 100%;
     --cream-dark: 170 10% 95%;
 
     /* Gradients — rich teal depth, iOS-like */
     --gradient-spiritual: linear-gradient(145deg, hsl(170 62% 32%) 0%, hsl(185 58% 24%) 100%);
-    --gradient-sunset: linear-gradient(145deg, hsl(12 72% 58%) 0%, hsl(6 65% 48%) 100%);
+    --gradient-sunset: linear-gradient(145deg, hsl(38 82% 52%) 0%, hsl(34 78% 42%) 100%);
     --gradient-mystic: linear-gradient(145deg, hsl(185 58% 20%) 0%, hsl(170 62% 32%) 100%);
-    --gradient-golden: linear-gradient(145deg, hsl(8 68% 45%) 0%, hsl(12 72% 58%) 60%, hsl(16 68% 68%) 100%);
+    --gradient-golden: linear-gradient(145deg, hsl(34 78% 40%) 0%, hsl(38 82% 52%) 60%, hsl(42 78% 64%) 100%);
 
     /* Shadows — iOS-style layered elevation */
     --shadow-spiritual: 0 4px 20px -2px hsl(170 62% 32% / 0.22), 0 1px 4px -1px hsl(170 62% 32% / 0.12);
     --shadow-mystic: 0 4px 20px -2px hsl(185 58% 26% / 0.20);
-    --shadow-golden: 0 4px 20px -2px hsl(12 72% 58% / 0.22);
+    --shadow-golden: 0 4px 20px -2px hsl(38 82% 52% / 0.22);
     --shadow-soft: 0 1px 8px -1px hsl(180 20% 8% / 0.06), 0 4px 16px -4px hsl(180 20% 8% / 0.05);
 
     /* Sidebar */
     --sidebar-background: 170 62% 32%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 12 72% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 38 82% 52%;
+    --sidebar-primary-foreground: 0 0% 10%;
     --sidebar-accent: 170 50% 40%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 170 50% 38%;
-    --sidebar-ring: 12 72% 65%;
+    --sidebar-ring: 38 82% 60%;
   }
 
   .dark {
@@ -96,15 +96,15 @@
     --primary: 170 70% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 12 75% 62%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 38 85% 58%;
+    --secondary-foreground: 0 0% 10%;
 
     /* Muted text clearly visible on dark */
     --muted: 175 18% 14%;
     --muted-foreground: 170 10% 65%;
 
-    --accent: 12 75% 62%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 38 85% 58%;
+    --accent-foreground: 0 0% 10%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -115,12 +115,12 @@
 
     --sidebar-background: 180 25% 3%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 12 75% 62%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 38 85% 58%;
+    --sidebar-primary-foreground: 0 0% 10%;
     --sidebar-accent: 175 18% 14%;
     --sidebar-accent-foreground: 0 0% 96%;
     --sidebar-border: 175 18% 14%;
-    --sidebar-ring: 12 75% 62%;
+    --sidebar-ring: 38 85% 58%;
   }
 }
 
