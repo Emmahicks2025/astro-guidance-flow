@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
 import { SpiritualInput } from "@/components/ui/spiritual-input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExpertConsultationDialog } from "@/components/consultation/ExpertConsultationDialog";
 import { ExpertReviews } from "@/components/consultation/ExpertReviews";
+import PullToRefresh from "@/components/dashboard/PullToRefresh";
+import { toast } from "sonner";
 
 type Category = 'all' | 'astrologer' | 'jotshi' | 'palmist' | 'relationship';
 
@@ -99,6 +101,44 @@ const TalkToJotshi = () => {
     fetchExperts();
   }, []);
 
+  const handleRefresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('jotshi_profiles')
+        .select('*')
+        .eq('approval_status', 'approved')
+        .order('rating', { ascending: false });
+      if (error) throw error;
+      const mappedExperts: Expert[] = (data || []).map((p) => ({
+        id: p.id,
+        name: p.display_name || 'Expert',
+        specialty: p.specialty || 'General Consultation',
+        experience: p.experience_years ? `${p.experience_years}+ years` : 'Experienced',
+        rating: Number(p.rating) || 0,
+        rate: p.hourly_rate || 20,
+        status: p.is_online ? 'online' : 'offline' as 'online' | 'busy' | 'offline',
+        avatar: p.avatar_url || defaultAvatar,
+        category: (p.category as Category) || 'astrologer',
+        languages: p.languages || ['Hindi', 'English'],
+        sessions: p.total_sessions || 0,
+        ai_personality: p.ai_personality || undefined,
+        voice_id: p.voice_id || undefined,
+        user_id: p.user_id || undefined,
+        first_message: p.first_message || undefined,
+      }));
+      setExperts(mappedExperts);
+      const counts: Record<string, number> = {};
+      mappedExperts.forEach((e) => { counts[e.category] = (counts[e.category] || 0) + 1; });
+      setCategoryCounts(counts);
+      toast.success("Experts refreshed!");
+    } catch (error) {
+      console.error('Error refreshing experts:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const filteredExperts = experts.filter(e => {
     const matchesCategory = activeCategory === 'all' || e.category === activeCategory;
     const matchesSearch = searchQuery === '' || 
@@ -141,7 +181,8 @@ const TalkToJotshi = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-5 space-y-5">
+      <PullToRefresh onRefresh={handleRefresh}>
+      <main className="container mx-auto px-4 py-5 space-y-5" role="main" aria-label="Expert consultation list">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -340,7 +381,7 @@ const TalkToJotshi = () => {
         {/* Bottom Spacing */}
         <div className="h-6" />
       </main>
-
+      </PullToRefresh>
       {/* Consultation Dialog */}
       <ExpertConsultationDialog
         expert={selectedExpert}

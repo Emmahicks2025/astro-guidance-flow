@@ -19,6 +19,8 @@ import ReactMarkdown from "react-markdown";
 import { useConversation } from "@elevenlabs/react";
 import { sendPushToUser } from "@/lib/pushNotifications";
 import { ReviewDialog } from "@/components/consultation/ReviewDialog";
+import AudioWaveform from "@/components/consultation/AudioWaveform";
+import VoIPStatusBadge from "@/components/consultation/VoIPStatusBadge";
 
 interface Expert {
   id: string;
@@ -763,6 +765,9 @@ export function ExpertConsultationDialog({
           {/* Call Tab — Phone-style full layout */}
           <TabsContent value="call" className="flex-1 flex-col m-0 p-0 overflow-hidden" style={{ display: activeTab === 'call' ? 'flex' : 'none' }}>
             <div className="flex-1 flex flex-col items-center justify-between bg-gradient-to-b from-background to-muted/20 px-6 py-6">
+              {/* VoIP Status Badge */}
+              <VoIPStatusBadge isActive={isCallActive || isConnecting} />
+
               {/* Avatar & Info */}
               <div className="flex flex-col items-center gap-2 pt-2">
                 <div className="relative">
@@ -793,8 +798,8 @@ export function ExpertConsultationDialog({
                 <p className="text-xs text-muted-foreground">{expert.specialty}</p>
               </div>
 
-              {/* Status */}
-              <div className="flex flex-col items-center gap-1">
+              {/* Status + Waveform */}
+              <div className="flex flex-col items-center gap-3">
                 {isConnecting && (
                   <motion.p
                     className="text-base font-medium text-muted-foreground"
@@ -807,6 +812,7 @@ export function ExpertConsultationDialog({
                 {isCallActive && (
                   <>
                     <p className="text-primary font-mono text-2xl tracking-wider font-semibold">{formatDuration(callDuration)}</p>
+                    <AudioWaveform isActive={isCallActive} isSpeaking={isAgentSpeaking} />
                     <p className="text-xs text-muted-foreground">
                       {isAgentSpeaking ? '🔊 Speaking...' : '🎙️ Listening...'}
                     </p>

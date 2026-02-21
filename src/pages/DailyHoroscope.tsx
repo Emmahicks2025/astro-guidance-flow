@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Sun, ArrowLeft, Star, TrendingUp, Heart, Briefcase, Coins } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-card";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
+import PullToRefresh from "@/components/dashboard/PullToRefresh";
+import { toast } from "sonner";
 
 const zodiacSigns = [
   { name: 'Aries', symbol: '♈', dates: 'Mar 21 - Apr 19' },
@@ -33,6 +35,11 @@ const mockHoroscope = {
 const DailyHoroscope = () => {
   const navigate = useNavigate();
   const [selectedSign, setSelectedSign] = useState<string | null>(null);
+
+  const handleRefresh = useCallback(async () => {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    toast.success("Horoscope updated!");
+  }, []);
 
   const renderStars = (count: number) => {
     return Array(5).fill(0).map((_, i) => (
@@ -64,7 +71,8 @@ const DailyHoroscope = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
+      <PullToRefresh onRefresh={handleRefresh}>
+      <main className="container mx-auto px-4 py-6 space-y-6" role="main" aria-label="Daily horoscope content">
         {!selectedSign ? (
           <>
             <h3 className="text-lg font-bold font-display text-center">Select Your Sign</h3>
@@ -165,6 +173,7 @@ const DailyHoroscope = () => {
           </motion.div>
         )}
       </main>
+      </PullToRefresh>
     </motion.div>
   );
 };

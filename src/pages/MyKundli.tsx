@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, ArrowLeft, User, Calendar, Clock, MapPin, Download, Share2, Scan, BookOpen, Languages, FileText, ChevronRight, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,7 @@ import KundliScanner from "@/components/kundli/KundliScanner";
 import KundliAnalysisDashboard from "@/components/kundli/KundliAnalysisDashboard";
 import LifeReportGenerator from "@/components/kundli/LifeReportGenerator";
 import WalkthroughTrigger from "@/components/walkthrough/WalkthroughTrigger";
+import CalculatingOverlay from "@/components/ui/CalculatingOverlay";
 import { generateSampleKundli } from "@/lib/kundli";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,6 +31,11 @@ const MyKundli = () => {
   const [activeTab, setActiveTab] = useState<"charts" | "scan" | "report">("charts");
   const [scannedAnalysis, setScannedAnalysis] = useState<any>(null);
   const [useHindiTerms, setUseHindiTerms] = useState(false);
+  const [showChartOverlay, setShowChartOverlay] = useState(true);
+
+  const handleChartOverlayComplete = useCallback(() => {
+    setShowChartOverlay(false);
+  }, []);
 
   // Generate Kundli based on user's actual birth data
   const kundliData = generateSampleKundli(
@@ -52,6 +58,17 @@ const MyKundli = () => {
       animate={{ opacity: 1 }}
       className="min-h-screen bg-background"
     >
+      <CalculatingOverlay 
+        isActive={showChartOverlay}
+        onComplete={handleChartOverlayComplete}
+        steps={[
+          "Initializing Neural Engine...",
+          "Syncing Ephemeris Data...",
+          "Calibrating Planetary Positions...",
+          "Rendering SVG Vector Map...",
+          "Finalizing Chart Layout...",
+        ]}
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
