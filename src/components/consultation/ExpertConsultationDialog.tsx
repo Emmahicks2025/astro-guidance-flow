@@ -330,6 +330,11 @@ export function ExpertConsultationDialog({
       return;
     }
 
+    // Notify human expert about incoming call
+    if (!isAI && expert.user_id) {
+      sendPushToUser(expert.user_id, `Incoming Call`, `A seeker is calling you. Open the app to respond.`);
+    }
+
     setIsConnecting(true);
     startRingtone();
     callTranscriptRef.current = [];

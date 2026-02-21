@@ -280,7 +280,7 @@ const TalkToJotshi = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.025 }}
                 >
-                  <SpiritualCard variant="elevated" interactive className="overflow-hidden border border-border/30">
+                  <SpiritualCard variant="elevated" interactive className="overflow-hidden border border-border/30 cursor-pointer" onClick={() => openConsultation(expert, 'chat')}>
                     <SpiritualCardContent className="p-4">
                       <div className="flex gap-4">
                         {/* Avatar */}
@@ -351,7 +351,7 @@ const TalkToJotshi = () => {
                             size="sm"
                             className="gap-1.5 text-xs h-9 px-3"
                             disabled={expert.status !== 'online'}
-                            onClick={() => openConsultation(expert, 'call')}
+                            onClick={(e) => { e.stopPropagation(); openConsultation(expert, 'call'); }}
                           >
                             <Phone className="w-3.5 h-3.5" />
                             Call
@@ -360,7 +360,7 @@ const TalkToJotshi = () => {
                             variant="primary" 
                             size="sm"
                             className="gap-1.5 text-xs h-9 px-3"
-                            onClick={() => openConsultation(expert, 'chat')}
+                            onClick={(e) => { e.stopPropagation(); openConsultation(expert, 'chat'); }}
                           >
                             <MessageCircle className="w-3.5 h-3.5" />
                             Chat
