@@ -623,7 +623,7 @@ export function ExpertConsultationDialog({
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />{expert.experience}
                 </span>
-                <span className="text-primary font-medium">${expert.rate}/min</span>
+                <span className="text-primary font-medium">{expert.rate} credits/min</span>
               </div>
             </div>
           </div>
