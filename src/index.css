@@ -7,38 +7,38 @@
 
 @layer base {
   :root {
-    /* Pure white, maximum clarity */
-    --background: 0 0% 100%;
-    --foreground: 0 0% 13%;
+    /* Warm ivory canvas — soft, premium feel */
+    --background: 40 33% 98%;
+    --foreground: 20 12% 16%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 13%;
+    --card: 36 30% 99%;
+    --card-foreground: 20 12% 16%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 13%;
+    --popover: 36 30% 99%;
+    --popover-foreground: 20 12% 16%;
 
     /* Primary — Rausch Red (Airbnb signature) */
     --primary: 357 78% 52%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary — Light warm gray */
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 13%;
+    --secondary: 36 20% 95%;
+    --secondary-foreground: 20 12% 16%;
 
-    /* Muted — soft neutral */
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 44%;
+    /* Muted — warm neutral */
+    --muted: 36 20% 95%;
+    --muted-foreground: 20 8% 46%;
 
-    /* Accent — same rausch family */
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 13%;
+    /* Accent */
+    --accent: 36 20% 95%;
+    --accent-foreground: 20 12% 16%;
 
     --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders — visible but gentle */
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
+    --border: 30 15% 90%;
+    --input: 30 15% 90%;
     --ring: 357 78% 52%;
 
     --radius: 0.75rem;
@@ -56,8 +56,8 @@
     --gold-light: 357 68% 65%;
     --gold-dark: 357 82% 40%;
 
-    --cream: 0 0% 100%;
-    --cream-dark: 0 0% 97%;
+    --cream: 40 33% 98%;
+    --cream-dark: 36 20% 95%;
 
     /* Gradients — subtle depth using dark charcoal + red */
     --gradient-spiritual: linear-gradient(145deg, hsl(0 0% 18%) 0%, hsl(0 0% 10%) 100%);
@@ -72,13 +72,13 @@
     --shadow-soft: 0 1px 3px hsl(0 0% 0% / 0.06), 0 4px 12px hsl(0 0% 0% / 0.04);
 
     /* Sidebar */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 13%;
+    --sidebar-background: 40 33% 98%;
+    --sidebar-foreground: 20 12% 16%;
     --sidebar-primary: 357 78% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 13%;
-    --sidebar-border: 0 0% 88%;
+    --sidebar-accent: 36 20% 95%;
+    --sidebar-accent-foreground: 20 12% 16%;
+    --sidebar-border: 30 15% 90%;
     --sidebar-ring: 357 78% 52%;
   }
 
