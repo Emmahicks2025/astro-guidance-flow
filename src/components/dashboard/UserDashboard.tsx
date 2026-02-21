@@ -170,17 +170,17 @@ const UserDashboard = () => {
         className="min-h-screen bg-background pb-24"
       >
         {/* Minimal Header */}
-        <header className="sticky top-0 z-50 bg-primary backdrop-blur-lg border-b border-primary-foreground/10 safe-area-top" role="banner">
+        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top" role="banner">
           <nav className="container mx-auto px-4 py-3 flex items-center justify-between" aria-label="Main navigation">
             <div className="flex items-center gap-2.5">
               <img src={stellarLogo} alt="Stellar" className="w-9 h-9 rounded-xl" />
-              <span className="font-display font-bold text-lg text-primary-foreground">Stellar</span>
+              <span className="font-display font-bold text-lg text-gradient-spiritual">Stellar</span>
             </div>
             <div className="flex items-center gap-0.5">
               <NotificationBell onOpenChat={openConversationFromBadge} />
               <button
                 onClick={openWalkthrough}
-                className="p-2 rounded-full text-primary-foreground/70 hover:text-primary-foreground transition-colors"
+                className="p-2 rounded-full text-muted-foreground hover:text-foreground transition-colors"
                 title={t.appGuide}
               >
                 <HelpCircle className="w-5 h-5" />
