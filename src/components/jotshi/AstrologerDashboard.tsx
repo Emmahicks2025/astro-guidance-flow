@@ -462,7 +462,7 @@ const AstrologerDashboard = () => {
                 <div className="flex items-center gap-3 mt-1">
                   <span className="text-xs text-muted-foreground">{profile?.experience_years || 0} yrs exp</span>
                   <span className="text-xs text-muted-foreground">•</span>
-                  <span className="text-xs text-muted-foreground">${profile?.hourly_rate || 0}/min</span>
+                  <span className="text-xs text-muted-foreground">{profile?.hourly_rate || 0} credits/min</span>
                   <span className="text-xs text-muted-foreground">•</span>
                   <span className="text-xs text-muted-foreground">{profile?.languages?.join(', ')}</span>
                 </div>
