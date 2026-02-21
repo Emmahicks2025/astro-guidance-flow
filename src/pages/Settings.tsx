@@ -48,6 +48,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import SystemStatus from "@/components/settings/SystemStatus";
 
 
 
@@ -415,6 +416,14 @@ const SettingsPage = () => {
           <Trash2 className="w-5 h-5" />
           {t.deleteAccount}
         </SpiritualButton>
+
+        {/* System Status */}
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+            Diagnostics
+          </h3>
+          <SystemStatus />
+        </section>
 
         {/* App Version */}
         <p className="text-center text-sm text-muted-foreground pb-4">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Hand, ArrowLeft, Upload, Camera, Info, Heart, Brain, Sparkles, Star, Shield, Gem, Phone, MessageCircle, ChevronRight, Loader2, Activity, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ExpertConsultationDialog } from "@/components/consultation/ExpertConsultationDialog";
 import { useTranslation } from "@/stores/languageStore";
+import CalculatingOverlay from "@/components/ui/CalculatingOverlay";
+import { useHaptics, NotificationType } from "@/hooks/useHaptics";
 
 const tips = [
   "Use natural lighting, avoid shadows",
@@ -80,12 +82,18 @@ const PalmReading = () => {
   const [analyzingMsgIndex, setAnalyzingMsgIndex] = useState(0);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showPalmOverlay, setShowPalmOverlay] = useState(false);
   const [analysis, setAnalysis] = useState<PalmAnalysis | null>(null);
   const [palmExperts, setPalmExperts] = useState<Expert[]>([]);
   const [loadingExperts, setLoadingExperts] = useState(false);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [consultationOpen, setConsultationOpen] = useState(false);
   const [consultationTab, setConsultationTab] = useState<'chat' | 'call'>('chat');
+  const { notification } = useHaptics();
+
+  const handlePalmOverlayComplete = useCallback(() => {
+    setShowPalmOverlay(false);
+  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -147,6 +155,7 @@ const PalmReading = () => {
       return;
     }
     setIsAnalyzing(true);
+    setShowPalmOverlay(true);
     setAnalyzingMsgIndex(0);
     const msgInterval = setInterval(() => {
       setAnalyzingMsgIndex(prev => (prev + 1) % analyzingMessages.length);
@@ -176,6 +185,7 @@ const PalmReading = () => {
       const data = await response.json();
       if (data.success && data.analysis && !data.analysis.error) {
         setAnalysis(data.analysis);
+        notification(NotificationType.Success);
         toast.success("Palm analysis complete!");
 
         // Save to profile
@@ -213,6 +223,17 @@ const PalmReading = () => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-background">
+      <CalculatingOverlay 
+        isActive={showPalmOverlay && isAnalyzing}
+        onComplete={handlePalmOverlayComplete}
+        steps={[
+          "Initializing Palm Scanner...",
+          "Detecting hand geometry...",
+          "Tracing major palm lines...",
+          "Analyzing mounts & markings...",
+          "Rendering analysis map...",
+        ]}
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border safe-area-top">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">

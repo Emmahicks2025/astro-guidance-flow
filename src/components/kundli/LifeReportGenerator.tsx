@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Sparkles, Loader2, User, Briefcase, Heart, Download, Share2 } from "lucide-react";
 import { SpiritualButton } from "@/components/ui/spiritual-button";
@@ -6,6 +6,8 @@ import { SpiritualCard, SpiritualCardContent } from "@/components/ui/spiritual-c
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { KundliData } from "@/lib/kundli";
+import CalculatingOverlay from "@/components/ui/CalculatingOverlay";
+import { useHaptics, NotificationType } from "@/hooks/useHaptics";
 
 interface LifeReportGeneratorProps {
   kundliData: KundliData;
@@ -31,9 +33,16 @@ interface LifeReport {
 
 const LifeReportGenerator = ({ kundliData, userName, dateOfBirth }: LifeReportGeneratorProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
   const [report, setReport] = useState<LifeReport | null>(null);
+  const { notification } = useHaptics();
+
+  const handleOverlayComplete = useCallback(() => {
+    setShowOverlay(false);
+  }, []);
 
   const generateReport = async () => {
+    setShowOverlay(true);
     setIsGenerating(true);
     
     try {
@@ -53,6 +62,7 @@ const LifeReportGenerator = ({ kundliData, userName, dateOfBirth }: LifeReportGe
 
       if (data?.report) {
         setReport(data.report);
+        notification(NotificationType.Success);
         toast.success('Life Report generated successfully!');
       }
     } catch (err) {
@@ -65,6 +75,17 @@ const LifeReportGenerator = ({ kundliData, userName, dateOfBirth }: LifeReportGe
 
   return (
     <div className="space-y-4">
+      <CalculatingOverlay 
+        isActive={showOverlay} 
+        onComplete={handleOverlayComplete}
+        steps={[
+          "Initializing Neural Engine...",
+          "Loading D1 Lagna Chart data...",
+          "Syncing D9 Navamsa positions...",
+          "Analyzing Dasha periods...",
+          "Rendering Life Report...",
+        ]}
+      />
       {!report ? (
         <SpiritualCard variant="spiritual" className="p-6">
           <div className="text-center space-y-4">
