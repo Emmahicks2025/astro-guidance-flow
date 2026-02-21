@@ -2,125 +2,125 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Stellar Design System — Modern iOS-inspired Spiritual Theme
-   Deep Teal + Warm Coral: serene, natural, high contrast */
+/* Stellar Design System — Immersive Teal & Gold
+   Deep Teal base with warm gold accents, cohesive throughout */
 
 @layer base {
   :root {
-    /* iOS-style: pure white base, true near-black text for max readability */
-    --background: 0 0% 100%;
-    --foreground: 180 18% 10%;
+    /* Warm teal-tinted surfaces instead of pure white */
+    --background: 168 28% 95%;
+    --foreground: 175 30% 12%;
 
-    --card: 170 16% 97%;
-    --card-foreground: 180 18% 10%;
+    --card: 168 22% 98%;
+    --card-foreground: 175 30% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 180 18% 10%;
+    --popover: 168 22% 98%;
+    --popover-foreground: 175 30% 12%;
 
     /* Primary — Deep Emerald Teal */
-    --primary: 170 62% 30%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 170 62% 28%;
+    --primary-foreground: 45 90% 96%;
 
     /* Secondary — Warm Amber Gold */
-    --secondary: 38 82% 52%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 40 82% 50%;
+    --secondary-foreground: 175 30% 12%;
 
-    /* Muted — readable medium gray, not too light */
-    --muted: 170 10% 94%;
-    --muted-foreground: 170 10% 38%;
+    /* Muted — teal-tinted grays */
+    --muted: 168 16% 90%;
+    --muted-foreground: 170 12% 42%;
 
-    /* Accent — Amber Gold */
-    --accent: 38 82% 52%;
-    --accent-foreground: 0 0% 10%;
+    /* Accent — Rich Gold */
+    --accent: 40 82% 50%;
+    --accent-foreground: 175 30% 12%;
 
     --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Borders — iOS hairline style */
-    --border: 170 10% 88%;
-    --input: 170 10% 90%;
-    --ring: 170 62% 30%;
+    /* Borders — teal-tinted hairlines */
+    --border: 168 14% 84%;
+    --input: 168 14% 87%;
+    --ring: 170 62% 28%;
 
     --radius: 0.875rem;
 
     /* Palette tokens */
-    --saffron: 38 82% 52%;
-    --saffron-light: 42 78% 66%;
-    --saffron-dark: 34 78% 40%;
+    --saffron: 40 82% 50%;
+    --saffron-light: 44 78% 64%;
+    --saffron-dark: 36 78% 38%;
 
-    --purple: 170 62% 32%;
-    --purple-light: 170 50% 50%;
-    --purple-dark: 172 70% 20%;
+    --purple: 170 62% 30%;
+    --purple-light: 170 50% 48%;
+    --purple-dark: 172 70% 18%;
 
-    --gold: 38 82% 52%;
-    --gold-light: 42 78% 66%;
-    --gold-dark: 34 78% 40%;
+    --gold: 40 82% 50%;
+    --gold-light: 44 78% 64%;
+    --gold-dark: 36 78% 38%;
 
-    --cream: 0 0% 100%;
-    --cream-dark: 170 10% 95%;
+    --cream: 168 22% 98%;
+    --cream-dark: 168 16% 93%;
 
-    /* Gradients — rich teal depth, iOS-like */
-    --gradient-spiritual: linear-gradient(145deg, hsl(170 62% 32%) 0%, hsl(185 58% 24%) 100%);
-    --gradient-sunset: linear-gradient(145deg, hsl(38 82% 52%) 0%, hsl(34 78% 42%) 100%);
-    --gradient-mystic: linear-gradient(145deg, hsl(185 58% 20%) 0%, hsl(170 62% 32%) 100%);
-    --gradient-golden: linear-gradient(145deg, hsl(34 78% 40%) 0%, hsl(38 82% 52%) 60%, hsl(42 78% 64%) 100%);
+    /* Gradients — deep teal depth */
+    --gradient-spiritual: linear-gradient(145deg, hsl(170 62% 28%) 0%, hsl(180 55% 20%) 100%);
+    --gradient-sunset: linear-gradient(145deg, hsl(40 82% 50%) 0%, hsl(36 78% 40%) 100%);
+    --gradient-mystic: linear-gradient(145deg, hsl(180 55% 16%) 0%, hsl(170 62% 28%) 100%);
+    --gradient-golden: linear-gradient(145deg, hsl(36 78% 38%) 0%, hsl(40 82% 50%) 60%, hsl(44 78% 62%) 100%);
 
-    /* Shadows — iOS-style layered elevation */
-    --shadow-spiritual: 0 4px 20px -2px hsl(170 62% 32% / 0.22), 0 1px 4px -1px hsl(170 62% 32% / 0.12);
-    --shadow-mystic: 0 4px 20px -2px hsl(185 58% 26% / 0.20);
-    --shadow-golden: 0 4px 20px -2px hsl(38 82% 52% / 0.22);
-    --shadow-soft: 0 1px 8px -1px hsl(180 20% 8% / 0.06), 0 4px 16px -4px hsl(180 20% 8% / 0.05);
+    /* Shadows */
+    --shadow-spiritual: 0 4px 20px -2px hsl(170 62% 28% / 0.25), 0 1px 4px -1px hsl(170 62% 28% / 0.14);
+    --shadow-mystic: 0 4px 20px -2px hsl(180 55% 22% / 0.22);
+    --shadow-golden: 0 4px 20px -2px hsl(40 82% 50% / 0.25);
+    --shadow-soft: 0 1px 8px -1px hsl(170 20% 10% / 0.07), 0 4px 16px -4px hsl(170 20% 10% / 0.05);
 
     /* Sidebar */
-    --sidebar-background: 170 62% 32%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 38 82% 52%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 170 50% 40%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 170 50% 38%;
-    --sidebar-ring: 38 82% 60%;
+    --sidebar-background: 170 62% 28%;
+    --sidebar-foreground: 45 90% 96%;
+    --sidebar-primary: 40 82% 50%;
+    --sidebar-primary-foreground: 175 30% 12%;
+    --sidebar-accent: 170 50% 36%;
+    --sidebar-accent-foreground: 45 90% 96%;
+    --sidebar-border: 170 50% 34%;
+    --sidebar-ring: 40 82% 58%;
   }
 
   .dark {
-    /* OLED dark — true near-black + teal card surfaces */
-    --background: 180 25% 5%;
-    --foreground: 0 0% 96%;
+    /* OLED dark — deep teal-black base */
+    --background: 175 30% 4%;
+    --foreground: 45 20% 95%;
 
-    --card: 175 24% 10%;
-    --card-foreground: 0 0% 96%;
+    --card: 172 26% 9%;
+    --card-foreground: 45 20% 95%;
 
-    --popover: 175 24% 10%;
-    --popover-foreground: 0 0% 96%;
+    --popover: 172 26% 9%;
+    --popover-foreground: 45 20% 95%;
 
-    --primary: 170 70% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 170 65% 50%;
+    --primary-foreground: 175 30% 4%;
 
-    --secondary: 38 85% 58%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 40 85% 56%;
+    --secondary-foreground: 175 30% 4%;
 
     /* Muted text clearly visible on dark */
-    --muted: 175 18% 14%;
-    --muted-foreground: 170 10% 65%;
+    --muted: 172 20% 13%;
+    --muted-foreground: 168 12% 62%;
 
-    --accent: 38 85% 58%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 40 85% 56%;
+    --accent-foreground: 175 30% 4%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 175 18% 18%;
-    --input: 175 18% 18%;
-    --ring: 170 70% 55%;
+    --border: 172 20% 16%;
+    --input: 172 20% 16%;
+    --ring: 170 65% 50%;
 
-    --sidebar-background: 180 25% 3%;
-    --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 38 85% 58%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 175 18% 14%;
-    --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 175 18% 14%;
-    --sidebar-ring: 38 85% 58%;
+    --sidebar-background: 175 30% 3%;
+    --sidebar-foreground: 45 20% 95%;
+    --sidebar-primary: 40 85% 56%;
+    --sidebar-primary-foreground: 175 30% 4%;
+    --sidebar-accent: 172 20% 13%;
+    --sidebar-accent-foreground: 45 20% 95%;
+    --sidebar-border: 172 20% 13%;
+    --sidebar-ring: 40 85% 56%;
   }
 }
 

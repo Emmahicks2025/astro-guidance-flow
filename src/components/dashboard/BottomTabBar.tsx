@@ -16,7 +16,7 @@ const BottomTabBar = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-xl border-t border-primary-foreground/10 safe-area-bottom">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path || 
@@ -28,8 +28,8 @@ const BottomTabBar = () => {
               className={cn(
                 "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200",
                 isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-secondary"
+                  : "text-primary-foreground/60 hover:text-primary-foreground"
               )}
             >
               <tab.icon className={cn("w-5 h-5", isActive && "scale-110")} />
@@ -40,7 +40,7 @@ const BottomTabBar = () => {
                 {tab.label}
               </span>
               {isActive && (
-                <div className="absolute bottom-1 w-5 h-0.5 rounded-full bg-primary" />
+                <div className="absolute bottom-1 w-5 h-0.5 rounded-full bg-secondary" />
               )}
             </button>
           );
