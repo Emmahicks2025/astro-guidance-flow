@@ -33,7 +33,7 @@ const Support = () => {
         <section className="text-center space-y-3">
           <h1 className="text-2xl font-display font-bold">How can we help you?</h1>
           <p className="text-muted-foreground leading-relaxed">
-            We're here to make your AstroGuru experience seamless. Browse common topics below or reach out to us directly.
+            We're here to make your Stellar experience seamless. Browse common topics below or reach out to us directly.
           </p>
         </section>
 
@@ -41,7 +41,7 @@ const Support = () => {
         <SpiritualCard className="p-5 space-y-4">
           <h2 className="text-lg font-bold flex items-center gap-2"><Mail className="w-5 h-5 text-primary" /> Contact Us</h2>
           <div className="space-y-2 text-muted-foreground leading-relaxed">
-            <p><strong>Email:</strong> support@astroguru.app</p>
+            <p><strong>Email:</strong> support@stellarapp.co</p>
             <p><strong>Response Time:</strong> We aim to respond within 24 hours on business days.</p>
             <p><strong>Hours:</strong> Monday – Saturday, 9:00 AM – 9:00 PM IST</p>
             <p>For urgent billing or account issues, please include your registered email address and a detailed description of the problem.</p>
@@ -85,7 +85,7 @@ const Support = () => {
               </div>
               <div>
                 <p className="font-semibold text-foreground">How do I manage or cancel my subscription?</p>
-                <p>Subscriptions are managed through the Apple App Store. Go to your iPhone's Settings → Apple ID → Subscriptions → AstroGuru. You can change plans or cancel from there. Cancellations take effect at the end of the current billing period.</p>
+                <p>Subscriptions are managed through the Apple App Store. Go to your iPhone's Settings → Apple ID → Subscriptions → Stellar. You can change plans or cancel from there. Cancellations take effect at the end of the current billing period.</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground">How do I restore my purchases on a new device?</p>
@@ -174,15 +174,15 @@ const Support = () => {
               </div>
               <div>
                 <p className="font-semibold text-foreground">Palm reading camera is not working.</p>
-                <p>Go to your iPhone's Settings → AstroGuru → Camera and ensure permission is enabled. Make sure no other app is using the camera.</p>
+                <p>Go to your iPhone's Settings → Stellar → Camera and ensure permission is enabled. Make sure no other app is using the camera.</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground">Push notifications are not arriving.</p>
-                <p>Go to your iPhone's Settings → Notifications → AstroGuru and ensure notifications are allowed. Also check that "Do Not Disturb" is not enabled.</p>
+                <p>Go to your iPhone's Settings → Notifications → Stellar and ensure notifications are allowed. Also check that "Do Not Disturb" is not enabled.</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground">Voice calls have no audio.</p>
-                <p>Make sure microphone permission is granted (Settings → AstroGuru → Microphone). Check that your device is not on silent mode and the volume is turned up. Try using earphones if the issue persists.</p>
+                <p>Make sure microphone permission is granted (Settings → Stellar → Microphone). Check that your device is not on silent mode and the volume is turned up. Try using earphones if the issue persists.</p>
               </div>
             </div>
           </div>
@@ -197,11 +197,11 @@ const Support = () => {
               </div>
               <div>
                 <p className="font-semibold text-foreground">How do I report inappropriate content?</p>
-                <p>If you encounter any inappropriate content or behavior, email us at support@astroguru.app with details including screenshots if possible. We take all reports seriously and will investigate promptly.</p>
+                <p>If you encounter any inappropriate content or behavior, email us at support@stellarapp.co with details including screenshots if possible. We take all reports seriously and will investigate promptly.</p>
               </div>
               <div>
                 <p className="font-semibold text-foreground">Can I export my data?</p>
-                <p>Yes. You can request a copy of all your stored data by contacting support@astroguru.app. We will provide your data within 30 days of the request.</p>
+                <p>Yes. You can request a copy of all your stored data by contacting support@stellarapp.co. We will provide your data within 30 days of the request.</p>
               </div>
             </div>
           </div>
@@ -221,7 +221,7 @@ const Support = () => {
         {/* Still Need Help */}
         <SpiritualCard className="p-5 space-y-3 text-center">
           <h2 className="text-lg font-bold">Still need help?</h2>
-          <p className="text-muted-foreground">Email us at <strong>support@astroguru.app</strong> with your issue and we'll get back to you within 24 hours.</p>
+          <p className="text-muted-foreground">Email us at <strong>support@stellarapp.co</strong> with your issue and we'll get back to you within 24 hours.</p>
         </SpiritualCard>
 
         <div className="h-8" />

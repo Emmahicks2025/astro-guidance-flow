@@ -416,7 +416,7 @@ const KundliAnalysisDashboard = ({ analysis, onBack }: KundliAnalysisDashboardPr
                         {planet.name} ({planet.hindiName})
                         {planet.isRetrograde && <span className="text-xs ml-1">(R)</span>}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground font-mono">
                         House {planet.house} • {planet.sign}
                       </p>
                     </div>

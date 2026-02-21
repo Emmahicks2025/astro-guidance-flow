@@ -87,7 +87,7 @@ const faqCategories: FaqCategory[] = [
       },
       {
         q: "How do I cancel my subscription?",
-        a: "Subscriptions are managed through the App Store. Go to your device Settings → Apple ID → Subscriptions, find AstroGuru, and tap Cancel. Your benefits continue until the end of the billing period."
+        a: "Subscriptions are managed through the App Store. Go to your device Settings → Apple ID → Subscriptions, find Stellar, and tap Cancel. Your benefits continue until the end of the billing period."
       },
     ],
   },
@@ -253,12 +253,12 @@ const HelpCenter = () => {
               interactive
               className="p-4 text-center"
               onClick={() => {
-                window.location.href = "mailto:support@astroguru.app";
+                window.location.href = "mailto:support@stellarapp.co";
               }}
             >
               <Mail className="w-6 h-6 text-primary mx-auto mb-2" />
               <p className="font-medium text-sm">Email Us</p>
-              <p className="text-xs text-muted-foreground mt-1">support@astroguru.app</p>
+              <p className="text-xs text-muted-foreground mt-1">support@stellarapp.co</p>
             </SpiritualCard>
             <SpiritualCard
               variant="elevated"

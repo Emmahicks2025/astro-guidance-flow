@@ -24,7 +24,7 @@ interface WalkthroughStep {
 const walkthroughSteps: WalkthroughStep[] = [
   {
     id: "welcome",
-    title: "Welcome to AstroGuru",
+    title: "Welcome to Stellar",
     subtitle: "Your Personal Vedic Astrology Guide",
     content: "Discover the ancient wisdom of Vedic Astrology (Jyotish). This app helps you understand your life path, relationships, career, and spiritual journey through the lens of celestial knowledge passed down for thousands of years.",
     icon: Star,
@@ -252,7 +252,7 @@ const AppWalkthrough = ({ isOpen, onClose, onComplete }: AppWalkthroughProps) =>
         <div className="p-4 flex items-center justify-between border-b border-border">
           <div className="flex items-center gap-2">
             <Star className="w-5 h-5 text-primary" />
-            <span className="font-display font-bold">AstroGuru Guide</span>
+            <span className="font-display font-bold">Stellar Guide</span>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">

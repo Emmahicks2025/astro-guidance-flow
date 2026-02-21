@@ -105,7 +105,7 @@ const Auth = () => {
             toast.error(error.message);
           }
         } else {
-          toast.success("Account created successfully! Welcome to AstroGuru 🌟");
+          toast.success("Account created successfully! Welcome to Stellar 🌟");
           navigate('/');
         }
       }
@@ -161,7 +161,7 @@ const Auth = () => {
           <div className="w-20 h-20 rounded-full bg-gradient-spiritual flex items-center justify-center shadow-spiritual mb-4">
             <Sparkles className="w-10 h-10 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold text-gradient-spiritual font-display">AstroGuru</h1>
+          <h1 className="text-3xl font-bold text-gradient-spiritual font-display">Stellar</h1>
           <p className="text-muted-foreground mt-2">
             {isLogin ? "Welcome back, seeker" : "Begin your cosmic journey"}
           </p>
