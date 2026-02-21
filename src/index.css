@@ -3,124 +3,124 @@
 @tailwind utilities;
 
 /* Stellar Design System — Modern iOS-inspired Spiritual Theme
-   Navy Blue + Vermillion: premium, clean, high contrast */
+   Deep Teal + Warm Coral: serene, natural, high contrast */
 
 @layer base {
   :root {
     /* iOS-style: pure white base, true near-black text for max readability */
     --background: 0 0% 100%;
-    --foreground: 220 20% 10%;
+    --foreground: 180 18% 10%;
 
-    --card: 220 20% 98%;
-    --card-foreground: 220 20% 10%;
+    --card: 170 16% 97%;
+    --card-foreground: 180 18% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 180 18% 10%;
 
-    /* Primary — Deep Cosmic Navy */
-    --primary: 222 72% 38%;
+    /* Primary — Deep Emerald Teal */
+    --primary: 170 62% 30%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary — Warm Vermillion */
-    --secondary: 8 78% 50%;
+    /* Secondary — Warm Coral */
+    --secondary: 12 72% 58%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted — readable medium gray, not too light */
-    --muted: 220 14% 94%;
-    --muted-foreground: 220 14% 38%;
+    --muted: 170 10% 94%;
+    --muted-foreground: 170 10% 38%;
 
-    /* Accent — Vermillion */
-    --accent: 8 78% 50%;
+    /* Accent — Coral */
+    --accent: 12 72% 58%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
 
     /* Borders — iOS hairline style */
-    --border: 220 14% 88%;
-    --input: 220 14% 90%;
-    --ring: 222 72% 38%;
+    --border: 170 10% 88%;
+    --input: 170 10% 90%;
+    --ring: 170 62% 30%;
 
     --radius: 0.875rem;
 
     /* Palette tokens */
-    --saffron: 8 78% 52%;
-    --saffron-light: 14 72% 66%;
-    --saffron-dark: 4 72% 40%;
+    --saffron: 12 72% 58%;
+    --saffron-light: 16 68% 70%;
+    --saffron-dark: 8 68% 45%;
 
-    --purple: 222 72% 40%;
-    --purple-light: 222 60% 58%;
-    --purple-dark: 222 80% 26%;
+    --purple: 170 62% 32%;
+    --purple-light: 170 50% 50%;
+    --purple-dark: 172 70% 20%;
 
-    --gold: 8 78% 52%;
-    --gold-light: 14 72% 66%;
-    --gold-dark: 4 72% 40%;
+    --gold: 12 72% 58%;
+    --gold-light: 16 68% 70%;
+    --gold-dark: 8 68% 45%;
 
     --cream: 0 0% 100%;
-    --cream-dark: 220 14% 95%;
+    --cream-dark: 170 10% 95%;
 
-    /* Gradients — rich navy depth, iOS-like */
-    --gradient-spiritual: linear-gradient(145deg, hsl(222 72% 40%) 0%, hsl(240 68% 32%) 100%);
-    --gradient-sunset: linear-gradient(145deg, hsl(8 78% 52%) 0%, hsl(2 70% 42%) 100%);
-    --gradient-mystic: linear-gradient(145deg, hsl(240 68% 26%) 0%, hsl(222 72% 40%) 100%);
-    --gradient-golden: linear-gradient(145deg, hsl(4 70% 38%) 0%, hsl(8 78% 52%) 60%, hsl(14 72% 62%) 100%);
+    /* Gradients — rich teal depth, iOS-like */
+    --gradient-spiritual: linear-gradient(145deg, hsl(170 62% 32%) 0%, hsl(185 58% 24%) 100%);
+    --gradient-sunset: linear-gradient(145deg, hsl(12 72% 58%) 0%, hsl(6 65% 48%) 100%);
+    --gradient-mystic: linear-gradient(145deg, hsl(185 58% 20%) 0%, hsl(170 62% 32%) 100%);
+    --gradient-golden: linear-gradient(145deg, hsl(8 68% 45%) 0%, hsl(12 72% 58%) 60%, hsl(16 68% 68%) 100%);
 
     /* Shadows — iOS-style layered elevation */
-    --shadow-spiritual: 0 4px 20px -2px hsl(222 72% 40% / 0.22), 0 1px 4px -1px hsl(222 72% 40% / 0.12);
-    --shadow-mystic: 0 4px 20px -2px hsl(240 68% 34% / 0.20);
-    --shadow-golden: 0 4px 20px -2px hsl(8 78% 52% / 0.22);
-    --shadow-soft: 0 1px 8px -1px hsl(220 25% 8% / 0.06), 0 4px 16px -4px hsl(220 25% 8% / 0.05);
+    --shadow-spiritual: 0 4px 20px -2px hsl(170 62% 32% / 0.22), 0 1px 4px -1px hsl(170 62% 32% / 0.12);
+    --shadow-mystic: 0 4px 20px -2px hsl(185 58% 26% / 0.20);
+    --shadow-golden: 0 4px 20px -2px hsl(12 72% 58% / 0.22);
+    --shadow-soft: 0 1px 8px -1px hsl(180 20% 8% / 0.06), 0 4px 16px -4px hsl(180 20% 8% / 0.05);
 
     /* Sidebar */
-    --sidebar-background: 222 72% 40%;
+    --sidebar-background: 170 62% 32%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 8 78% 52%;
+    --sidebar-primary: 12 72% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 60% 48%;
+    --sidebar-accent: 170 50% 40%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 222 60% 46%;
-    --sidebar-ring: 8 78% 60%;
+    --sidebar-border: 170 50% 38%;
+    --sidebar-ring: 12 72% 65%;
   }
 
   .dark {
-    /* OLED dark — true near-black + navy card surfaces */
-    --background: 220 30% 5%;
+    /* OLED dark — true near-black + teal card surfaces */
+    --background: 180 25% 5%;
     --foreground: 0 0% 96%;
 
-    --card: 222 28% 10%;
+    --card: 175 24% 10%;
     --card-foreground: 0 0% 96%;
 
-    --popover: 222 28% 10%;
+    --popover: 175 24% 10%;
     --popover-foreground: 0 0% 96%;
 
-    --primary: 222 85% 65%;
+    --primary: 170 70% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 8 80% 60%;
+    --secondary: 12 75% 62%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted text clearly visible on dark */
-    --muted: 222 22% 14%;
-    --muted-foreground: 220 14% 65%;
+    --muted: 175 18% 14%;
+    --muted-foreground: 170 10% 65%;
 
-    --accent: 8 80% 60%;
+    --accent: 12 75% 62%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 222 22% 18%;
-    --input: 222 22% 18%;
-    --ring: 222 85% 65%;
+    --border: 175 18% 18%;
+    --input: 175 18% 18%;
+    --ring: 170 70% 55%;
 
-    --sidebar-background: 220 30% 3%;
+    --sidebar-background: 180 25% 3%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-primary: 8 80% 60%;
+    --sidebar-primary: 12 75% 62%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 22% 14%;
+    --sidebar-accent: 175 18% 14%;
     --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 222 22% 14%;
-    --sidebar-ring: 8 80% 60%;
+    --sidebar-border: 175 18% 14%;
+    --sidebar-ring: 12 75% 62%;
   }
 }
 
