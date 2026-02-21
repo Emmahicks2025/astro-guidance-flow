@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
+import { useHaptics, ImpactStyle } from "@/hooks/useHaptics";
 
 const spiritualButtonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-base font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0",
@@ -42,12 +43,23 @@ export interface SpiritualButtonProps
 }
 
 const SpiritualButton = React.forwardRef<HTMLButtonElement, SpiritualButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+    const { impact } = useHaptics();
+
+    const handleClick = React.useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        impact(variant === 'primary' || variant === 'golden' ? ImpactStyle.Medium : ImpactStyle.Light);
+        onClick?.(e);
+      },
+      [onClick, impact, variant]
+    );
+
     return (
       <Comp
         className={cn(spiritualButtonVariants({ variant, size, className }))}
         ref={ref}
+        onClick={asChild ? onClick : handleClick}
         {...props}
       />
     );

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchUserProfile } from "@/lib/profileService";
@@ -7,12 +8,19 @@ import { supabase } from "@/integrations/supabase/client";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import UserDashboard from "@/components/dashboard/UserDashboard";
 import AstrologerDashboard from "@/components/jotshi/AstrologerDashboard";
+import SplashScreen from "@/components/SplashScreen";
 
 const Index = () => {
   const { isComplete, userData, updateUserData, completeOnboarding } = useOnboardingStore();
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [checkingProfile, setCheckingProfile] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => !sessionStorage.getItem('splash_shown'));
+
+  const handleSplashComplete = useCallback(() => {
+    setShowSplash(false);
+    sessionStorage.setItem('splash_shown', '1');
+  }, []);
 
   // Redirect to auth if not logged in, or to admin if admin
   useEffect(() => {
@@ -110,11 +118,20 @@ const Index = () => {
     }
   }, [user, loading]);
 
+  // Show splash on first load of session
+  if (showSplash) {
+    return (
+      <AnimatePresence>
+        <SplashScreen onComplete={handleSplashComplete} />
+      </AnimatePresence>
+    );
+  }
+
   // Show loading while checking auth or profile
   if (loading || checkingProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-label="Loading">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" aria-hidden="true" />
       </div>
     );
   }
